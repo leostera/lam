@@ -3,9 +3,6 @@ use log::{debug, info};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-use lam::bytecode::Reader;
-use lam::runtime::Runner;
-
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(
     name = "lam",
@@ -92,7 +89,9 @@ impl BuildOpt {
     async fn build(self) {
         let t0 = std::time::Instant::now();
         debug!("Files: {:?}", self.files);
-        lam::bytecode::Reader::from_file(PathBuf::from("")).unwrap();
+        for file in self.files {
+            lam::bytecode::Reader::from_file(file).unwrap();
+        }
         info!("Building project...");
         info!("Done in {}ms", t0.elapsed().as_millis());
     }
