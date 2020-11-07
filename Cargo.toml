@@ -13,7 +13,9 @@ path = "src/main.rs"
 anyhow = "1.0"
 binread = "1.4.0"
 chrono = "0.4"
+eetf = "0.4"
 fern = { version = "0.6", features = [ "colored" ] }
+flate2 = "1.0"
 log = "0.4"
 structopt = "0.3"
 tokio = { version = "0.2", features = ["macros", "tcp", "rt-core" , "time"] }

@@ -89,7 +89,7 @@ pub enum Chunk {
     Line(ChunkData<LineTable>),
 
     #[br(magic = b"LitT")]
-    LitT(ChunkData<LitTable>),
+    LitT(ChunkData<LiteralTable>),
 
     #[br(magic = b"LocT")]
     LocT(ChunkData<LocTable>),
@@ -125,9 +125,28 @@ pub struct CodeTable {
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
 pub struct FunTable {
-    #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    count: u32,
+    #[br(count = count)]
+    data: Vec<Function>,
 }
+
+#[derive(Debug, BinRead)]
+pub struct Function {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    atom_index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    arity: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    offset: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    nfree: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    ouniq: u32,
+}
+
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
 pub struct LocTable {
@@ -158,9 +177,51 @@ pub struct DocsTable {
 
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
-pub struct LitTable {
-    #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+pub struct LiteralTable {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    uncompressed_size: u32,
+    #[br(
+        count = size - 4,
+        parse_with = LiteralTable::deflate_and_parse,
+        args(size - 4, uncompressed_size)
+    )]
+    data: Vec<eetf::Term>,
+}
+
+impl LiteralTable {
+    fn deflate_and_parse<R: Read + Seek>(
+        reader: &mut R,
+        _ro: &binread::ReadOptions,
+        args: (u32, u32),
+    ) -> binread::BinResult<Vec<eetf::Term>> {
+        let mut literals = vec![];
+
+        let (deflated_size, inflated_size) = args;
+
+        let mut buf = vec![0; deflated_size as usize];
+        reader.read_exact(&mut buf).unwrap();
+
+        let mut deflater = flate2::read::ZlibDecoder::new(buf.as_slice());
+        let mut inflated = vec![0; inflated_size as usize];
+        deflater.read(&mut inflated).unwrap();
+
+        let count = u32::from_be_bytes([inflated[0], inflated[1], inflated[2], inflated[3]]);
+
+        let data: Vec<u8> = inflated[8..].to_vec();
+        let mut cursor = Cursor::new(&data);
+
+        println!("{:?}", inflated);
+        println!("{:?}", data);
+
+        for _ in 0..count - 1 {
+            println!("{:?}", cursor);
+            let term = eetf::Term::decode(&mut cursor).unwrap();
+            literals.push(term);
+            cursor.set_position(cursor.position() + 4);
+        }
+
+        Ok(literals)
+    }
 }
 
 #[derive(Debug, BinRead)]
@@ -180,8 +241,20 @@ pub struct LineTable {
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
 pub struct ImportTable {
-    #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    count: u32,
+    #[br(count = count)]
+    data: Vec<Import>,
+}
+
+#[derive(Debug, BinRead)]
+pub struct Import {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    module_atom_index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    fun_atom_index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    arity: u32,
 }
 
 #[derive(Debug, BinRead)]
@@ -201,8 +274,20 @@ pub struct AttrTable {
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
 pub struct ExportTable {
-    #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    count: u32,
+    #[br(count = count)]
+    data: Vec<Export>,
+}
+
+#[derive(Debug, BinRead)]
+pub struct Export {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    atom_index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    arity: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    label: u32,
 }
 
 #[derive(Debug, BinRead)]
