@@ -92,7 +92,7 @@ pub enum Chunk {
     LitT(ChunkData<LiteralTable>),
 
     #[br(magic = b"LocT")]
-    LocT(ChunkData<LocTable>),
+    LocT(ChunkData<LocationTable>),
 
     #[br(magic = b"StrT")]
     StrT(ChunkData<StrTable>),
@@ -149,9 +149,21 @@ pub struct Function {
 
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
-pub struct LocTable {
-    #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+pub struct LocationTable {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    count: u32,
+    #[br(count = count)]
+    data: Vec<Location>,
+}
+
+#[derive(Debug, BinRead)]
+pub struct Location {
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    fun_atom_index: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    arity: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    label: u32,
 }
 
 #[derive(Debug, BinRead)]
