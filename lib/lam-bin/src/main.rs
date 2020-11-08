@@ -3,6 +3,8 @@ use log::{debug, info};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use lam_cli::bingen;
+
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(
     name = "lam",
@@ -11,7 +13,7 @@ use structopt::StructOpt;
 ░█▒░▒▄▀▄░█▄▒▄█
 ▒█▄▄░█▀█░█▒▀▒█
 
-Compile your BEAM bytecode to WASM.
+Compile BEAM bytecode to native binaries.
 "
 )]
 struct LAM {
@@ -23,9 +25,9 @@ struct LAM {
 }
 
 impl LAM {
-    async fn run(self) {
+    fn run(self) {
         self.setup_logging();
-        self.cmd.run().await;
+        self.cmd.run();
     }
 
     fn setup_logging(&self) {
@@ -67,9 +69,9 @@ enum Goal {
 }
 
 impl Goal {
-    async fn run(self) {
+    fn run(self) {
         match self {
-            Goal::Build(opts) => opts.build().await,
+            Goal::Build(opts) => opts.build(),
         }
     }
 }
@@ -83,21 +85,34 @@ struct BuildOpt {
         parse(from_os_str)
     )]
     files: Vec<PathBuf>,
+
+    #[structopt(
+        short = "o",
+        long = "output",
+        name = "OUTPUT",
+        help = "the output path of the executable",
+        parse(from_os_str)
+    )]
+    output: PathBuf,
 }
 
 impl BuildOpt {
-    async fn build(self) {
+    fn build(self) {
         let t0 = std::time::Instant::now();
-        debug!("Files: {:?}", self.files);
-        for file in self.files {
-            lam::bytecode::Reader::from_file(file).unwrap();
-        }
         info!("Building project...");
+        let bc = vec![
+            lam::program::Instruction::Allocate {},
+            lam::program::Instruction::Noop,
+        ];
+
+        let target = bingen::Target::of_bytecode(bc).with_name(self.output);
+
+        target.compile().unwrap();
+
         info!("Done in {}ms", t0.elapsed().as_millis());
     }
 }
 
-#[tokio::main]
-async fn main() {
-    LAM::from_args().run().await;
+fn main() {
+    LAM::from_args().run();
 }

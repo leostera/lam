@@ -1,0 +1,22 @@
+[package]
+name = "lam-cli"
+description = "Leandro's Abstract Machine"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[[bin]]
+name = "lam"
+path = "src/main.rs"
+
+[dependencies]
+lam = { path = "../lam" }
+lam-rts = { path = "../lam-rts" }
+
+anyhow = "1.0"
+chrono = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+flate2 = "1.0"
+log = "0.4"
+structopt = "0.3"

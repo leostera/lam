@@ -1,0 +1,25 @@
+[package]
+name = "lam"
+description = "Leandro's Abstract Machine"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "lam"
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[dependencies]
+anyhow = "1.0"
+binread = "1.4.0"
+chrono = "0.4"
+eetf = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+flate2 = "1.0"
+log = "0.4"
+structopt = "0.3"
+tokio = { version = "0.2", features = ["macros", "tcp", "rt-core" , "time"] }

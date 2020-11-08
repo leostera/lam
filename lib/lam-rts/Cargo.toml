@@ -1,0 +1,20 @@
+[package]
+name = "lam-rts"
+description = "Leandro's Abstract Machine"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+name = "lamrts"
+path = "src/lib.rs"
+crate-type = ["staticlib"]
+
+[dependencies]
+lam = { path = "../lam" }
+
+anyhow = "1.0"
+chrono = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+log = "0.4"

@@ -16,6 +16,10 @@ pub struct BEAM {
 }
 
 impl BEAM {
+    pub fn size(&self) -> u32 {
+        self.size
+    }
+
     fn parse_chunks<R: Read + Seek>(
         reader: &mut R,
         ro: &binread::ReadOptions,
@@ -62,7 +66,7 @@ pub enum Chunk {
     Atom(ChunkData<AtomTable>),
 
     #[br(magic = b"Attr")]
-    Attr(ChunkData<AttrTable>),
+    Attr(ChunkData<AttributeTable>),
 
     #[br(magic = b"CInf")]
     CInf(ChunkData<CInfTable>),
@@ -95,7 +99,7 @@ pub enum Chunk {
     LocT(ChunkData<LocationTable>),
 
     #[br(magic = b"StrT")]
-    StrT(ChunkData<StrTable>),
+    StrT(ChunkData<StringTable>),
 }
 
 #[derive(Debug, BinRead)]
@@ -238,7 +242,7 @@ impl LiteralTable {
 
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
-pub struct StrTable {
+pub struct StringTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
@@ -278,7 +282,7 @@ pub struct AbstTable {
 
 #[derive(Debug, BinRead)]
 #[br(import(size : u32))]
-pub struct AttrTable {
+pub struct AttributeTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
