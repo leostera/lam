@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "lib/lam",
-  "lib/lam-bin",
   "lib/lam-rts",
-  "lib/lam-dummy"
+  "lib/lam-bin"
 ]
