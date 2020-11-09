@@ -2,5 +2,6 @@
 members = [
   "lib/lam",
   "lib/lam-rts",
+  "lib/lam-rts-wasm",
   "lib/lam-bin"
 ]

@@ -1,0 +1,14 @@
+[package]
+name = "lam-rts-wasm"
+description = "Leandro's Abstract Machine"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lam = { path = "../lam" }
+lam-rts = { path = "../lam-rts" }
