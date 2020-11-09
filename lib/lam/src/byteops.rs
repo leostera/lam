@@ -171,7 +171,7 @@ pub enum OpCode {
 }
 
 impl OpCode {
-    fn arity(self) -> u8 {
+    pub fn arity(self) -> u8 {
         match self {
             OpCode::Label => 1,
             OpCode::FuncInfo => 3,
