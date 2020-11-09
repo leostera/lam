@@ -9,12 +9,11 @@ publish = false
 [lib]
 name = "lamrts"
 path = "src/lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "lib"]
 
 [dependencies]
 lam = { path = "../lam" }
 
 anyhow = "1.0"
-chrono = "0.4"
-fern = { version = "0.6", features = [ "colored" ] }
+fern = { version = "0.6", features = ["colored"] }
 log = "0.4"

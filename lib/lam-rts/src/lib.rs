@@ -6,6 +6,10 @@ pub extern "C" fn start(data: *const u8, size: usize) {
             size / std::mem::size_of::<lam::program::Instruction>(),
         )
     };
+    run(program)
+}
+
+pub fn run(program: &[lam::program::Instruction]) {
     println!("Size: {}", program.len());
     println!("Bytecode: {:?}", program);
 }
