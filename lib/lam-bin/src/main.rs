@@ -4,7 +4,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-use lam_cli::bingen;
+use lam_cli::beam_reader;
+use lam_cli::native_gen;
 use lam_cli::wasm_gen;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -68,13 +69,39 @@ impl LAM {
 #[derive(StructOpt, Debug, Clone)]
 enum Goal {
     Build(BuildOpt),
+    Dump(DumpOpt),
 }
 
 impl Goal {
     fn run(self) {
         match self {
             Goal::Build(opts) => opts.build(),
+            Goal::Dump(opts) => opts.dump(),
         }
+    }
+}
+
+#[derive(StructOpt, Debug, Clone)]
+#[structopt(name = "dump", about = "dump the parsed instructions")]
+struct DumpOpt {
+    #[structopt(
+        name = "FILES",
+        help = "the .beam files to compile",
+        parse(from_os_str)
+    )]
+    files: Vec<PathBuf>,
+}
+
+impl DumpOpt {
+    fn dump(self) {
+        let t0 = std::time::Instant::now();
+        info!("Building project...");
+
+        for file in self.files {
+            beam_reader::Reader::from_file(file).unwrap();
+        }
+
+        info!("Done in {}ms", t0.elapsed().as_millis());
     }
 }
 
@@ -131,13 +158,10 @@ impl BuildOpt {
         info!("Building project...");
 
         // let bc = beam_reader::Reader::new().read_files(self.files);
-        let bc: Vec<lam::program::Instruction> = vec![
-            lam::program::Instruction::Allocate {},
-            lam::program::Instruction::Noop,
-        ];
+        let bc: lam::program::Program = lam::program::sample();
 
         match self.target {
-            BuildTarget::Native => bingen::Target::of_bytecode(bc)
+            BuildTarget::Native => native_gen::Target::of_bytecode(bc)
                 .with_name(self.output)
                 .compile(),
             BuildTarget::WASM => wasm_gen::Target::of_bytecode(bc)

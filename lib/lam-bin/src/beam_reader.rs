@@ -226,9 +226,6 @@ impl LiteralTable {
         let data: Vec<u8> = inflated[8..].to_vec();
         let mut cursor = Cursor::new(&data);
 
-        println!("{:?}", inflated);
-        println!("{:?}", data);
-
         for _ in 0..count - 1 {
             println!("{:?}", cursor);
             let term = eetf::Term::decode(&mut cursor).unwrap();
@@ -322,7 +319,7 @@ impl Reader {
         let bytecode = std::fs::read(file)?;
         let mut reader = Cursor::new(bytecode);
         let beam: BEAM = reader.read_ne().unwrap();
-        print!("{:#?}\n", beam);
+        println!("{:#?}\n", beam);
         Ok(beam)
     }
 }

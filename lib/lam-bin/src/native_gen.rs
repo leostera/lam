@@ -1,4 +1,5 @@
 use anyhow::{Context, Error};
+use bincode;
 use log::debug;
 use std::io::Write;
 use std::path::PathBuf;
@@ -11,12 +12,12 @@ const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblamrts.a");
 
 #[derive(Clone, Debug, Default)]
 pub struct Target {
-    bytecode: Vec<lam::program::Instruction>,
+    bytecode: lam::program::Program,
     output: PathBuf,
 }
 
 impl Target {
-    pub fn of_bytecode(bytecode: Vec<lam::program::Instruction>) -> Target {
+    pub fn of_bytecode(bytecode: lam::program::Program) -> Target {
         Target {
             bytecode,
             ..Target::default()
@@ -31,11 +32,7 @@ impl Target {
         debug!("Templating .c file...");
 
         let bc = self.bytecode;
-        let bc_size = bc.len() * std::mem::size_of::<lam::program::Instruction>();
-        let data = unsafe {
-            let bc_ptr = bc.as_ptr() as *const u8;
-            std::slice::from_raw_parts(bc_ptr, bc_size)
-        };
+        let data = bincode::serialize(&bc)?;
         let bc_str = format!("{:?}", data);
 
         let runtime_object = std::path::PathBuf::from(&"./liblamrts.a");
@@ -44,7 +41,7 @@ impl Target {
 
         let template = include_str!("bin.c").to_string();
         let c_code = template
-            .replace("LAM_BYTECODE_SIZE", &bc_size.to_string())
+            .replace("LAM_BYTECODE_SIZE", &data.len().to_string())
             .replace("LAM_BYTECODE_RAW", &bc_str)
             .replace("{[", "{")
             .replace("]}", "}");

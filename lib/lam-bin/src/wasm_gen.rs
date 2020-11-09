@@ -9,12 +9,12 @@ const RUNTIME: &[u8] = include_bytes!("../../../target/wasm32-wasi/release/lam_r
 
 #[derive(Clone, Debug, Default)]
 pub struct Target {
-    bytecode: Vec<lam::program::Instruction>,
+    bytecode: lam::program::Program,
     output: PathBuf,
 }
 
 impl Target {
-    pub fn of_bytecode(bytecode: Vec<lam::program::Instruction>) -> Target {
+    pub fn of_bytecode(bytecode: lam::program::Program) -> Target {
         Target {
             bytecode,
             ..Target::default()
@@ -28,11 +28,7 @@ impl Target {
     pub fn compile(self) -> Result<(), Error> {
         /* Prepare the bytecode */
         let bc = self.bytecode;
-        let bc_size = bc.len() * std::mem::size_of::<lam::program::Instruction>();
-        let data = unsafe {
-            let bc_ptr = bc.as_ptr() as *const u8;
-            std::slice::from_raw_parts(bc_ptr, bc_size)
-        };
+        let data = bincode::serialize(&bc)?;
 
         /* Create runtime module */
         let mut module = walrus::Module::from_buffer(RUNTIME)?;
@@ -60,7 +56,7 @@ impl Target {
         main.name("main".to_string())
             .func_body()
             .i32_const(0)
-            .i32_const(bc_size as i32)
+            .i32_const(data.len() as i32)
             .call(start);
 
         let main = main.finish(vec![], &mut module.funcs);
