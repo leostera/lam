@@ -15,8 +15,11 @@ lam = { path = "../lam" }
 lam-rts = { path = "../lam-rts" }
 
 anyhow = "1.0"
+binread = "1.4"
 chrono = "0.4"
+eetf = "0.4"
 fern = { version = "0.6", features = [ "colored" ] }
 flate2 = "1.0"
 log = "0.4"
 structopt = "0.3"
+walrus = "0.18"

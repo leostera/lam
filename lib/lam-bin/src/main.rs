@@ -1,9 +1,11 @@
 use fern::colors::{Color, ColoredLevelConfig};
-use log::{debug, info};
+use log::info;
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 use lam_cli::bingen;
+use lam_cli::wasm_gen;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(
@@ -94,20 +96,55 @@ struct BuildOpt {
         parse(from_os_str)
     )]
     output: PathBuf,
+
+    #[structopt(
+        short = "t",
+        long = "target",
+        name = "TARGET",
+        help = "the target architecture to use: native or wasm",
+        default_value = "native"
+    )]
+    target: BuildTarget,
+}
+
+#[derive(StructOpt, Debug, Clone)]
+#[structopt()]
+pub enum BuildTarget {
+    Native,
+    WASM,
+}
+
+impl FromStr for BuildTarget {
+    type Err = String;
+    fn from_str(target: &str) -> Result<Self, Self::Err> {
+        match target {
+            "native" => Ok(BuildTarget::Native),
+            "wasm" => Ok(BuildTarget::WASM),
+            _ => Err("Could not parse target. Please use native or wasm".to_string()),
+        }
+    }
 }
 
 impl BuildOpt {
     fn build(self) {
         let t0 = std::time::Instant::now();
         info!("Building project...");
-        let bc = vec![
+
+        // let bc = beam_reader::Reader::new().read_files(self.files);
+        let bc: Vec<lam::program::Instruction> = vec![
             lam::program::Instruction::Allocate {},
             lam::program::Instruction::Noop,
         ];
 
-        let target = bingen::Target::of_bytecode(bc).with_name(self.output);
-
-        target.compile().unwrap();
+        match self.target {
+            BuildTarget::Native => bingen::Target::of_bytecode(bc)
+                .with_name(self.output)
+                .compile(),
+            BuildTarget::WASM => wasm_gen::Target::of_bytecode(bc)
+                .with_name(self.output)
+                .compile(),
+        }
+        .unwrap();
 
         info!("Done in {}ms", t0.elapsed().as_millis());
     }

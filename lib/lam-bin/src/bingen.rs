@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Error};
+use anyhow::{Context, Error};
 use log::debug;
 use std::io::Write;
 use std::path::PathBuf;
@@ -36,13 +36,13 @@ impl Target {
             let bc_ptr = bc.as_ptr() as *const u8;
             std::slice::from_raw_parts(bc_ptr, bc_size)
         };
+        let bc_str = format!("{:?}", data);
 
         let runtime_object = std::path::PathBuf::from(&"./liblamrts.a");
         let mut liblamrts_a = std::fs::File::create(&runtime_object)?;
         liblamrts_a.write_all(RUNTIME)?;
 
         let template = include_str!("bin.c").to_string();
-        let bc_str = format!("{:?}", data);
         let c_code = template
             .replace("LAM_BYTECODE_SIZE", &bc_size.to_string())
             .replace("LAM_BYTECODE_RAW", &bc_str)
