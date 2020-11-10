@@ -5,9 +5,10 @@ of LAM.
 
 #### Milestones
 
-* 2020 Q4 - Milestone 1: A BEAM Binary :hammer:
+* 2020 Q4 - Milestone 1: Native Binaries :heavy_check_mark:
+* 2020 Q4 - Milestone 1: WASM Binaries :heavy_check_mark:
 
-## 2020 Q4 - Milestone 1: A BEAM Binary :hammer:
+## 2020 Q4 - Milestone 1: Native Binaries :heavy_check_mark:
 
 The initial goal here is to package a bunch of .beam files into a single
 relocatable binary for a specific architecture (eg, only
@@ -16,44 +17,42 @@ relocatable binary for a specific architecture (eg, only
 There should be a small cli, that we can run:
 
 ```sh
-$ lam build *.beam -o bin.exe
+$ lam build *.beam -o bin.exe -t native
 $ ./bin.exe
 Hello, Joe!
 ```
 
-And I expect it to run some basic stuff. Things that we won't have:
-
-* SMP
-* Processes
-* Message Passing
-* NIF / FFIs
-
 Things that we should have:
 
 * Io module should work
-* File module should work
 
-## M2: A BEAM .wasm
+## 2020 Q1 - Milestone 2: WASM Binaries :heavy_check_mark:
 
 In short, the same things we had working on milestone 1 run on a browser. In
 particular we should be able to run:
 
 ```sh
-$ lam build *beam -o bin.wasm --target wasm
-$ wasmrun bin.wasm
+$ lam build *.beam -o bin.wasm -t wasm
+$ wasmtime bin.wasm
 Hello, Joe!
 ```
+
+## Enough Bytecode support to build small CLI tools
+
+## Enough NIFs to build small CLI tools
+
+## Web-compatible WASM Binaries
 
 Which means we should be able to load this from a Javascript file, and provide
 the necessary FFIs:
 
 ```js
 load("bin.wasm")
-.then( mod => {
-    const rt = mod.Runtime.new({
+.then( LAM => {
+    const LAM = LAM.new({
       io: { format: (...args) => console.log(args) },
     });
-    rt.start();
+    LAM.start();
   });
 ```
 
