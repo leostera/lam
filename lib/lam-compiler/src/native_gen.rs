@@ -11,7 +11,7 @@ const RUNTIME: &[u8] = include_bytes!("../../../target/debug/liblam_rts_native.a
 const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblam_rts_native.a");
 
 impl Target {
-    pub fn to_native(self) -> Result<(), Error> {
+    pub fn to_native(&self) -> Result<(), Error> {
         debug!("Templating .c file...");
 
         let data = self.bytecode().serialize()?;
@@ -42,13 +42,13 @@ impl Target {
             "-ldl",
             "-lm",
         ]);
-        let res = cc.status().map(|_| ()).context("Compilation failed")?;
+        cc.status().map(|_| ()).context("Compilation failed")?;
 
         debug!("Removing temporary files...");
 
         std::fs::remove_file(runtime_object).context("Could not remove liblamrts.a file")?;
         std::fs::remove_file(path).context("Could not remove .c file")?;
 
-        Ok(res)
+        Ok(())
     }
 }

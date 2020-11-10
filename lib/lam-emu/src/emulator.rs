@@ -1,7 +1,7 @@
 use std::boxed::Box;
 use std::collections::HashMap;
 
-use super::program::{Instruction, Register, Value, MFA};
+use super::program::{Instruction, Register, Value};
 use super::runtime::Runtime;
 
 #[derive(Debug, Default, Clone)]

@@ -203,12 +203,12 @@ impl Program {
         }
 
         // insert last labels
-        if current_label_instructions.len() > 0 {
+        if !current_label_instructions.is_empty() {
             current_module_labels.insert(
                 current_label_id,
                 FunctionLabel {
                     id: current_label_id,
-                    instructions: current_label_instructions.clone(),
+                    instructions: current_label_instructions,
                 },
             );
         }
@@ -218,9 +218,9 @@ impl Program {
             program.mods.insert(
                 current_module_name.clone(),
                 Module {
-                    name: current_module_name.clone(),
-                    funs: current_module_funs.clone(),
-                    labels: current_module_labels.clone(),
+                    name: current_module_name,
+                    funs: current_module_funs,
+                    labels: current_module_labels,
                 },
             );
         };

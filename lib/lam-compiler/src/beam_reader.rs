@@ -27,14 +27,9 @@ impl BEAM {
     ) -> binread::BinResult<Vec<Chunk>> {
         let mut chunks = vec![];
 
-        loop {
-            match Chunk::read(reader) {
-                Ok(mut chunk) => {
-                    chunk.after_parse(reader, ro, arg)?;
-                    chunks.push(chunk)
-                }
-                Err(_) => break,
-            }
+        while let Ok(mut chunk) = Chunk::read(reader) {
+            chunk.after_parse(reader, ro, arg)?;
+            chunks.push(chunk)
         }
 
         Ok(chunks)

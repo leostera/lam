@@ -11,7 +11,7 @@ const RUNTIME: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/lam_rts_web.wasm");
 
 impl Target {
-    pub fn to_web(self) -> Result<(), Error> {
+    pub fn to_web(&self) -> Result<(), Error> {
         Ok(())
     }
 }

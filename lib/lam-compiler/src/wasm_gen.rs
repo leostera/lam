@@ -9,7 +9,7 @@ const RUNTIME: &[u8] = include_bytes!("../../../target/wasm32-wasi/debug/lam_rts
 const RUNTIME: &[u8] = include_bytes!("../../../target/wasm32-wasi/release/lam_rts_wasm.wasm");
 
 impl Target {
-    pub fn to_wasm(self) -> Result<(), Error> {
+    pub fn to_wasm(&self) -> Result<(), Error> {
         /* Prepare the bytecode */
         let data = self.bytecode().serialize()?;
 
