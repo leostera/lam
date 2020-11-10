@@ -1,6 +1,6 @@
 [package]
 name = "lam-rts-wasm"
-description = "Leandro's Abstract Machine"
+description = "LAM's WASM Runtime System"
 version = "0.0.1"
 authors = ["Leandro Ostera <leandro@ostera.io>"]
 edition = "2018"
@@ -10,5 +10,5 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-lam = { path = "../lam" }
-lam-rts = { path = "../lam-rts" }
+lam-emu = { path = "../lam-emu" }
+lam-rts-native = { path = "../lam-rts-native" }
