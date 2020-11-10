@@ -4,6 +4,8 @@
 -export([main/0]).
 
 -spec main() -> ok.
-main() -> io:format(<<"Hello, Joe!">>, []).
+main() ->
+  Str = <<"Hello, Joe!">>,
+  io:format(<<"~p">>, [Str | []]).
 
 

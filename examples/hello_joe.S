@@ -12,9 +12,9 @@
     {line,[{location,"hello_joe.erl",7}]}.
     {func_info,{atom,hello_joe},{atom,main},0}.
   {label,2}.
-    {move,nil,{x,1}}.
-    {move,{literal,<<"Hello, Joe!">>},{x,0}}.
-    {line,[{location,"hello_joe.erl",7}]}.
+    {move,{literal,[<<"Hello, Joe!">>]},{x,1}}.
+    {move,{literal,<<"~p">>},{x,0}}.
+    {line,[{location,"hello_joe.erl",9}]}.
     {call_ext_only,2,{extfunc,io,format,2}}.
 
 
