@@ -313,7 +313,6 @@ impl Reader {
         let bytecode = std::fs::read(file)?;
         let mut reader = Cursor::new(bytecode);
         let beam: BEAM = reader.read_ne().unwrap();
-        println!("{:#?}\n", beam);
         Ok(beam)
     }
 }
