@@ -1,0 +1,15 @@
+[package]
+name = "lam-rts-web"
+description = "LAM's Web Runtime System"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lam-emu = { path = "../lam-emu" }
+
+wasm-bindgen = "0.2"
