@@ -13,3 +13,8 @@ crate-type = ["cdylib"]
 lam-emu = { path = "../lam-emu" }
 
 wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = [
+  'Performance',
+  'Window',
+  'console'
+] }

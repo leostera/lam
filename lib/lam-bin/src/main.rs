@@ -138,6 +138,7 @@ struct BuildOpt {
 pub enum BuildTarget {
     Native,
     WASM,
+    Web,
 }
 
 impl FromStr for BuildTarget {
@@ -146,6 +147,7 @@ impl FromStr for BuildTarget {
         match target {
             "native" => Ok(BuildTarget::Native),
             "wasm" => Ok(BuildTarget::WASM),
+            "web" => Ok(BuildTarget::Web),
             _ => Err("Could not parse target. Please use native or wasm".to_string()),
         }
     }
@@ -164,6 +166,7 @@ impl BuildOpt {
         match self.target {
             BuildTarget::Native => target.to_native(),
             BuildTarget::WASM => target.to_wasm(),
+            BuildTarget::Web => target.to_web(),
         }
         .unwrap();
 
