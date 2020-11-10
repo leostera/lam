@@ -1,0 +1,28 @@
+[package]
+name = "lam-compiler"
+description = "LAM compiler and code generation"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[dependencies]
+lam-emu = { path = "../lam-emu" }
+lam-rts-native = { path = "../lam-rts-native" }
+lam-rts-wasm = { path = "../lam-rts-wasm" }
+lam-rts-web = { path = "../lam-rts-web" }
+
+anyhow = "1.0"
+binread = "1.4"
+chrono = "0.4"
+eetf = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+flate2 = "1.0"
+log = "0.4"
+walrus = "0.18"
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
