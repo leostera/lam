@@ -1,7 +1,9 @@
 [workspace]
 members = [
-  "lib/lam",
-  "lib/lam-rts",
+  "lib/lam-bin",
+  "lib/lam-compiler",
+  "lib/lam-emu",
+  "lib/lam-rts-native",
   "lib/lam-rts-wasm",
-  "lib/lam-bin"
+  "lib/lam-rts-web"
 ]
