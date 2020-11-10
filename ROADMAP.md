@@ -6,7 +6,8 @@ of LAM.
 #### Milestones
 
 * 2020 Q4 - Milestone 1: Native Binaries :heavy_check_mark:
-* 2020 Q4 - Milestone 1: WASM Binaries :heavy_check_mark:
+* 2020 Q4 - Milestone 2: WASM Binaries :heavy_check_mark:
+* 2020 Q4 - Milestone 3: ... :hammer:
 
 ## 2020 Q4 - Milestone 1: Native Binaries :heavy_check_mark:
 
