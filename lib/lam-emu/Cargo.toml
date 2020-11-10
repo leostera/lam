@@ -1,0 +1,19 @@
+[package]
+name = "lam-emu"
+description = "LAM emulator"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[dependencies]
+anyhow = "1.0"
+eetf = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
