@@ -7,9 +7,8 @@
 
 ## What is LAM?
 
-LAM is a **lightweight alternative to the BEAM** that lets you run run your
-BEAM programs as **native binaries and WebAssembly**, both WASI-enabled systems
-and browsers.
+LAM is a **lightweight alternative to the BEAM** that runs as **Native and
+WebAssembly binaries**, both on WASI-enabled systems and browsers.
 
 It does not support BEAM-style _hot-code reloading_, and a bunch of other
 things, so not all BEAM programs will be supported.
