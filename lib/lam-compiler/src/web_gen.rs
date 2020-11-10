@@ -56,7 +56,10 @@ impl Target {
 
         std::fs::write(
             self.output().with_extension("js"),
-            JS_TEMPLATE.replace("OUTPUT_NAME", self.output().to_str().unwrap()),
+            JS_TEMPLATE.replace(
+                "OUTPUT_NAME",
+                self.output().file_name().unwrap().to_str().unwrap(),
+            ),
         )?;
 
         Ok(())
