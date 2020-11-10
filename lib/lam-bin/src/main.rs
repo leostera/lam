@@ -4,9 +4,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-use lam_cli::beam_reader;
-use lam_cli::native_gen;
-use lam_cli::wasm_gen;
+use lam_compiler::beam_reader;
+use lam_compiler::target::Target;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(
@@ -158,15 +157,13 @@ impl BuildOpt {
         info!("Building project...");
 
         // let bc = beam_reader::Reader::new().read_files(self.files);
-        let bc: lam::program::Program = lam::program::sample();
+        let bc: lam_emu::program::Program = lam_emu::program::sample();
+
+        let target = Target::of_bytecode(bc).with_name(self.output);
 
         match self.target {
-            BuildTarget::Native => native_gen::Target::of_bytecode(bc)
-                .with_name(self.output)
-                .compile(),
-            BuildTarget::WASM => wasm_gen::Target::of_bytecode(bc)
-                .with_name(self.output)
-                .compile(),
+            BuildTarget::Native => target.to_native(),
+            BuildTarget::WASM => target.to_wasm(),
         }
         .unwrap();
 

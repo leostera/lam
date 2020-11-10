@@ -1,6 +1,6 @@
 [package]
-name = "lam-cli"
-description = "Leandro's Abstract Machine"
+name = "lam-bin"
+description = "LAM command line interface"
 version = "0.0.1"
 authors = ["Leandro Ostera <leandro@ostera.io>"]
 edition = "2018"
@@ -11,17 +11,11 @@ name = "lam"
 path = "src/main.rs"
 
 [dependencies]
-lam = { path = "../lam" }
-lam-rts = { path = "../lam-rts" }
+lam-emu = { path = "../lam-emu" }
+lam-compiler = { path = "../lam-compiler" }
 
 anyhow = "1.0"
-binread = "1.4"
 chrono = "0.4"
-eetf = "0.4"
 fern = { version = "0.6", features = [ "colored" ] }
-flate2 = "1.0"
 log = "0.4"
 structopt = "0.3"
-walrus = "0.18"
-serde = { version = "1.0", features = ["derive"] }
-bincode = "1.3"
