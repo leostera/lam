@@ -1,18 +1,17 @@
 [package]
-name = "lam-rts"
-description = "Leandro's Abstract Machine"
+name = "lam-rts-native"
+description = "LAM's Native Runtime System"
 version = "0.0.1"
 authors = ["Leandro Ostera <leandro@ostera.io>"]
 edition = "2018"
 publish = false
 
 [lib]
-name = "lamrts"
 path = "src/lib.rs"
 crate-type = ["staticlib", "lib"]
 
 [dependencies]
-lam = { path = "../lam" }
+lam-emu = { path = "../lam-emu" }
 
 anyhow = "1.0"
 fern = { version = "0.6", features = ["colored"] }
@@ -20,3 +19,5 @@ log = "0.4"
 
 serde = { version = "1.0", features = ["derive"] }
 bincode = "1.3"
+
+wee_alloc = "0.4"
