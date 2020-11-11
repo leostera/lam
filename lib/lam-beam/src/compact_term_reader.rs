@@ -9,7 +9,7 @@ use byteorder::ReadBytesExt;
 use num_bigint::BigInt;
 use std::io;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum SimpleTag {
     Literal = 0b000,
@@ -41,7 +41,7 @@ impl Into<SimpleTag> for u8 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum ExtendedTag {
     List = 0b0001_0111,
@@ -65,14 +65,14 @@ impl Into<ExtendedTag> for u8 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum Value {
     Small(u8),
     Large(BigInt),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum TagKind {
     Simple(SimpleTag, Value),
@@ -98,7 +98,7 @@ impl Into<CompactTerm> for TagKind {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum CompactTerm {
     Nil,
