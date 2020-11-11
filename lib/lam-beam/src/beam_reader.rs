@@ -4,6 +4,9 @@ use binread::BinRead;
 use binread::BinReaderExt;
 use std::path::PathBuf;
 
+use super::byteops::OpCode;
+use super::compact_term_reader::CompactTerm;
+
 #[derive(Debug, BinRead)]
 #[br(big, magic = b"FOR1")]
 pub struct BEAM {
@@ -117,8 +120,43 @@ pub struct CodeTable {
     label_count: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     fun_count: u32,
-    #[br(count = size - 4*4, map = |v: Vec<u8>| v.len() as u32)]
-    data: u32,
+    #[br(
+        count = size - 4*4,
+        parse_with = CodeTable::parse_into_terms,
+        args(size - 4*4)
+    )]
+    data: Vec<(OpCode, u8, std::vec::Vec<CompactTerm>)>,
+}
+
+impl CodeTable {
+    fn parse_into_terms<R: Read + Seek>(
+        reader: &mut R,
+        _ro: &binread::ReadOptions,
+        args: (u32,),
+    ) -> binread::BinResult<Vec<(OpCode, u8, std::vec::Vec<CompactTerm>)>> {
+        let (size,) = args;
+
+        let mut buf = vec![0; size as usize];
+        reader.read_exact(&mut buf).unwrap();
+
+        let mut instructions = vec![];
+
+        let data: Vec<u8> = buf.to_vec();
+        let mut cursor = Cursor::new(&data[3..]);
+        let mut opcode_buf: [u8; 1] = [0; 1];
+        while let Ok(()) = cursor.read_exact(&mut opcode_buf) {
+            let opcode: OpCode = opcode_buf[0].into();
+            let arity: u8 = opcode.arity();
+            let mut args: Vec<CompactTerm> = vec![];
+            for _ in 0..arity {
+                let term = CompactTerm::decode(&mut cursor).expect("Could not decode compact term");
+                args.push(term);
+            }
+            instructions.push((opcode, arity, args));
+        }
+
+        Ok(instructions)
+    }
 }
 
 #[derive(Debug, BinRead)]

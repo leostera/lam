@@ -1,5 +1,3 @@
-pub mod beam_reader;
-
 pub mod target;
 
 pub mod native_gen;

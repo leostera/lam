@@ -1,0 +1,21 @@
+[package]
+name = "lam-beam"
+description = "LAM .beam file support"
+version = "0.0.1"
+authors = ["Leandro Ostera <leandro@ostera.io>"]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[dependencies]
+anyhow = "1.0"
+binread = "1.4"
+byteorder = "1.3"
+eetf = "0.4"
+fern = { version = "0.6", features = [ "colored" ] }
+flate2 = "1.0"
+log = "0.4"
+num-bigint = "0.3"
