@@ -111,17 +111,19 @@ impl Program {
     pub fn jump(&self, instr_ptr: &mut InstructionPointer, call: &FnCall) {
         let last_ptr = instr_ptr.clone();
 
-        let module_name = call.module().unwrap_or(last_ptr.current_module.clone());
+        let module_name = call
+            .module()
+            .unwrap_or_else(|| last_ptr.current_module.clone());
         let module = self
             .modules
             .get(&module_name)
-            .expect(&format!("Could not find module: {:?}", &module_name));
+            .unwrap_or_else(|| panic!("Could not find module: {:?}", &module_name));
         /* NOTE: labels are 1 indexed! */
         let function_key = (call.function(), call.arity());
         let first_label = module
             .functions
             .get(&function_key)
-            .expect(&format!("Could not find function : {:?}", &function_key))
+            .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key))
             - 1;
         let first_instruction = module.labels[first_label as usize].instructions[0].clone();
 

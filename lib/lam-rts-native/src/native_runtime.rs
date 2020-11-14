@@ -8,7 +8,7 @@ impl Runtime for NativeRuntime {
         let MFA {
             module,
             function,
-            arity,
+            arity: _,
         } = mfa;
         match (module.as_str(), function.as_str()) {
             ("io", "format") => println!("{:?}", args),

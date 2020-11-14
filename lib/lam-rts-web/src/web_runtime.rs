@@ -12,7 +12,7 @@ impl Runtime for WebRuntime {
         let MFA {
             module,
             function,
-            arity,
+            arity: _,
         } = mfa;
         match (module.as_str(), function.as_str()) {
             ("io", "format") => console::log_1(&format!("{:?}", args).into()),

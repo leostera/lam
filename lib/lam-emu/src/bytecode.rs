@@ -70,10 +70,9 @@ pub enum FnCall {
 impl FnCall {
     pub fn arity(&self) -> u8 {
         match self {
-            FnCall::Local { arity, .. } => arity,
-            FnCall::Qualified { arity, .. } => arity,
+            FnCall::Local { arity, .. } => *arity,
+            FnCall::Qualified { arity, .. } => *arity,
         }
-        .clone()
     }
 
     pub fn module(&self) -> Option<String> {

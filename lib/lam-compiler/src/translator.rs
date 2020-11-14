@@ -104,7 +104,7 @@ impl ModuleTranslator {
 
     pub fn mk_instr(
         opcode: &lam_beam::OpCode,
-        args: &std::vec::Vec<lam_beam::CompactTerm>,
+        args: &[lam_beam::CompactTerm],
         atom_table: &lam_beam::AtomTable,
         literal_table: &lam_beam::LiteralTable,
         import_table: &lam_beam::ImportTable,
