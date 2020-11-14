@@ -7,12 +7,12 @@ of LAM.
 
 * 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
 * 2020 Q4 - Milestone 2: Single Process Programs :hammer:
-* Milestone 3: Multi-Process Programs :crystall_ball:
-* Milestone 4: Multi-core Processing :crystall_ball:
-* Milestone 5: Native Extensions :crystall_ball:
+* Milestone 3: Multi-Process Programs :crystal_ball:
+* Milestone 4: Multi-core Processing :crystal_ball:
+* Milestone 5: Native Extensions :crystal_ball:
 * Milestone 6: WebIDL API :web:
 
-## 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_markhammer:
+## 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
 
 The initial goal here is to package a bunch of .beam files into a single
 relocatable binary for a specific architecture (eg, only
@@ -54,7 +54,7 @@ should support a larger surface area of the BEAM bytecode including:
 The goal here is to support all of OTPs non-process based modules, with the
 exception of those that have some low-level FFI needs (such as `io.erl`).
 
-## Milestone 3: Multi-Process Programs :crystall_ball:
+## Milestone 3: Multi-Process Programs :crystal_ball:
 
 Implement the rest of the bytecode for message passing including:
 
@@ -64,11 +64,11 @@ Implement the rest of the bytecode for message passing including:
 At this point I'd expect us to support the core OTP modules: `supervisor` and
 `gen_server`.
 
-## Milestone 4: Multi-core Processing :crystall_ball:
+## Milestone 4: Multi-core Processing :crystal_ball:
 
 Implement symmetric multi-processing to spread the work across several cores.
 
-## Milestone 5: Native Extensions :crystall_ball:
+## Milestone 5: Native Extensions :crystal_ball:
 
 To support building useful native and web applications, we need to figure out
 how to allow people to link custom code that interfaces with the runtime, and
