@@ -10,8 +10,13 @@
 LAM is a **lightweight alternative to the BEAM** that runs as **Native and
 WebAssembly binaries**, both on WASI-enabled systems and browsers.
 
-It does not support BEAM-style _hot-code reloading_, and a bunch of other
-things, so not all BEAM programs will be supported.
+It supports
+
+* Concurrency via processes and message passing
+* Multi-core scheduling (except on the Web)
+
+It does not support _hot-code reloading_ and _distribution_ so not all BEAM
+programs will be supported.
 
 You should use this if you want to build:
 
