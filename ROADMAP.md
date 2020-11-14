@@ -10,7 +10,8 @@ of LAM.
 * Milestone 3: Multi-Process Programs :crystal_ball:
 * Milestone 4: Multi-core Processing :crystal_ball:
 * Milestone 5: Native Extensions :crystal_ball:
-* Milestone 6: WebIDL API :web:
+* Milestone 6: WebIDL API :rocket:
+* Milestone 7: Native Graphics :rocket:
 
 ## 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
 
@@ -43,16 +44,23 @@ $ parcel serve index.html
 
 ## 2020 Q4 - Milestone 2: Single Process Programs :hammer:
 
-For this milestone, I'd like to be able to run arbitrary Erlang programs. So we
-should support a larger surface area of the BEAM bytecode including:
+For this milestone, I'd like to be able to write arbitrary single-process
+Erlang programs. So we should support a larger surface area of the BEAM
+bytecode including:
 
 - [ ] y register and heap allocations
 - [ ] all value creation
 - [ ] all calls ops
 - [ ] all tests
 
-The goal here is to support all of OTPs non-process based modules, with the
-exception of those that have some low-level FFI needs (such as `io.erl`).
+The goal here would be to be able to create any sort of values that are valid
+in Erlang, and call functions in any way valid in Erlang as well, so that 
+we can build some command line tools.
+
+Some things that should be possible are:
+
+* run infinitely: `f() -> f().` should just run and run and run.
+* run relatively fast
 
 ## Milestone 3: Multi-Process Programs :crystal_ball:
 
@@ -83,8 +91,14 @@ Calling `json:parse(String).` should be the exact same for a consumer. Whether
 the implementation is fulfilled by bytecode running on LAM, or by native
 platform code, should be irrelevant.
 
-## Milestone 6: WebIDL API :web:
+## Milestone 6: WebIDL API :rocket:
 
 To make it more useful to build web things, we should generate the bytecode
 necessary to interface with the web platform from the WebIDL description. This
 is how the `web-sys` crate currently does it.
+
+## Milestone 7: Native Graphics :rocket:
+
+From the work I've done before on the `erlang-gui` project, it should be
+possible for us to generate native extensions to Vulkan and Skia to build
+native applications.
