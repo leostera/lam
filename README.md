@@ -7,11 +7,12 @@
 
 ## What is LAM?
 
-LAM is a **lightweight alternative to the BEAM** that runs as **Native and
-WebAssembly binaries**, both on WASI-enabled systems and browsers.
+LAM aims to be a **lightweight alternative to the BEAM** that runs as **Native
+and WebAssembly binaries**, both on WASI-enabled systems and browsers.
 
-It supports
+It will supports:
 
+* Immutable functional programming with proper tail calls
 * Concurrency via processes and message passing
 * Multi-core scheduling (except on the Web)
 
