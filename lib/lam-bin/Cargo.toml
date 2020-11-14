@@ -11,6 +11,7 @@ name = "lam"
 path = "src/main.rs"
 
 [dependencies]
+lam-beam = { path = "../lam-beam" }
 lam-emu = { path = "../lam-emu" }
 lam-compiler = { path = "../lam-compiler" }
 

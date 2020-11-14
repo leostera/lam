@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
 
-use lam_compiler::beam_reader;
+use lam_beam::beam_reader;
 use lam_compiler::target::Target;
 
 #[derive(StructOpt, Debug, Clone)]
@@ -97,7 +97,8 @@ impl DumpOpt {
         info!("Building project...");
 
         for file in self.files {
-            beam_reader::Reader::from_file(file).unwrap();
+            let beam = beam_reader::Reader::from_file(file).unwrap();
+            println!("{:#?}", beam);
         }
 
         info!("Done in {}ms", t0.elapsed().as_millis());
@@ -158,8 +159,14 @@ impl BuildOpt {
         let t0 = std::time::Instant::now();
         info!("Building project...");
 
-        // let bc = beam_reader::Reader::new().read_files(self.files);
-        let bc: lam_emu::program::Program = lam_emu::program::sample();
+        let mut beams = Vec::new();
+        for f in self.files {
+            beams.push(beam_reader::Reader::from_file(f).unwrap());
+        }
+
+        let bc: lam_emu::program::Program = lam_compiler::Translator::default()
+            .with_bytecode(beams)
+            .to_program();
 
         let target = Target::of_bytecode(bc).with_name(self.output);
 
