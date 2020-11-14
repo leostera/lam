@@ -164,11 +164,11 @@ impl BuildOpt {
             beams.push(beam_reader::Reader::from_file(f).unwrap());
         }
 
-        let bc: lam_emu::program::Program = lam_compiler::Translator::default()
-            .with_bytecode(beams)
-            .to_program();
+        let program: lam_emu::program::Program = lam_compiler::Translator::default()
+            .from_bytecode(beams)
+            .with_main("main".to_string(), "main".to_string());
 
-        let target = Target::of_bytecode(bc).with_name(self.output);
+        let target = Target::of_program(program).with_name(self.output);
 
         match self.target {
             BuildTarget::Native => target.to_native(),
