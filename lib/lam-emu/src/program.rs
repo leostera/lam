@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::bytecode::Instruction;
+use super::bytecode::*;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
@@ -11,6 +11,23 @@ pub struct MFA {
     pub module: String,
     pub function: String,
     pub arity: u8,
+}
+
+impl Into<MFA> for FnCall {
+    fn into(self) -> MFA {
+        match self {
+            FnCall::Qualified {
+                module,
+                function,
+                arity,
+            } => MFA {
+                module,
+                function,
+                arity,
+            },
+            _ => panic!("Can't turn local calls into MFAs"),
+        }
+    }
 }
 
 #[derive(Default, Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -49,7 +66,7 @@ impl Default for Program {
     fn default() -> Program {
         Program {
             main: MFA {
-                module: "hello_joe".to_string(),
+                module: "main".to_string(),
                 function: "main".to_string(),
                 arity: 0,
             },
@@ -75,13 +92,65 @@ impl Program {
         }
     }
 
-    pub fn instructions(&self) -> std::slice::Iter<Instruction> {
+    pub fn next(&self, instr_ptr: &mut InstructionPointer) {
+        let module = self.modules.get(&instr_ptr.current_module).unwrap();
+
+        let instructions = &module.labels[instr_ptr.current_label as usize].instructions;
+
+        // let last_label = module.labels.len();
+        let last_offset = instructions.len();
+
+        if (instr_ptr.current_instruction + 1) < last_offset {
+            instr_ptr.current_instruction += 1;
+            instr_ptr.instr = instructions[instr_ptr.current_instruction as usize].clone()
+        } else {
+            instr_ptr.instr = Instruction::Halt
+        }
+    }
+
+    pub fn jump(&self, instr_ptr: &mut InstructionPointer, call: &FnCall) {
+        let last_ptr = instr_ptr.clone();
+
+        let module_name = call.module().unwrap_or(last_ptr.current_module.clone());
+        let module = self
+            .modules
+            .get(&module_name)
+            .expect(&format!("Could not find module: {:?}", &module_name));
+        /* NOTE: labels are 1 indexed! */
+        let function_key = (call.function(), call.arity());
+        let first_label = module
+            .functions
+            .get(&function_key)
+            .expect(&format!("Could not find function : {:?}", &function_key))
+            - 1;
+        let first_instruction = module.labels[first_label as usize].instructions[0].clone();
+
+        *instr_ptr = InstructionPointer {
+            last_instr_ptr: Some(Box::new(last_ptr)),
+            current_module: module.name.clone(),
+            current_label: first_label,
+            current_instruction: 0,
+            instr: first_instruction,
+        }
+    }
+
+    pub fn first_instruction(&self) -> InstructionPointer {
         let module = self.modules.get(&self.main.module).unwrap();
+        /* NOTE: labels are 1 indexed! */
         let first_label = module
             .functions
             .get(&(self.main.function.clone(), self.main.arity))
-            .unwrap();
-        module.labels[*first_label as usize].instructions.iter()
+            .unwrap()
+            - 1;
+        let first_instruction = module.labels[first_label as usize].instructions[0].clone();
+
+        InstructionPointer {
+            last_instr_ptr: None,
+            current_module: module.name.clone(),
+            current_label: first_label,
+            current_instruction: 0,
+            instr: first_instruction,
+        }
     }
 
     pub fn serialize(&self) -> Result<Vec<u8>, Error> {
@@ -90,4 +159,14 @@ impl Program {
     pub fn deserialize(data: &[u8]) -> Result<Program, Error> {
         bincode::deserialize(data).context("Could not serialize program")
     }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
+pub struct InstructionPointer {
+    last_instr_ptr: Option<Box<InstructionPointer>>,
+    current_module: String,
+    current_label: u8,
+    current_instruction: usize,
+    pub instr: Instruction,
 }

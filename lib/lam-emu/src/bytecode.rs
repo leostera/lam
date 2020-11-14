@@ -43,6 +43,7 @@ pub enum Literal {
 pub enum Value {
     Register(Register),
     Literal(Literal),
+    Nil,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -64,7 +65,31 @@ pub enum FnCall {
         function: String,
         arity: u8,
     },
-    Native {},
+}
+
+impl FnCall {
+    pub fn arity(&self) -> u8 {
+        match self {
+            FnCall::Local { arity, .. } => arity,
+            FnCall::Qualified { arity, .. } => arity,
+        }
+        .clone()
+    }
+
+    pub fn module(&self) -> Option<String> {
+        match self {
+            FnCall::Local { .. } => None,
+            FnCall::Qualified { module, .. } => Some(module.to_string()),
+        }
+    }
+
+    pub fn function(&self) -> String {
+        match self {
+            FnCall::Local { function, .. } => function,
+            FnCall::Qualified { function, .. } => function,
+        }
+        .clone()
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
