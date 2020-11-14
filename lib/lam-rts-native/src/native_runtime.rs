@@ -1,5 +1,4 @@
-use lam_emu::program::{Value, MFA};
-use lam_emu::{Emulator, Runtime};
+use lam_emu::{Emulator, Runtime, MFA};
 
 #[derive(Default, Debug, Clone)]
 pub struct NativeRuntime {}
@@ -15,11 +14,10 @@ impl Runtime for NativeRuntime {
             ("io", "format") => {
                 let mut regs = vec![];
                 for i in 0..*arity {
-                    regs.push(emu.registers.get(&i).unwrap());
+                    regs.push(emu.registers[i as usize].clone());
                 }
                 match regs[1] {
-                    Value::Nil => println!("{:?}", regs[0]),
-                    _ => println!("templating not supported yet"),
+                    _ => println!("{:?}", regs[0]),
                 }
             }
             (_, _) => todo!(),
