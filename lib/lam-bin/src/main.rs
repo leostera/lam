@@ -1,5 +1,5 @@
 use fern::colors::{Color, ColoredLevelConfig};
-use log::info;
+use log::{debug, info};
 use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -128,7 +128,7 @@ struct BuildOpt {
         short = "t",
         long = "target",
         name = "TARGET",
-        help = "the target architecture to use: native or wasm",
+        help = "the target architecture to use: native | wasm | web",
         default_value = "native"
     )]
     target: BuildTarget,
@@ -159,14 +159,19 @@ impl BuildOpt {
         let t0 = std::time::Instant::now();
         info!("Building project...");
 
+        let t1 = std::time::Instant::now();
         let mut beams = Vec::new();
         for f in self.files {
             beams.push(beam_reader::Reader::from_file(f).unwrap());
         }
+        debug!("Read bytecode in {}ms", t1.elapsed().as_millis());
 
+        let t2 = std::time::Instant::now();
         let program: lam_emu::program::Program = lam_compiler::Translator::default()
             .from_bytecode(beams)
             .with_main("main".to_string(), "main".to_string());
+
+        debug!("Built program in {}ms", t2.elapsed().as_millis());
 
         let target = Target::of_program(program).with_name(self.output);
 
