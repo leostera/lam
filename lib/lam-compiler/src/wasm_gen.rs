@@ -11,7 +11,7 @@ const RUNTIME: &[u8] = include_bytes!("../../../target/wasm32-wasi/release/lam_r
 impl Target {
     pub fn to_wasm(&self) -> Result<(), Error> {
         /* Prepare the bytecode */
-        let data = self.bytecode().serialize()?;
+        let data = self.program().serialize()?;
 
         /* Create runtime module */
         let mut module = walrus::Module::from_buffer(RUNTIME)?;

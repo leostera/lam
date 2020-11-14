@@ -15,7 +15,7 @@ const RUNTIME: &[u8] =
 impl Target {
     pub fn to_web(&self) -> Result<(), Error> {
         /* Prepare the bytecode */
-        let data = self.bytecode().serialize()?;
+        let data = self.program().serialize()?;
 
         /* Create runtime module */
         let mut module = walrus::Module::from_buffer(RUNTIME)?;

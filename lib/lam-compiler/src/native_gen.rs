@@ -14,7 +14,7 @@ impl Target {
     pub fn to_native(&self) -> Result<(), Error> {
         debug!("Templating .c file...");
 
-        let data = self.bytecode().serialize()?;
+        let data = self.program().serialize()?;
         let bc_str = format!("{:?}", data);
 
         let runtime_object = std::path::PathBuf::from(&"./liblamrts.a");
