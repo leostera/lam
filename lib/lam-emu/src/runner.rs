@@ -1,3 +1,4 @@
+use super::bytecode::Instruction;
 use super::emulator::Emulator;
 use super::program::Program;
 use super::runtime::Runtime;
@@ -28,5 +29,6 @@ impl Runner {
             self.emulator.execute(instr, &mut self.runtime);
             debug!("{:#?}", self.emulator.registers);
         }
+        self.emulator.execute(&Instruction::Halt, &mut self.runtime);
     }
 }
