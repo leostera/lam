@@ -11,6 +11,7 @@ path = "src/lib.rs"
 crate-type = ["lib"]
 
 [dependencies]
+lam-beam = { path = "../lam-beam" }
 lam-emu = { path = "../lam-emu" }
 lam-rts-native = { path = "../lam-rts-native" }
 lam-rts-wasm = { path = "../lam-rts-wasm" }
