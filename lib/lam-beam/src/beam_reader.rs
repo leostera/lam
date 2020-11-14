@@ -98,7 +98,7 @@ pub enum Chunk {
     LitT(ChunkData<LiteralTable>),
 
     #[br(magic = b"LocT")]
-    LocT(ChunkData<LocationTable>),
+    LocT(ChunkData<LocalFunctionTable>),
 
     #[br(magic = b"StrT")]
     StrT(ChunkData<StringTable>),
@@ -123,9 +123,9 @@ pub struct CodeTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     max_opcode: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    label_count: u32,
+    some_strange_count: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    fun_count: u32,
+    pub label_count: u32,
     #[br(
         count = size - 4*4,
         parse_with = CodeTable::parse_into_terms,
@@ -175,7 +175,7 @@ pub struct FunTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    data: Vec<Function>,
+    functions: Vec<Function>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
@@ -196,15 +196,15 @@ pub struct Function {
 
 #[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
-pub struct LocationTable {
+pub struct LocalFunctionTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    data: Vec<Location>,
+    data: Vec<LocationFunction>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
-pub struct Location {
+pub struct LocationFunction {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     fun_atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -244,7 +244,7 @@ pub struct LiteralTable {
         parse_with = LiteralTable::deflate_and_parse,
         args(size - 4, uncompressed_size)
     )]
-    data: Vec<eetf::Term>,
+    pub literals: Vec<eetf::Term>,
 }
 
 impl LiteralTable {
@@ -269,7 +269,7 @@ impl LiteralTable {
         let data: Vec<u8> = inflated[8..].to_vec();
         let mut cursor = Cursor::new(&data);
 
-        for _ in 0..count - 1 {
+        for _ in 0..count {
             let term = eetf::Term::decode(&mut cursor).unwrap();
             literals.push(term);
             cursor.set_position(cursor.position() + 4);
@@ -299,17 +299,17 @@ pub struct ImportTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    data: Vec<Import>,
+    pub imports: Vec<Import>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
 pub struct Import {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    module_atom_index: u32,
+    pub module_atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    fun_atom_index: u32,
+    pub fun_atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    arity: u32,
+    pub arity: u32,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
@@ -332,17 +332,17 @@ pub struct ExportTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    data: Vec<Export>,
+    pub exports: Vec<Export>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
 pub struct Export {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    atom_index: u32,
+    pub atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    arity: u32,
+    pub arity: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    label: u32,
+    pub label: u32,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
