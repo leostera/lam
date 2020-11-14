@@ -9,6 +9,13 @@ pub struct Pid {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
+pub struct Tuple {
+    size: u8,
+    elements: Vec<Literal>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
 pub enum List {
     Nil,
     Cons(Box<Literal>, Box<List>),
@@ -22,12 +29,13 @@ pub enum Literal {
     Atom(String),
     Binary(String),
     Bool(bool),
+    Character(u8),
     Float(f64),
     Integer(BigInt),
     List(List),
     Map(Map),
     Pid(Pid),
-    Tuple(Vec<Literal>),
+    Tuple(Tuple),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -46,7 +54,7 @@ pub enum Register {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
-pub enum Call {
+pub enum FnCall {
     Local {
         function: String,
         arity: u8,
@@ -110,8 +118,8 @@ pub enum Instruction {
     ///
 
     /** Perform a function call with or without allocating a new stack frame.  */
-    Call(Call),
-    TailCall(Call),
+    Call(FnCall),
+    TailCall(FnCall),
 
     /** Creates a new process and puts the Pid on the X(0) register */
     Spawn,
