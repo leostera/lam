@@ -132,6 +132,15 @@ struct BuildOpt {
         default_value = "native"
     )]
     target: BuildTarget,
+
+    #[structopt(
+        short = "e",
+        long = "entrypoint",
+        name = "ENTRYPOINT",
+        help = "the module where to look for the main function",
+        default_value = "main"
+    )]
+    entrypoint: String,
 }
 
 #[derive(StructOpt, Debug, Clone)]
@@ -169,7 +178,7 @@ impl BuildOpt {
         let t2 = std::time::Instant::now();
         let program: lam_emu::program::Program = lam_compiler::Translator::default()
             .from_bytecode(beams)
-            .with_main("main".to_string(), "main".to_string());
+            .with_main(self.entrypoint, "main".to_string());
 
         debug!("Built program in {}ms", t2.elapsed().as_millis());
 
