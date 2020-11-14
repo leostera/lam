@@ -5,9 +5,14 @@ of LAM.
 
 #### Milestones
 
-* 2020 Q4 - Milestone 1: BEAM Binaries :hammer:
+* 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
+* 2020 Q4 - Milestone 2: Single Process Programs :hammer:
+* Milestone 3: Multi-Process Programs :crystall_ball:
+* Milestone 4: Multi-core Processing :crystall_ball:
+* Milestone 5: Native Extensions :crystall_ball:
+* Milestone 6: WebIDL API :web:
 
-## 2020 Q4 - Milestone 1: BEAM Binaries :hammer:
+## 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_markhammer:
 
 The initial goal here is to package a bunch of .beam files into a single
 relocatable binary for a specific architecture (eg, only
@@ -36,14 +41,50 @@ $ parcel serve index.html
 > Hello, Joe!
 ```
 
-## Enough Bytecode support to build small CLI tools
+## 2020 Q4 - Milestone 2: Single Process Programs :hammer:
 
-## Enough NIFs to build small CLI tools
+For this milestone, I'd like to be able to run arbitrary Erlang programs. So we
+should support a larger surface area of the BEAM bytecode including:
 
+- [ ] y register and heap allocations
+- [ ] all value creation
+- [ ] all calls ops
+- [ ] all tests
 
-## Future Work :crystall_ball:
+The goal here is to support all of OTPs non-process based modules, with the
+exception of those that have some low-level FFI needs (such as `io.erl`).
 
-- [ ] Processes + GC
-- [ ] Message passing
-- [ ] FFI
-- [ ] Multi-Core Scheduling 
+## Milestone 3: Multi-Process Programs :crystall_ball:
+
+Implement the rest of the bytecode for message passing including:
+
+* spawn, kill, monitor, link
+* send, receive, select_receive, remove_message, wait
+
+At this point I'd expect us to support the core OTP modules: `supervisor` and
+`gen_server`.
+
+## Milestone 4: Multi-core Processing :crystall_ball:
+
+Implement symmetric multi-processing to spread the work across several cores.
+
+## Milestone 5: Native Extensions :crystall_ball:
+
+To support building useful native and web applications, we need to figure out
+how to allow people to link custom code that interfaces with the runtime, and
+expose it in a transparent way.
+
+For example, natively, we may want to open a socket to make an HTTP request. On
+a browser, we may want DOM manipulation. On other runtimes (like wasi), we may
+want other things to be available.
+
+But regardless of the runtime, the calls should look completely transparent.
+Calling `json:parse(String).` should be the exact same for a consumer. Whether
+the implementation is fulfilled by bytecode running on LAM, or by native
+platform code, should be irrelevant.
+
+## Milestone 6: WebIDL API :web:
+
+To make it more useful to build web things, we should generate the bytecode
+necessary to interface with the web platform from the WebIDL description. This
+is how the `web-sys` crate currently does it.
