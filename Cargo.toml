@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "lib/lam-beam",
   "lib/lam-bin",
   "lib/lam-compiler",
   "lib/lam-emu",
