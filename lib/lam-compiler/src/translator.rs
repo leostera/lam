@@ -71,7 +71,6 @@ impl ModuleTranslator {
 
         /* We'll go over every instruction, batching them by the current label id */
         for (opcode, _arity, args) in self.beam_code_table.instructions() {
-            println!("\n{:?} {:?}", opcode, args);
             match opcode {
                 /* This OpCode defines the _beginning_ of a function section.
                  *
@@ -91,7 +90,6 @@ impl ModuleTranslator {
                         &self.beam_literal_table,
                         &self.beam_import_table,
                     ) {
-                        println!("=> {:?}", lam_instr);
                         module.labels[(current_label - 1) as usize]
                             .instructions
                             .push(lam_instr);
