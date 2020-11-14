@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use super::byteops::OpCode;
 use super::compact_term_reader::CompactTerm;
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(big, magic = b"FOR1")]
 pub struct BEAM {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -21,6 +21,10 @@ pub struct BEAM {
 impl BEAM {
     pub fn size(&self) -> u32 {
         self.size
+    }
+
+    pub fn chunks(&self) -> std::slice::Iter<'_, Chunk> {
+        self.chunks.iter()
     }
 
     fn parse_chunks<R: Read + Seek>(
@@ -39,12 +43,12 @@ impl BEAM {
     }
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 pub struct ChunkData<T: BinRead<Args = (u32,)>> {
     #[br(map = |val: [u8;4]| std::cmp::max(0, i32::from_be_bytes(val)) as u32)]
     size: u32,
     #[br(count = size, args(size))]
-    data: T,
+    pub data: T,
     #[br(
         count = 4 * ( (size +4 -1) / 4) - size,
         map = |val: Vec<u8>| val.len() as u32
@@ -100,16 +104,18 @@ pub enum Chunk {
     StrT(ChunkData<StringTable>),
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct AtomTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    atoms: Vec<Atom>,
+    pub atoms: Vec<Atom>,
 }
 
-#[derive(Debug, Clone, BinRead)]
+pub type Instruction = (OpCode, u8, std::vec::Vec<CompactTerm>);
+
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct CodeTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -125,15 +131,19 @@ pub struct CodeTable {
         parse_with = CodeTable::parse_into_terms,
         args(size - 4*4)
     )]
-    data: Vec<(OpCode, u8, std::vec::Vec<CompactTerm>)>,
+    instructions: Vec<Instruction>,
 }
 
 impl CodeTable {
+    pub fn instructions(&self) -> std::slice::Iter<'_, Instruction> {
+        self.instructions.iter()
+    }
+
     fn parse_into_terms<R: Read + Seek>(
         reader: &mut R,
         _ro: &binread::ReadOptions,
         args: (u32,),
-    ) -> binread::BinResult<Vec<(OpCode, u8, std::vec::Vec<CompactTerm>)>> {
+    ) -> binread::BinResult<Vec<Instruction>> {
         let (size,) = args;
 
         let mut buf = vec![0; size as usize];
@@ -159,7 +169,7 @@ impl CodeTable {
     }
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct FunTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -168,7 +178,7 @@ pub struct FunTable {
     data: Vec<Function>,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 pub struct Function {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     atom_index: u32,
@@ -184,7 +194,7 @@ pub struct Function {
     ouniq: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct LocationTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -193,7 +203,7 @@ pub struct LocationTable {
     data: Vec<Location>,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 pub struct Location {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     fun_atom_index: u32,
@@ -203,28 +213,28 @@ pub struct Location {
     label: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct DbgiTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct CInfTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct DocsTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct LiteralTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -269,21 +279,21 @@ impl LiteralTable {
     }
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct StringTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct LineTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct ImportTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -292,7 +302,7 @@ pub struct ImportTable {
     data: Vec<Import>,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 pub struct Import {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     module_atom_index: u32,
@@ -302,21 +312,21 @@ pub struct Import {
     arity: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct AbstTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct AttributeTable {
     #[br(count = size, map = |v: Vec<u8>| v.len() as u32)]
     data: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
 pub struct ExportTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
@@ -325,7 +335,7 @@ pub struct ExportTable {
     data: Vec<Export>,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 pub struct Export {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     atom_index: u32,
@@ -335,12 +345,12 @@ pub struct Export {
     label: u32,
 }
 
-#[derive(Debug, Clone, BinRead)]
+#[derive(Default, Debug, Clone, BinRead)]
 #[br(assert(size > 0))]
 pub struct Atom {
     size: u8,
     #[br(count = size, map = |val: Vec<u8>|  std::str::from_utf8(&val.as_slice()).unwrap().to_string())]
-    name: String,
+    pub name: String,
 }
 
 #[derive(Default)]

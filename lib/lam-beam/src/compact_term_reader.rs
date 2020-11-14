@@ -208,3 +208,15 @@ impl<R: io::Read> Decoder<R> {
         Ok(tagged_value.into())
     }
 }
+
+impl Into<u8> for CompactTerm {
+    fn into(self) -> u8 {
+        0
+    }
+}
+
+impl Into<(u8, u8, u8)> for CompactTerm {
+    fn into(self) -> (u8, u8, u8) {
+        (0, 0, 0)
+    }
+}
