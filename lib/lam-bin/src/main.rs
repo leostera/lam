@@ -1,4 +1,3 @@
-use fern::colors::{Color, ColoredLevelConfig};
 use log::{debug, info};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -28,40 +27,8 @@ struct LAM {
 
 impl LAM {
     fn run(self) {
-        self.setup_logging();
+        env_logger::init();
         self.cmd.run();
-    }
-
-    fn setup_logging(&self) {
-        let colors_line = ColoredLevelConfig::new()
-            .error(Color::Red)
-            .warn(Color::Yellow)
-            .info(Color::White)
-            .debug(Color::White)
-            .trace(Color::BrightBlack);
-        let colors_level = colors_line.clone().info(Color::Green);
-        fern::Dispatch::new()
-            .format(move |out, message, record| {
-                out.finish(format_args!(
-                    "{color_line}{date} {level}{color_line} :: {message}\x1B[0m",
-                    color_line = format_args!(
-                        "\x1B[{}m",
-                        colors_line.get_color(&record.level()).to_fg_str()
-                    ),
-                    date = chrono::Local::now().format("%H:%M:%S"),
-                    level = colors_level.color(record.level()),
-                    message = message,
-                ));
-            })
-            .level(if self.verbose {
-                log::LevelFilter::Debug
-            } else {
-                log::LevelFilter::Info
-            })
-            .level_for("pretty_colored", log::LevelFilter::Trace)
-            .chain(std::io::stdout())
-            .apply()
-            .unwrap();
     }
 }
 
@@ -96,10 +63,20 @@ impl DumpOpt {
         let t0 = std::time::Instant::now();
         info!("Building project...");
 
-        for file in self.files {
-            let beam = beam_reader::Reader::from_file(file).unwrap();
-            println!("{:#?}", beam);
+        let t1 = std::time::Instant::now();
+        let mut beams = Vec::new();
+        for f in self.files {
+            beams.push(beam_reader::Reader::from_file(f).unwrap());
         }
+        debug!("Read bytecode in {}ms", t1.elapsed().as_millis());
+
+        let t2 = std::time::Instant::now();
+        let program: lam_emu::program::Program =
+            lam_compiler::Translator::default().from_bytecode(beams);
+
+        debug!("Built program in {}ms", t2.elapsed().as_millis());
+
+        println!("{:#?}", program);
 
         info!("Done in {}ms", t0.elapsed().as_millis());
     }

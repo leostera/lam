@@ -17,6 +17,6 @@ lam-compiler = { path = "../lam-compiler" }
 
 anyhow = "1.0"
 chrono = "0.4"
-fern = { version = "0.6", features = [ "colored" ] }
 log = "0.4"
+env_logger="0.8"
 structopt = "0.3"
