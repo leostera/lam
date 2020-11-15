@@ -136,7 +136,7 @@ impl ModuleTranslator {
             //
             //  Working with the Heap
             //
-            OpCode::TestHeap => Some(Instruction::Allocate {
+            OpCode::TestHeap | OpCode::Allocate => Some(Instruction::Allocate {
                 words: args[0].clone().into(),
                 keep_registers: args[1].clone().into(),
             }),
@@ -151,10 +151,24 @@ impl ModuleTranslator {
             //
             //  Function Calls
             //
-            OpCode::CallOnly => {
+            OpCode::CallOnly | OpCode::CallLast => {
                 let label = args[1].clone().into();
                 Some(Instruction::Jump(label))
             }
+
+            OpCode::CallExt => {
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[1].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                Some(Instruction::Call(FnCall::Qualified {
+                    module,
+                    function,
+                    arity,
+                }))
+            }
+
             OpCode::CallExtOnly => {
                 let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
                     args[1].clone().into(),
@@ -214,6 +228,26 @@ impl ModuleTranslator {
                 Some(Instruction::Test(label, Test::IsGreaterOrEqualThan(a, b)))
             }
 
+            OpCode::IsNil => {
+                let label = args[0].clone().into();
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::Test(label, Test::IsNil(a)))
+            }
+
+            OpCode::IsNonemptyList => {
+                let label = args[0].clone().into();
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::Test(label, Test::IsNonEmptyList(a)))
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Creating Values
@@ -234,6 +268,14 @@ impl ModuleTranslator {
                     Value::Literal(Literal::List(List::Cons(Box::new(head), Box::new(tail))));
                 let register = ModuleTranslator::mk_reg(args[2].clone());
                 Some(Instruction::PutValue { register, value })
+            }
+
+            OpCode::GetList => {
+                // {get_list,{x,0},{x,1},{x,2}}.
+                let list = ModuleTranslator::mk_reg(args[0].clone());
+                let head = ModuleTranslator::mk_reg(args[1].clone());
+                let tail = ModuleTranslator::mk_reg(args[2].clone());
+                Some(Instruction::SplitList { list, head, tail })
             }
 
             ///////////////////////////////////////////////////////////////////
