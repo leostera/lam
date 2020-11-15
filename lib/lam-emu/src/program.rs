@@ -10,7 +10,7 @@ use super::bytecode::*;
 pub struct MFA {
     pub module: String,
     pub function: String,
-    pub arity: u8,
+    pub arity: u32,
 }
 
 impl Into<MFA> for FnCall {
@@ -33,15 +33,24 @@ impl Into<MFA> for FnCall {
 #[derive(Default, Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub struct FunctionLabel {
-    pub id: u8,
+    pub id: Label,
     pub instructions: Vec<Instruction>,
+}
+
+impl FunctionLabel {
+    pub fn new(id: Label) -> FunctionLabel {
+        FunctionLabel {
+            id,
+            ..FunctionLabel::default()
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub struct Module {
     pub name: String,
-    pub functions: HashMap<(String, u8), u8>,
+    pub functions: HashMap<(String, Arity), Label>,
     pub labels: Vec<FunctionLabel>,
 }
 
@@ -95,14 +104,18 @@ impl Program {
     pub fn next(&self, instr_ptr: &mut InstructionPointer) {
         let module = self.modules.get(&instr_ptr.current_module).unwrap();
 
-        let instructions = &module.labels[instr_ptr.current_label as usize].instructions;
+        let label = (instr_ptr.current_label - 1) as usize;
+        let instructions = &module.labels[label].instructions;
 
         // let last_label = module.labels.len();
         let last_offset = instructions.len();
 
-        if (instr_ptr.current_instruction + 1) < last_offset {
+        let next_instr = instr_ptr.current_instruction + 1;
+        if next_instr < last_offset {
             instr_ptr.current_instruction += 1;
             instr_ptr.instr = instructions[instr_ptr.current_instruction as usize].clone()
+        } else if let Some(last_ptr) = &instr_ptr.last_instr_ptr {
+            *instr_ptr = (**last_ptr).clone()
         } else {
             instr_ptr.instr = Instruction::Halt
         }
@@ -123,33 +136,56 @@ impl Program {
         let first_label = module
             .functions
             .get(&function_key)
-            .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key))
-            - 1;
-        let first_instruction = module.labels[first_label as usize].instructions[0].clone();
+            .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key));
+        let first_instruction = module.labels[(first_label - 1) as usize].instructions[0].clone();
 
         *instr_ptr = InstructionPointer {
             last_instr_ptr: Some(Box::new(last_ptr)),
             current_module: module.name.clone(),
-            current_label: first_label,
+            current_label: *first_label,
             current_instruction: 0,
             instr: first_instruction,
         }
     }
 
+    pub fn jump_to_label(&self, instr_ptr: &mut InstructionPointer, label: &Label) {
+        let last_ptr = instr_ptr.clone();
+
+        let module_name = last_ptr.current_module.clone();
+        let module = self
+            .modules
+            .get(&module_name)
+            .unwrap_or_else(|| panic!("Could not find module: {:?}", &module_name));
+        let first_instruction = module.labels[(label - 1) as usize].instructions[0].clone();
+
+        *instr_ptr = InstructionPointer {
+            current_module: last_ptr.current_module.clone(),
+            current_label: *label,
+            current_instruction: 0,
+            instr: first_instruction,
+            last_instr_ptr: None,
+        }
+    }
+
+    pub fn return_to_last_instr(&self, instr_ptr: &mut InstructionPointer) {
+        let last_ptr = instr_ptr.last_instr_ptr.clone().unwrap();
+        *instr_ptr = *last_ptr;
+    }
+
     pub fn first_instruction(&self) -> InstructionPointer {
         let module = self.modules.get(&self.main.module).unwrap();
         /* NOTE: labels are 1 indexed! */
+        let function_key = (self.main.function.clone(), self.main.arity);
         let first_label = module
             .functions
-            .get(&(self.main.function.clone(), self.main.arity))
-            .unwrap()
-            - 1;
-        let first_instruction = module.labels[first_label as usize].instructions[0].clone();
+            .get(&function_key)
+            .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key));
+        let first_instruction = module.labels[(first_label - 1) as usize].instructions[0].clone();
 
         InstructionPointer {
             last_instr_ptr: None,
             current_module: module.name.clone(),
-            current_label: first_label,
+            current_label: *first_label,
             current_instruction: 0,
             instr: first_instruction,
         }
@@ -168,7 +204,7 @@ impl Program {
 pub struct InstructionPointer {
     last_instr_ptr: Option<Box<InstructionPointer>>,
     current_module: String,
-    current_label: u8,
+    current_label: Label,
     current_instruction: usize,
     pub instr: Instruction,
 }

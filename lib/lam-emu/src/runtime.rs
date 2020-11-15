@@ -5,5 +5,5 @@ use super::program::*;
  *  side-effects and other functions implemented by the host.
  */
 pub trait Runtime {
-    fn execute(&mut self, call: &MFA, args: &[Value]) -> Value;
+    fn execute(&mut self, call: &MFA, args: &[Literal]) -> Literal;
 }
