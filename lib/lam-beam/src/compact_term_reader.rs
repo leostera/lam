@@ -167,20 +167,21 @@ impl<R: io::Read> Decoder<R> {
                     let next_byte = self.reader.read_u8()?;
                     let is_small_value = 0 == (next_byte & 0b0000_1000);
                     let is_large_value = 0 == (next_byte & 0b0001_0000);
-                    let short_value = next_byte >> 4;
                     byte_count += if is_small_value {
-                        short_value as u32
+                        (next_byte >> 4) as u32
                     } else if is_large_value {
-                        ((short_value << 3) | (self.reader.read_u8()?)) as u32
+                        let shift_value = ((byte as u32) & 0b1110_0000) << 3;
+                        let next_byte = self.reader.read_u8()? as u32;
+                        shift_value | next_byte
                     } else {
                         panic!("We were expecting a small or small-extended value!");
                     }
                 }
 
                 /* read all the extra bytes */
-                let mut buf: Vec<u8> = Vec::with_capacity(byte_count as usize);
-                self.reader.read_exact(&mut buf)?;
-
+                let mut buf: Vec<u8> = vec![0; byte_count as usize];
+                trace!("Reading {:?} bytes into: {:?}", byte_count, buf);
+                self.reader.read(&mut buf)?;
                 Value::Large(BigInt::from_signed_bytes_be(&buf))
             };
 
