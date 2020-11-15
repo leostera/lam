@@ -34,7 +34,7 @@
   {label,5}.
     {move,{integer,1},{x,1}}.
     {move,{integer,0},{x,2}}.
-    {move,{integer,200048},{x,0}}.
+    {move,{integer,1048},{x,0}}.
     {call_only,3,{f,2}}.
 
 

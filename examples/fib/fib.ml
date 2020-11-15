@@ -3,4 +3,4 @@ let rec fib n b a =
   | true -> Io.format "~p" [a]
   | false -> fib (n - 1) (a + b) b
 
-let main () = fib 2048 1 0
+let main () = fib 1048 1 0

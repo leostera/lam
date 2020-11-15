@@ -12,6 +12,6 @@ fib(N, B, A) ->
   end.
 
 -spec main() -> ok.
-main() -> fib(200048, 1, 0).
+main() -> fib(1048, 1, 0).
 
 

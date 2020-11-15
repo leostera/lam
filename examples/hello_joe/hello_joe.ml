@@ -1,3 +1,1 @@
-let main () =
-  let str = "Hello, Joe!" in
-  Io.format "~p" [str]
+let main () = Io.format "Hello, Joe!" []
