@@ -2,7 +2,7 @@
 -module(fib).
 
 -export([fib/3]).
--export([main/0]).
+-export([main/1]).
 
 -spec fib(integer(), integer(), integer()) -> ok.
 fib(N, B, A) ->
@@ -11,7 +11,7 @@ fib(N, B, A) ->
     false -> fib(erlang:'-'(N, 1), erlang:'+'(A, B), B)
   end.
 
--spec main() -> ok.
-main() -> fib(1048, 1, 0).
+-spec main(list(binary())) -> ok.
+main([Arg | []]) -> fib(erlang:list_to_integer(Arg), 1, 0).
 
 

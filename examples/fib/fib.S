@@ -1,6 +1,6 @@
 {module, fib}.  %% version = 0
 
-{exports, [{fib,3},{main,0},{module_info,0},{module_info,1}]}.
+{exports, [{fib,3},{main,1},{module_info,0},{module_info,1}]}.
 
 {attributes, []}.
 
@@ -27,15 +27,21 @@
     {call_only,3,{f,2}}.
 
 
-{function, main, 0, 5}.
+{function, main, 1, 5}.
   {label,4}.
     {line,[{location,"fib.erl",15}]}.
-    {func_info,{atom,fib},{atom,main},0}.
+    {func_info,{atom,fib},{atom,main},1}.
   {label,5}.
-    {move,{integer,1},{x,1}}.
+    {test,is_nonempty_list,{f,4},[{x,0}]}.
+    {get_list,{x,0},{x,1},{x,2}}.
+    {test,is_nil,{f,4},[{x,2}]}.
+    {allocate,0,2}.
+    {move,{x,1},{x,0}}.
+    {line,[{location,"fib.erl",15}]}.
+    {call_ext,1,{extfunc,erlang,list_to_integer,1}}.
     {move,{integer,0},{x,2}}.
-    {move,{integer,1048},{x,0}}.
-    {call_only,3,{f,2}}.
+    {move,{integer,1},{x,1}}.
+    {call_last,3,{f,2},0}.
 
 
 {function, module_info, 0, 7}.
