@@ -1,4 +1,5 @@
 use anyhow::{Context, Error};
+use log::trace;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::iter::FromIterator;
@@ -95,7 +96,7 @@ impl Program {
             main: MFA {
                 module,
                 function,
-                arity: 0,
+                arity: 1,
             },
             ..self
         }
@@ -149,6 +150,8 @@ impl Program {
     }
 
     pub fn jump_to_label(&self, instr_ptr: &mut InstructionPointer, label: &Label) {
+        trace!("Jumping to label: {:?}", label - 1);
+
         let last_ptr = instr_ptr.clone();
 
         let module_name = last_ptr.current_module.clone();
@@ -156,7 +159,10 @@ impl Program {
             .modules
             .get(&module_name)
             .unwrap_or_else(|| panic!("Could not find module: {:?}", &module_name));
+        trace!("Found module: {:?}", module_name);
+
         let first_instruction = module.labels[(label - 1) as usize].instructions[0].clone();
+        trace!("First instruction: {:?}", first_instruction);
 
         *instr_ptr = InstructionPointer {
             current_module: last_ptr.current_module.clone(),

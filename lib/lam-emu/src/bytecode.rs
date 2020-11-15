@@ -119,6 +119,8 @@ impl FnCall {
 #[repr(C)]
 pub enum Test {
     IsGreaterOrEqualThan(Value, Value),
+    IsNil(Value),
+    IsNonEmptyList(Value),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -197,6 +199,14 @@ pub enum Instruction {
     PutValue {
         register: Register,
         value: Value,
+    },
+
+    /** Deconstruct a list from [list] and place its head in register
+     *  [head] and its tail in register [tail] */
+    SplitList {
+        list: Register,
+        head: Register,
+        tail: Register,
     },
 
     ///////////////////////////////////////////////////////////////////////////

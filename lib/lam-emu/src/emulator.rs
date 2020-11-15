@@ -23,11 +23,25 @@ impl Emulator {
         }
     }
 
+    pub fn preload(&mut self, x: usize, v: Value) -> &mut Emulator {
+        self.registers[x] = v;
+        self
+    }
+
     pub fn run(&mut self) {
-        debug!("Program: {:#?}", &self.program);
-        debug!("==================================================");
+        debug!(
+            "Program: {:#?} \n==================================================",
+            &self.program
+        );
         let mut instr_ptr = self.program.first_instruction();
         loop {
+            trace!(
+                "Registers: \n    0 => {:?}\n    1 => {:?}\n    2 => {:?}",
+                self.registers[0],
+                self.registers[1],
+                self.registers[2]
+            );
+            trace!("Instr => {:?}", instr_ptr.instr);
             match instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
@@ -78,6 +92,17 @@ impl Emulator {
                     self.program.next(&mut instr_ptr);
                 }
 
+                Instruction::Call(call) => {
+                    let arity = call.arity() as usize;
+                    let args = self.fetch_values(&self.registers[0..arity]);
+                    let ret = self.runtime.execute(&call.into(), &args);
+                    for i in 0..arity {
+                        self.registers[i] = Value::Nil;
+                    }
+                    self.registers[0] = Value::Literal(ret);
+                    self.program.next(&mut instr_ptr);
+                }
+
                 Instruction::TailCall(call) => {
                     let arity = call.arity() as usize;
                     let args = self.fetch_values(&self.registers[0..arity]);
@@ -103,8 +128,10 @@ impl Emulator {
 
                 Instruction::Test(label, test) => {
                     if self.run_test(&test) {
+                        trace!("Test passed! continuing...");
                         self.program.next(&mut instr_ptr);
                     } else {
+                        trace!("Test failed! Jumping to: {:?}", label);
                         self.program.jump_to_label(&mut instr_ptr, &label);
                     }
                 }
@@ -121,20 +148,28 @@ impl Emulator {
                     self.program.next(&mut instr_ptr);
                 }
 
+                Instruction::SplitList {
+                    list: Register::X(rl),
+                    head: Register::X(rh),
+                    tail: Register::X(rt),
+                } => {
+                    let value = &self.registers[rl as usize];
+                    match self.fetch_value(&value) {
+                        Literal::List(List::Cons(boxed_head, boxed_tail)) => {
+                            self.registers[rh as usize] = *boxed_head.clone();
+                            self.registers[rt as usize] = *boxed_tail.clone();
+                        }
+                        _ => panic!("Attempted to split a value that is not a list: {:?}", value),
+                    };
+                    self.program.next(&mut instr_ptr);
+                }
+
                 ////////////////////////////////////////////////////////////////
                 //
                 // Function calls
                 //
                 _ => self.program.next(&mut instr_ptr),
             }
-
-            trace!("\nInstr => {:?}", instr_ptr.instr);
-            trace!(
-                "Registers: \n    0 => {:?}\n    1 => {:?}\n    2 => {:?}",
-                self.registers[0],
-                self.registers[1],
-                self.registers[2]
-            );
         }
     }
 
@@ -145,6 +180,21 @@ impl Emulator {
                 let b: BigInt = self.fetch_value(b).into();
                 a >= b
             }
+
+            Test::IsNil(a) => match self.fetch_value(a) {
+                Literal::List(List::Nil) => true,
+                Literal::List(_) => false,
+                _ => panic!("Can not check if non list value {:?} is an empty list", a),
+            },
+
+            Test::IsNonEmptyList(a) => match self.fetch_value(a) {
+                Literal::List(List::Cons(_, _)) => true,
+                Literal::List(List::Nil) => false,
+                _ => panic!(
+                    "Can not check if non list value {:?} is a non empty list",
+                    a
+                ),
+            },
         }
     }
 
@@ -153,10 +203,15 @@ impl Emulator {
     }
 
     pub fn fetch_value(&self, v: &Value) -> Literal {
+        trace!("fetching value: {:?}", v);
         match v {
             Value::Literal(Literal::List(ls)) => Literal::List(self.make_list_concrete(ls)),
             Value::Literal(l) => l.clone(),
-            Value::Register(Register::X(rx)) => self.fetch_value(&self.registers[*rx as usize]),
+            Value::Register(Register::X(rx)) => {
+                trace!("found register, fetching from: {:?}", *rx);
+                self.fetch_value(&self.registers[*rx as usize])
+            }
+            Value::Nil => Literal::List(List::Nil),
             _ => panic!("Could not fetch value: {:?}", v),
         }
     }
