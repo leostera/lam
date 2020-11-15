@@ -18,3 +18,4 @@ web-sys = { version = "0.3", features = [
   'Window',
   'console'
 ] }
+num-bigint = { version = "0.3", features = ["serde"] }
