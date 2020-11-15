@@ -1,11 +1,12 @@
+use anyhow::Error;
+use byteorder::ReadBytesExt;
 /**
  * This module is heavily inspired from @kvakvs/ErlangRT's compat_term.rs
  * and @sile/eetf's codec.rs
  *
  * Thanks to both of you for the inspiration and guidance :)
  */
-use anyhow::Error;
-use byteorder::ReadBytesExt;
+use log::trace;
 use num_bigint::BigInt;
 use std::io;
 
@@ -68,7 +69,7 @@ impl Into<ExtendedTag> for u8 {
 #[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum Value {
-    Small(u8),
+    Small(u32),
     Large(BigInt),
 }
 
@@ -102,13 +103,13 @@ impl Into<CompactTerm> for TagKind {
 #[repr(u8)]
 pub enum CompactTerm {
     Nil,
-    Literal(u8),
+    Literal(u32),
     Integer(Value),
-    Atom(u8),
-    RegisterX(u8),
-    RegisterY(u8),
-    Label(u8),
-    Character(u8),
+    Atom(u32),
+    RegisterX(u32),
+    RegisterY(u32),
+    Label(u32),
+    Character(u32),
     List,
     RegisterFloat,
     ListAllocation,
@@ -141,13 +142,12 @@ impl<R: io::Read> Decoder<R> {
             let is_small_value = 0 == (byte & 0b0000_1000);
             let is_large_value = 0 == (byte & 0b0001_0000);
 
-            /* the first 4 bits are the actual value for non-extended values */
-            let short_value = byte >> 4;
-
             let value = if is_small_value {
-                Value::Small(short_value)
+                Value::Small((byte >> 4).into())
             } else if is_large_value {
-                Value::Small((short_value << 3) | (self.reader.read_u8()?))
+                let shift_value = ((byte as u32) & 0b1110_0000) << 3;
+                let next_byte = self.reader.read_u8()? as u32;
+                Value::Small(shift_value | next_byte)
             } else {
                 /* here we'll read the amount of extra bytes to read first
                  * and then loop over until we're done reading that value.
@@ -193,9 +193,11 @@ impl<R: io::Read> Decoder<R> {
                     let is_large_value = 0 == (next_byte & 0b0001_0000);
                     let short_value = next_byte >> 4;
                     let value = if is_small_value {
-                        Value::Small(short_value)
+                        Value::Small(short_value.into())
                     } else if is_large_value {
-                        Value::Small((short_value << 3) | (self.reader.read_u8()?))
+                        let shift_value = (short_value as u32) << 3;
+                        let next_byte = self.reader.read_u8()? as u32;
+                        Value::Small(shift_value | next_byte)
                     } else {
                         panic!("We were expecting a small or small-extended value!");
                     };
@@ -205,12 +207,14 @@ impl<R: io::Read> Decoder<R> {
             }
         };
 
+        trace!("Read tagged value: {:?}", tagged_value);
+
         Ok(tagged_value.into())
     }
 }
 
-impl Into<u8> for CompactTerm {
-    fn into(self) -> u8 {
+impl Into<u32> for CompactTerm {
+    fn into(self) -> u32 {
         match self {
             CompactTerm::Literal(x) => x,
             CompactTerm::Atom(x) => x,
@@ -220,6 +224,22 @@ impl Into<u8> for CompactTerm {
             CompactTerm::Character(x) => x,
             CompactTerm::Integer(Value::Small(x)) => x,
             CompactTerm::ExtendedLiteral(Value::Small(x)) => x,
+            _ => panic!("Cannot convert CompactTerm {:?} into u32 value", self),
+        }
+    }
+}
+
+impl Into<u8> for CompactTerm {
+    fn into(self) -> u8 {
+        match self {
+            CompactTerm::Literal(x) => x as u8,
+            CompactTerm::Atom(x) => x as u8,
+            CompactTerm::RegisterX(x) => x as u8,
+            CompactTerm::RegisterY(x) => x as u8,
+            CompactTerm::Label(x) => x as u8,
+            CompactTerm::Character(x) => x as u8,
+            CompactTerm::Integer(Value::Small(x)) => x as u8,
+            CompactTerm::ExtendedLiteral(Value::Small(x)) => x as u8,
             _ => panic!("Cannot convert CompactTerm {:?} into u8 value", self),
         }
     }
