@@ -4,7 +4,8 @@ use lam_beam::{
     OpCode, BEAM,
 };
 use lam_emu::{
-    FnCall, FunctionLabel, Instruction, List, Literal, Module, Program, Register, Value,
+    FnCall, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register, Test,
+    Value,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -50,11 +51,11 @@ impl ModuleTranslator {
         let mut module = Module::default();
         module.name = self.beam_atom_table.atoms[0].name.clone();
 
-        for _ in 1..=(self.beam_code_table.label_count as u8) {
-            module.labels.push(FunctionLabel::default());
+        for i in 1..=self.beam_code_table.label_count {
+            module.labels.push(FunctionLabel::new(i));
         }
 
-        let mut current_label: u8 = 0;
+        let mut current_label: Label = 0;
 
         /* NOTE(@ostera): the atom table really begins at 1 instead of 0, but
          * when we read it, we index it from 0, so all atom indices are off by 1 */
@@ -62,8 +63,8 @@ impl ModuleTranslator {
             let atom_idx = export.atom_index - 1;
 
             let fn_name = &self.beam_atom_table.atoms[atom_idx as usize].name;
-            let fn_arity = export.arity as u8;
-            let fn_first_label = export.label as u8;
+            let fn_arity = export.arity;
+            let fn_first_label = export.label;
 
             let key = (fn_name.to_string(), fn_arity);
             module.functions.insert(key, fn_first_label);
@@ -111,6 +112,10 @@ impl ModuleTranslator {
     ) -> Option<Instruction> {
         /* using the args, look up the right values in the right tables */
         match opcode {
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Register Machine instructions
+            //
             OpCode::Move => {
                 let from = ModuleTranslator::mk_value_of_compact_term(
                     args[0].clone(),
@@ -120,24 +125,121 @@ impl ModuleTranslator {
                 let to = ModuleTranslator::mk_reg(args[1].clone());
                 Some(Instruction::Move(from, to))
             }
+
+            OpCode::Swap => {
+                let a = ModuleTranslator::mk_reg(args[0].clone());
+                let b = ModuleTranslator::mk_reg(args[1].clone());
+                Some(Instruction::Swap(a, b))
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Working with the Heap
+            //
+            OpCode::TestHeap => Some(Instruction::Allocate {
+                words: args[0].clone().into(),
+                keep_registers: args[1].clone().into(),
+            }),
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Control-Flow
+            //
+            OpCode::Return => Some(Instruction::Return),
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Function Calls
+            //
+            OpCode::CallOnly => {
+                let label = args[1].clone().into();
+                Some(Instruction::Jump(label))
+            }
             OpCode::CallExtOnly => {
-                let import_idx: u8 = args[1].clone().into();
-                let import = &import_table.imports[import_idx as usize];
-
-                let module = atom_table.atoms[(import.module_atom_index - 1) as usize]
-                    .name
-                    .to_string();
-                let function = atom_table.atoms[(import.fun_atom_index - 1) as usize]
-                    .name
-                    .to_string();
-                let arity = import.arity as u8;
-
-                Some(Instruction::Call(FnCall::Qualified {
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[1].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                Some(Instruction::TailCall(FnCall::Qualified {
                     module,
                     function,
                     arity,
                 }))
             }
+
+            OpCode::GcBif2 => {
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[2].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[3].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[4].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let dest = ModuleTranslator::mk_reg(args[5].clone());
+                let bif = FnCall::BuiltIn {
+                    module,
+                    function,
+                    arity,
+                    arguments: vec![a, b],
+                    destination: dest,
+                };
+                Some(Instruction::Call(bif))
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Tests
+            //
+            OpCode::IsGe => {
+                let label = args[0].clone().into();
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::Test(label, Test::IsGreaterOrEqualThan(a, b)))
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Creating Values
+            //
+            OpCode::PutList => {
+                // {put_list,{x,2},nil,{x,1}}.
+                let head = ModuleTranslator::mk_value_of_compact_term(
+                    args[0].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let tail = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let value =
+                    Value::Literal(Literal::List(List::Cons(Box::new(head), Box::new(tail))));
+                let register = ModuleTranslator::mk_reg(args[2].clone());
+                Some(Instruction::PutValue { register, value })
+            }
+
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Other!
+            //
             _ => None,
         }
     }
@@ -152,12 +254,12 @@ impl ModuleTranslator {
             CompactTerm::RegisterY(y) => Value::Register(Register::Y(y)),
             CompactTerm::Nil => Value::Literal(Literal::List(List::Nil)),
             CompactTerm::Integer(v) => ModuleTranslator::mk_int(v),
-            CompactTerm::Character(c) => Value::Literal(Literal::Character(c)),
+            CompactTerm::Character(c) => Value::Literal(Literal::Character(c as u8)),
             CompactTerm::Atom(idx) => Value::Literal(Literal::Atom(
                 atom_table.atoms[(idx - 1) as usize].name.to_string(),
             )),
-            CompactTerm::Literal(idx)
-            | CompactTerm::ExtendedLiteral(lam_beam::Value::Small(idx)) => {
+            CompactTerm::Literal(y) => Value::Literal(Literal::Integer(y.into())),
+            CompactTerm::ExtendedLiteral(lam_beam::Value::Small(idx)) => {
                 Value::Literal(ModuleTranslator::mk_literal_of_external_term(
                     &literal_table.literals[idx as usize],
                 ))
@@ -173,13 +275,14 @@ impl ModuleTranslator {
     pub fn mk_literal_of_external_term(x: &ExternalTerm) -> Literal {
         match x {
             ExternalTerm::List(external_term::List { elements }) => {
-                let value = elements.iter().fold(List::Nil, |acc, el| {
-                    List::Cons(
-                        Box::new(ModuleTranslator::mk_literal_of_external_term(el)),
-                        Box::new(acc),
-                    )
-                });
-                Literal::List(value)
+                elements.iter().fold(Literal::List(List::Nil), |acc, el| {
+                    Literal::List(List::Cons(
+                        Box::new(Value::Literal(
+                            ModuleTranslator::mk_literal_of_external_term(el),
+                        )),
+                        Box::new(Value::Literal(acc)),
+                    ))
+                })
             }
             ExternalTerm::Atom(atom) => Literal::Atom(atom.to_string()),
             ExternalTerm::Binary(bin) => Literal::Binary(
@@ -206,6 +309,24 @@ impl ModuleTranslator {
             CompactTerm::RegisterY(y) => Register::Y(y),
             _ => panic!("Tried to turn {:?} into a register", x),
         }
+    }
+
+    pub fn mk_mfa_from_imports(
+        import_idx: u32,
+        import_table: &ImportTable,
+        atom_table: &AtomTable,
+    ) -> (String, String, u32) {
+        let import = &import_table.imports[import_idx as usize];
+
+        let module = atom_table.atoms[(import.module_atom_index - 1) as usize]
+            .name
+            .to_string();
+        let function = atom_table.atoms[(import.fun_atom_index - 1) as usize]
+            .name
+            .to_string();
+        let arity = import.arity;
+
+        (module, function, arity)
     }
 }
 

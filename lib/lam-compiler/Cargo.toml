@@ -20,7 +20,6 @@ lam-rts-web = { path = "../lam-rts-web" }
 anyhow = "1.0"
 binread = "1.4"
 chrono = "0.4"
-fern = { version = "0.6", features = [ "colored" ] }
 log = "0.4"
 walrus = "0.18"
 serde = { version = "1.0", features = ["derive"] }
