@@ -1,5 +1,6 @@
 use lam_emu::{List, Literal, Runtime, Value, MFA};
 use num_bigint::BigInt;
+use std::str::FromStr;
 
 #[derive(Default, Debug, Clone)]
 pub struct NativeRuntime {}
@@ -32,6 +33,10 @@ impl Runtime for NativeRuntime {
                 let b: BigInt = args[1].clone().into();
                 Literal::Integer(a + &b)
             }
+            ("erlang", "list_to_integer") => match args[0].clone() {
+                Literal::Binary(str) => Literal::Integer(BigInt::from_str(&str).unwrap()),
+                _ => panic!("Could not convert: {:?} to an integer", args[0]),
+            },
             (_, _) => panic!("How'd you get here?"),
         }
     }

@@ -1,5 +1,9 @@
 use log::debug;
 
+use std::env;
+
+use lam_emu::{List, Literal, Value};
+
 mod native_runtime;
 
 /** # Safety
@@ -15,5 +19,21 @@ pub unsafe extern "C" fn start(data: *const u8, size: usize) {
     env_logger::init();
     debug!("Initializing Native Runtime...");
 
-    lam_emu::Emulator::new(program, Box::new(runtime)).run()
+    lam_emu::Emulator::new(program, Box::new(runtime))
+        .preload(0, args())
+        .run()
+}
+
+pub fn args() -> lam_emu::Value {
+    Value::Literal(
+        env::args()
+            .into_iter()
+            .skip(1) // skip the binary name
+            .fold(Literal::List(List::Nil), |acc, v| {
+                Literal::List(List::Cons(
+                    Box::new(Value::Literal(Literal::Binary(v.to_string()))),
+                    Box::new(Value::Literal(acc)),
+                ))
+            }),
+    )
 }
