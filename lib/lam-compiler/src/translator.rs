@@ -51,7 +51,7 @@ impl ModuleTranslator {
         let mut module = Module::default();
         module.name = self.beam_atom_table.atoms[0].name.clone();
 
-        for i in 1..=self.beam_code_table.label_count {
+        for i in 0..self.beam_code_table.label_count {
             module.labels.push(FunctionLabel::new(i));
         }
 
@@ -64,7 +64,7 @@ impl ModuleTranslator {
 
             let fn_name = &self.beam_atom_table.atoms[atom_idx as usize].name;
             let fn_arity = export.arity;
-            let fn_first_label = export.label;
+            let fn_first_label = export.label - 1;
 
             let key = (fn_name.to_string(), fn_arity);
             module.functions.insert(key, fn_first_label);
@@ -79,11 +79,12 @@ impl ModuleTranslator {
                  * function and you'll end up with an empty module. */
                 OpCode::Label => {
                     current_label = args[0].clone().into();
+                    current_label -= 1;
                 }
 
                 /* If we are in a label, try to translate the instructions into
                  * something we can handle in the emulator. */
-                _ if current_label > 0 => {
+                _ => {
                     if let Some(lam_instr) = ModuleTranslator::mk_instr(
                         &opcode,
                         &args,
@@ -91,12 +92,11 @@ impl ModuleTranslator {
                         &self.beam_literal_table,
                         &self.beam_import_table,
                     ) {
-                        module.labels[(current_label - 1) as usize]
+                        module.labels[current_label as usize]
                             .instructions
                             .push(lam_instr);
                     }
                 }
-                _ => (),
             }
         }
 
@@ -152,8 +152,8 @@ impl ModuleTranslator {
             //  Function Calls
             //
             OpCode::CallOnly | OpCode::CallLast => {
-                let label = args[1].clone().into();
-                Some(Instruction::Jump(label))
+                let label: u32 = args[1].clone().into();
+                Some(Instruction::Jump(label - 1))
             }
 
             OpCode::CallExt => {
@@ -214,7 +214,7 @@ impl ModuleTranslator {
             //  Tests
             //
             OpCode::IsGe => {
-                let label = args[0].clone().into();
+                let label: u32 = args[0].clone().into();
                 let a = ModuleTranslator::mk_value_of_compact_term(
                     args[1].clone(),
                     &atom_table,
@@ -225,27 +225,30 @@ impl ModuleTranslator {
                     &atom_table,
                     &literal_table,
                 );
-                Some(Instruction::Test(label, Test::IsGreaterOrEqualThan(a, b)))
+                Some(Instruction::Test(
+                    label - 1,
+                    Test::IsGreaterOrEqualThan(a, b),
+                ))
             }
 
             OpCode::IsNil => {
-                let label = args[0].clone().into();
+                let label: u32 = args[0].clone().into();
                 let a = ModuleTranslator::mk_value_of_compact_term(
                     args[1].clone(),
                     &atom_table,
                     &literal_table,
                 );
-                Some(Instruction::Test(label, Test::IsNil(a)))
+                Some(Instruction::Test(label - 1, Test::IsNil(a)))
             }
 
             OpCode::IsNonemptyList => {
-                let label = args[0].clone().into();
+                let label: u32 = args[0].clone().into();
                 let a = ModuleTranslator::mk_value_of_compact_term(
                     args[1].clone(),
                     &atom_table,
                     &literal_table,
                 );
-                Some(Instruction::Test(label, Test::IsNonEmptyList(a)))
+                Some(Instruction::Test(label - 1, Test::IsNonEmptyList(a)))
             }
 
             ///////////////////////////////////////////////////////////////////
