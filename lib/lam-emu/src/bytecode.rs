@@ -1,6 +1,7 @@
 use num_bigint::BigInt;
 use num_traits::cast::FromPrimitive;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 pub type Label = u32;
 pub type Arity = u32;
@@ -8,7 +9,14 @@ pub type Arity = u32;
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub struct Pid {
-    id: u64,
+    pub scheduler_id: u32,
+    pub process_id: u64,
+}
+
+impl Display for Pid {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "<{:?}.{:?}.0>", self.scheduler_id, self.process_id)
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
