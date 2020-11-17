@@ -11,6 +11,8 @@ Cargo.lock
 
 *.exe
 *.wasm
+*.opt
 
 .cache
 dist
+
