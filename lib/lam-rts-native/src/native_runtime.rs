@@ -1,9 +1,31 @@
-use lam_emu::{List, Literal, Runtime, Value, MFA};
+use anyhow::Error;
+use lam_emu::{List, Literal, Runtime, Scheduler, Value, MFA};
 use num_bigint::BigInt;
+use std::env;
 use std::str::FromStr;
 
 #[derive(Default, Debug, Clone)]
 pub struct NativeRuntime {}
+
+impl NativeRuntime {
+    pub fn cpu_count(&self) -> usize {
+        num_cpus::get()
+    }
+
+    pub fn args(&self) -> lam_emu::Value {
+        Value::Literal(
+            env::args()
+                .into_iter()
+                .skip(1) // skip the binary name
+                .fold(Literal::List(List::Nil), |acc, v| {
+                    Literal::List(List::Cons(
+                        Box::new(Value::Literal(Literal::Binary(v.to_string()))),
+                        Box::new(Value::Literal(acc)),
+                    ))
+                }),
+        )
+    }
+}
 
 impl Runtime for NativeRuntime {
     fn execute(&mut self, mfa: &MFA, args: &[Literal]) -> Literal {
@@ -39,5 +61,32 @@ impl Runtime for NativeRuntime {
             },
             (_, _) => panic!("How'd you get here?"),
         }
+    }
+
+    fn run_schedulers(&mut self, schedulers: Vec<Scheduler>) -> Result<(), Error> {
+        crossbeam::thread::scope(|scope| {
+            let mut scopes = vec![];
+            for s in schedulers[1..].to_vec() {
+                scopes.push(scope.spawn(|_| {
+                    s.run(Box::new(self.clone())).unwrap();
+                }));
+            }
+            let mut main_scheduler = schedulers[0].clone();
+            main_scheduler
+                .boot(self.args())
+                .clone()
+                .run(Box::new(self.clone()))
+                .unwrap();
+        })
+        .unwrap();
+        Ok(())
+    }
+
+    fn sleep(&self, delay: u64) {
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+    }
+
+    fn halt(&self) -> ! {
+        std::process::exit(0)
     }
 }
