@@ -15,11 +15,10 @@ impl NativeRuntime {
     pub fn args(&self) -> lam_emu::Value {
         Value::Literal(
             env::args()
-                .into_iter()
                 .skip(1) // skip the binary name
                 .fold(Literal::List(List::Nil), |acc, v| {
                     Literal::List(List::Cons(
-                        Box::new(Value::Literal(Literal::Binary(v.to_string()))),
+                        Box::new(Value::Literal(Literal::Binary(v))),
                         Box::new(Value::Literal(acc)),
                     ))
                 }),

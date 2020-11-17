@@ -337,7 +337,7 @@ impl InstructionPointer {
         trace!("First instruction: {:?}", first_instruction);
 
         *self = InstructionPointer {
-            current_module: last_ptr.current_module.clone(),
+            current_module: last_ptr.current_module,
             current_label: *label,
             current_instruction: 0,
             instr: first_instruction,

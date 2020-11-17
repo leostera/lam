@@ -59,7 +59,7 @@ impl Process {
             .run(reduction_count, program, scheduler, runtime)?
         {
             EmulationStatus::Terminated => self.terminate(),
-            _ => (),
+            EmulationStatus::Continue => (),
         };
         Ok(())
     }

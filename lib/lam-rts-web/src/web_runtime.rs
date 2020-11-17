@@ -26,7 +26,7 @@ impl Runtime for WebRuntime {
                     },
                     x => format!("{:?}", x),
                 };
-                console::log_1(&format!("{}", str).into());
+                console::log_1(&str.into());
                 Literal::Atom("ok".to_string())
             }
             ("erlang", "-") => {

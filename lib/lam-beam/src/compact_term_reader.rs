@@ -181,7 +181,7 @@ impl<R: io::Read> Decoder<R> {
                 /* read all the extra bytes */
                 let mut buf: Vec<u8> = vec![0; byte_count as usize];
                 trace!("Reading {:?} bytes into: {:?}", byte_count, buf);
-                self.reader.read(&mut buf)?;
+                self.reader.read_exact(&mut buf)?;
                 Value::Large(BigInt::from_signed_bytes_be(&buf))
             };
 
