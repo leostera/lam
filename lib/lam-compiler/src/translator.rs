@@ -430,8 +430,8 @@ impl ModuleTranslator {
     ) -> Value {
         trace!("Translating compact term {:?} to a literal value", x);
         match x {
-            CompactTerm::RegisterX(x) => Value::Register(Register::X(x)),
-            // CompactTerm::RegisterY(y) => Value::Register(Register::Y(y)),
+            CompactTerm::RegisterX(x) => Value::Register(Register::Global(x)),
+            CompactTerm::RegisterY(y) => Value::Register(Register::Local(y)),
             CompactTerm::Nil => Value::Literal(Literal::List(List::Nil)),
             CompactTerm::Integer(v) => ModuleTranslator::mk_int(v),
             CompactTerm::Character(c) => Value::Literal(Literal::Character(c as u8)),
@@ -486,8 +486,8 @@ impl ModuleTranslator {
     pub fn mk_reg(x: CompactTerm) -> Register {
         trace!("Translating {:?} to a register", x);
         match x {
-            CompactTerm::RegisterX(x) => Register::X(x),
-            // CompactTerm::RegisterY(y) => Register::Y(y),
+            CompactTerm::RegisterX(x) => Register::Global(x),
+            CompactTerm::RegisterY(y) => Register::Local(y),
             _ => panic!("Tried to turn {:?} into a register", x),
         }
     }
