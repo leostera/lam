@@ -40,8 +40,8 @@ jobs:
           - x86_64-pc-windows-gnu
           - x86_64-pc-windows-msvc
           - x86_64-unknown-linux-gnu
-        os:
-          - ubuntu-latest
+        rust_version:
+          - stable
 
         include:
           # macos builds
@@ -49,10 +49,22 @@ jobs:
             os: macos-latest
           - target: aarch64-apple-darwin
             os: macos-latest
+            rust_version: nightly
           - target: aarch64-apple-ios
             os: macos-latest
 
-          # windows builds
+          # linux builds
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: armv7-unknown-linux-gnueabihf
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+            # target: windows builds
+            # os: ubuntu-latest
           - target: x86_64-pc-windows-gnu
             os: windows-latest
           - target: x86_64-pc-windows-msvc
@@ -60,6 +72,7 @@ jobs:
 
     env:
       OS: ${{ matrix.os }}
+      RUST_VERSION: ${{ matrix.rust_version }}
 
     runs-on: ${{ matrix.os }}
 

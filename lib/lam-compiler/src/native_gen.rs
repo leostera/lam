@@ -4,10 +4,16 @@ use std::io::Write;
 
 use super::target::Target;
 
-#[cfg(debug_assertions)]
+#[cfg(and(debug_assertions, windows))]
+const RUNTIME: &[u8] = include_bytes!("../../../target/debug/liblam_rts_native.lib");
+
+#[cfg(and(debug_assertions, not(windows)))]
 const RUNTIME: &[u8] = include_bytes!("../../../target/debug/liblam_rts_native.a");
 
-#[cfg(not(debug_assertions))]
+#[cfg(and(not(debug_assertions), windows))]
+const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblam_rts_native.lib");
+
+#[cfg(and(not(debug_assertions), not(windows)))]
 const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblam_rts_native.a");
 
 impl Target {
