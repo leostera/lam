@@ -3,7 +3,7 @@ use anyhow::Error;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
-use lam_emu::{List, Literal, Runtime, Scheduler, Value, MFA};
+use lam_emu::{List, Literal, Runtime, Scheduler, MFA};
 use num_bigint::BigInt;
 
 #[wasm_bindgen]
@@ -21,7 +21,7 @@ impl Runtime for WebRuntime {
             ("io", "format") => {
                 let str = match args[1].clone() {
                     Literal::List(List::Cons(boxed_int, _)) => match *boxed_int {
-                        Value::Literal(Literal::Integer(bi)) => bi.to_string(),
+                        Literal::Integer(bi) => bi.to_string(),
                         x => format!("{:?}", x),
                     },
                     x => format!("{:?}", x),
