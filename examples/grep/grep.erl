@@ -9,12 +9,13 @@
 -spec count_aux(any(), any()) -> integer().
 count_aux(Word, Data) -> 0.
 
--spec count(any(), any(), binary()) -> ok.
+-spec count(beam__erlang:pid(integer()), any(), binary()) -> ok.
 count(Top, Word, File) ->
   erlang:spawn(fun
   (_self, _recv) ->
   case file:read_file(File) of
-    {ok, Data} -> count_aux(Word, Data)
+    {ok, Data} -> C = count_aux(Word, Data),
+erlang:send(Top, C)
   end
 end),
   ok.

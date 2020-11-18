@@ -3,7 +3,9 @@ let count_aux word data = 0
 let count top word file =
   let _ = Erlang.spawn (fun _self _recv ->
     match File.read_file file with
-    | Ok data -> count_aux word data
+    | Ok data ->
+        let c = count_aux word data in
+        Erlang.send top c
   ) in
   ()
 
