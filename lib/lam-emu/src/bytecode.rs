@@ -15,7 +15,47 @@ pub enum Value {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub enum Register {
-    X(u32),
+    /// Global registers are available for all functions within a process, and
+    /// they are used for passing arguments to other function calls, and for
+    /// receiving return values.
+    ///
+    /// Calling `f(1)` is roughly translated to:
+    ///
+    /// ```
+    /// Global(0) = 1
+    /// Call(f)
+    /// ```
+    ///
+    /// And after it runs, `Global(0)` will have the return value.
+    ///
+    Global(u32),
+
+    /// Local registers are private to a function call, and are used to save
+    /// intermediary values necessary to compute the final result.
+    ///
+    /// Between calls, any value from a Global register that needs to be used
+    /// after the call, should be moved to a Local register first and restored
+    /// after.
+    ///
+    /// For example, this code:
+    ///
+    /// ```erlang
+    /// f(A) -> g(1) + A.
+    /// ```
+    ///
+    /// Roughly translates to:
+    ///
+    /// ```
+    /// Local(0) = Global(0)
+    /// Global(0) = 1
+    /// Call(g)
+    /// Add(Global(0), Local(0))
+    /// ```
+    ///
+    /// And the return value will be available at `Global(0)` (assuming that's
+    /// where Add puts it).
+    ///
+    Local(u32),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
