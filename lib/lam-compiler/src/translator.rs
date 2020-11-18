@@ -141,6 +141,10 @@ impl ModuleTranslator {
                 keep_registers: args[1].clone().into(),
             }),
 
+            OpCode::Deallocate => Some(Instruction::Deallocate {
+                words: args[0].clone().into(),
+            }),
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Control-Flow
@@ -151,7 +155,7 @@ impl ModuleTranslator {
             //
             //  Function Calls
             //
-            OpCode::CallOnly | OpCode::CallLast => {
+            OpCode::Call | OpCode::CallOnly | OpCode::CallLast => {
                 let label: u32 = args[1].clone().into();
                 Some(Instruction::Jump(label - 1))
             }
@@ -169,7 +173,7 @@ impl ModuleTranslator {
                 }))
             }
 
-            OpCode::CallExtOnly => {
+            OpCode::CallExtOnly | OpCode::CallExtLast => {
                 let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
                     args[1].clone().into(),
                     &import_table,
@@ -180,6 +184,28 @@ impl ModuleTranslator {
                     function,
                     arity,
                 }))
+            }
+
+            OpCode::GcBif1 => {
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[2].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[3].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let dest = ModuleTranslator::mk_reg(args[4].clone());
+                let bif = FnCall::BuiltIn {
+                    module,
+                    function,
+                    arity,
+                    arguments: vec![a],
+                    destination: dest,
+                };
+                Some(Instruction::Call(bif))
             }
 
             OpCode::GcBif2 => {
@@ -209,6 +235,51 @@ impl ModuleTranslator {
                 Some(Instruction::Call(bif))
             }
 
+            OpCode::GcBif3 => {
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[2].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[3].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[4].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let c = ModuleTranslator::mk_value_of_compact_term(
+                    args[5].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let dest = ModuleTranslator::mk_reg(args[6].clone());
+                let bif = FnCall::BuiltIn {
+                    module,
+                    function,
+                    arity,
+                    arguments: vec![a, b, c],
+                    destination: dest,
+                };
+                Some(Instruction::Call(bif))
+            }
+
+            OpCode::Bif0 => {
+                let name_idx: u32 = args[0].clone().into();
+                let name = &atom_table.atoms[(name_idx - 1) as usize].name;
+
+                match name.as_str() {
+                    "self" => {
+                        let reg = ModuleTranslator::mk_reg(args[1].clone());
+                        Some(Instruction::PidSelf(reg))
+                    }
+                    _ => None,
+                }
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Tests
@@ -231,6 +302,22 @@ impl ModuleTranslator {
                 ))
             }
 
+            OpCode::IsEqExact => {
+                // {test,is_eq_exact,{f,7},[{x,0},{integer,0}]}.
+                let label: u32 = args[0].clone().into();
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::Test(label - 1, Test::Equals(a, b)))
+            }
+
             OpCode::IsNil => {
                 let label: u32 = args[0].clone().into();
                 let a = ModuleTranslator::mk_value_of_compact_term(
@@ -251,6 +338,31 @@ impl ModuleTranslator {
                 Some(Instruction::Test(label - 1, Test::IsNonEmptyList(a)))
             }
 
+            OpCode::IsTaggedTuple => {
+                // {test,is_tagged_tuple,{f,8},[{x,0},2,{atom,some}]}.
+                let label: u32 = args[0].clone().into();
+
+                let value = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+
+                let element: u32 = args[2].clone().into();
+
+                let atom_idx: u32 = args[3].clone().into();
+                let atom = atom_table.atoms[(atom_idx - 1) as usize].name.to_string();
+
+                Some(Instruction::Test(
+                    label - 1,
+                    Test::IsTaggedTuple {
+                        value,
+                        element,
+                        atom,
+                    },
+                ))
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Creating Values
@@ -262,15 +374,9 @@ impl ModuleTranslator {
                     &atom_table,
                     &literal_table,
                 );
-                let tail = ModuleTranslator::mk_value_of_compact_term(
-                    args[1].clone(),
-                    &atom_table,
-                    &literal_table,
-                );
-                let value =
-                    Value::Literal(Literal::List(List::Cons(Box::new(head), Box::new(tail))));
-                let register = ModuleTranslator::mk_reg(args[2].clone());
-                Some(Instruction::PutValue { register, value })
+                let tail = ModuleTranslator::mk_reg(args[1].clone());
+                let target = ModuleTranslator::mk_reg(args[2].clone());
+                Some(Instruction::ConsList { target, head, tail })
             }
 
             OpCode::GetList => {
@@ -281,6 +387,26 @@ impl ModuleTranslator {
                 Some(Instruction::SplitList { list, head, tail })
             }
 
+            OpCode::GetTupleElement => {
+                // {get_tuple_element,{x,0},1,{x,0}}.
+                let tuple = ModuleTranslator::mk_reg(args[0].clone());
+                let element: u32 = args[1].clone().into();
+                let target = ModuleTranslator::mk_reg(args[2].clone());
+                Some(Instruction::GetTupleElement {
+                    tuple,
+                    element,
+                    target,
+                })
+            }
+
+            /*
+            {case_end,{x,0}}.
+
+            //         label  ? ? arity
+            {make_fun2,{f,16},0,0,2}.
+
+            {trim,1,1}.
+                        */
             ///////////////////////////////////////////////////////////////////
             //
             //  Other!
@@ -296,7 +422,7 @@ impl ModuleTranslator {
     ) -> Value {
         match x {
             CompactTerm::RegisterX(x) => Value::Register(Register::X(x)),
-            CompactTerm::RegisterY(y) => Value::Register(Register::Y(y)),
+            // CompactTerm::RegisterY(y) => Value::Register(Register::Y(y)),
             CompactTerm::Nil => Value::Literal(Literal::List(List::Nil)),
             CompactTerm::Integer(v) => ModuleTranslator::mk_int(v),
             CompactTerm::Character(c) => Value::Literal(Literal::Character(c as u8)),
@@ -322,10 +448,8 @@ impl ModuleTranslator {
             ExternalTerm::List(external_term::List { elements }) => {
                 elements.iter().fold(Literal::List(List::Nil), |acc, el| {
                     Literal::List(List::Cons(
-                        Box::new(Value::Literal(
-                            ModuleTranslator::mk_literal_of_external_term(el),
-                        )),
-                        Box::new(Value::Literal(acc)),
+                        Box::new(ModuleTranslator::mk_literal_of_external_term(el)),
+                        Box::new(acc),
                     ))
                 })
             }
@@ -351,7 +475,7 @@ impl ModuleTranslator {
     pub fn mk_reg(x: CompactTerm) -> Register {
         match x {
             CompactTerm::RegisterX(x) => Register::X(x),
-            CompactTerm::RegisterY(y) => Register::Y(y),
+            // CompactTerm::RegisterY(y) => Register::Y(y),
             _ => panic!("Tried to turn {:?} into a register", x),
         }
     }
