@@ -30,6 +30,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        target:
+          - host 
         os:
           - macos-latest
           - ubuntu-latest
