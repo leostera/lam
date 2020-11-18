@@ -57,6 +57,7 @@ impl<'a> Scheduler<'a> {
     }
 
     /*
+    fn spawn(&mut self, mfa, args);
     fn kill(&mut self, pid: &Pid);
 
     fn link(&mut self, a: &Pid, b: &Pid);

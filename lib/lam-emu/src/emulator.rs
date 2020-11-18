@@ -1,4 +1,5 @@
 use super::bytecode::*;
+use super::literal::*;
 use super::program::*;
 use super::runtime::Runtime;
 use super::scheduler::*;
@@ -152,11 +153,15 @@ impl Emulator {
                 //
                 //  Creating Values
                 //
-                Instruction::PutValue {
-                    register: Register::X(rx),
-                    value,
+                Instruction::ConsList {
+                    target: Register::X(rx),
+                    head,
+                    tail,
                 } => {
-                    self.registers[rx as usize] = Value::Literal(self.fetch_value(&value));
+                    let head = Box::new(self.fetch_register(&head));
+                    let tail = Box::new(self.fetch_register(&tail));
+                    self.registers[rx as usize] =
+                        Value::Literal(Literal::List(List::Cons(head, tail)));
                     self.instr_ptr.next(&program);
                 }
 
@@ -168,8 +173,8 @@ impl Emulator {
                     let value = &self.registers[rl as usize];
                     match self.fetch_value(&value) {
                         Literal::List(List::Cons(boxed_head, boxed_tail)) => {
-                            self.registers[rh as usize] = *boxed_head.clone();
-                            self.registers[rt as usize] = *boxed_tail.clone();
+                            self.registers[rh as usize] = Value::Literal(*boxed_head.clone());
+                            self.registers[rt as usize] = Value::Literal(*boxed_tail.clone());
                         }
                         _ => panic!("Attempted to split a value that is not a list: {:?}", value),
                     };
@@ -212,6 +217,20 @@ impl Emulator {
                     a
                 ),
             },
+
+            Test::Equals(a, b) => self.fetch_value(a) == self.fetch_value(b),
+
+            Test::IsTaggedTuple {
+                value,
+                element,
+                atom,
+            } => match self.fetch_value(value) {
+                Literal::Tuple(Tuple { elements, .. }) => match &elements[*element as usize] {
+                    Literal::Atom(tag) => tag == atom,
+                    _ => false,
+                },
+                x => panic!("Cannot check if value {:?} is a tagged tuple", x),
+            },
         }
     }
 
@@ -222,7 +241,6 @@ impl Emulator {
     pub fn fetch_value(&self, v: &Value) -> Literal {
         trace!("fetching value: {:?}", v);
         match v {
-            Value::Literal(Literal::List(ls)) => Literal::List(self.make_list_concrete(ls)),
             Value::Literal(l) => l.clone(),
             Value::Register(Register::X(rx)) => {
                 trace!("found register, fetching from: {:?}", *rx);
@@ -233,14 +251,8 @@ impl Emulator {
         }
     }
 
-    pub fn make_list_concrete(&self, l: &List) -> List {
-        match l {
-            List::Nil => List::Nil,
-            List::Cons(hd, tl) => List::Cons(
-                Box::new(Value::Literal(self.fetch_value(&*hd))),
-                Box::new(Value::Literal(self.fetch_value(&*tl))),
-            ),
-        }
+    pub fn fetch_register(&self, r: &Register) -> Literal {
+        self.fetch_value(&Value::Register(r.clone()))
     }
 }
 

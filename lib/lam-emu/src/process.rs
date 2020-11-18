@@ -1,5 +1,6 @@
 use super::bytecode::*;
 use super::emulator::*;
+use super::literal::*;
 use super::program::*;
 use super::runtime::*;
 use super::scheduler::*;
