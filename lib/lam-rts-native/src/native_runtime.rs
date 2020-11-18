@@ -17,10 +17,7 @@ impl NativeRuntime {
             env::args()
                 .skip(1) // skip the binary name
                 .fold(Literal::List(List::Nil), |acc, v| {
-                    Literal::List(List::Cons(
-                        Box::new(Value::Literal(Literal::Binary(v))),
-                        Box::new(Value::Literal(acc)),
-                    ))
+                    Literal::List(List::Cons(Box::new(Literal::Binary(v)), Box::new(acc)))
                 }),
         )
     }
@@ -37,7 +34,7 @@ impl Runtime for NativeRuntime {
             ("io", "format") => {
                 match args[1].clone() {
                     Literal::List(List::Cons(boxed_int, _)) => match *boxed_int {
-                        Value::Literal(Literal::Integer(bi)) => println!("{}", bi.to_string()),
+                        Literal::Integer(bi) => println!("{}", bi.to_string()),
                         x => println!("{:?}", x),
                     },
                     x => println!("{:?}", x),
