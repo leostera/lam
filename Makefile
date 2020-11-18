@@ -18,6 +18,7 @@ build.web:
 .PHONY: release
 release: release.wasm release.web
 	cargo build --release
+	tar czf release.tar.gz -C ./target/release/ lam
 
 .PHONY: release.wasm
 release.wasm:
@@ -39,3 +40,7 @@ install: release
 .PHONY: clean
 clean:
 	cargo clean
+
+.PHONY: fmt
+fmt:
+	cargo fmt

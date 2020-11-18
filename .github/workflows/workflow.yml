@@ -1,0 +1,137 @@
+name: Main workflow
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  create_draft_release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      upload_url: ${{ steps.create_draft_release.outputs.upload_url }}
+
+    steps:
+      - name: Create draft release on tags
+        id: create_draft_release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+  build:
+    needs: create_draft_release
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - armv7-unknown-linux-gnueabihf
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - x86_64-unknown-linux-gnu
+
+        include:
+          # macos builds
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+
+          # linux builds
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: armv7-unknown-linux-gnueabihf
+            os: ubuntu-latest
+
+          # windows builds
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    env:
+      OS: ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Fetch tags
+        id: tag
+        run: git fetch --tags --force
+
+      - name: Cached Infra
+        uses: actions/cache@v2
+        env:
+          cache-name: cached-opam
+        with:
+          path: |
+           ~/.cargo
+           target
+           C:\cygwin
+          key: v${{ secrets.CACHE_VERSION }}-${{ matrix.os }}-${{ matrix.target }}-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            v${{ secrets.CACHE_VERSION }}-${{ matrix.os }}-${{ matrix.target }}-${{ env.cache-name }}-
+            v${{ secrets.CACHE_VERSION }}-${{ matrix.os }}-${{ matrix.target }}-
+
+      - name: Use Rust (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Set git user
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions-bot@users.noreply.github.com
+
+      - name: Define env (Unix)
+        if: ${{ runner.os != 'Windows' }}
+        run: echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
+
+      - name: Define env (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          echo "GITHUB_TAG=$(git describe --always --tags)" >> $Env:GITHUB_ENV
+
+
+      - name: Build project
+        run: make clean build
+
+      - name: Run tests
+        run: make test
+
+      - name: Check code formatting
+        if: ${{ success() && startsWith(runner.os, 'Linux') }}
+        run: opam exec -- make fmt
+
+      - name: Create release archive
+        if: ${{ success() }}
+        run: make release
+
+      - name: Upload LAM build artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          path: release.tar.gz
+          name: lam-${{ env.GITHUB_TAG }}-${{ matrix.target }}.tar.gz
+          if-no-files-found: error
+
+      - name: Upload LAM release tarball
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        id: upload-lam-release-tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_draft_release.outputs.upload_url }}
+          asset_path: release.tar.gz
+          asset_name: lam-${{ env.GITHUB_TAG }}-${{ matrix.target }}.tar.gz
+          asset_content_type: application/zip
