@@ -5,6 +5,7 @@ use super::runtime::Runtime;
 use super::scheduler::*;
 use anyhow::Error;
 use std::boxed::Box;
+use std::collections::VecDeque;
 
 use log::*;
 
@@ -13,7 +14,7 @@ use num_bigint::BigInt;
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Emulator {
-    registers: Vec<Value>,
+    registers: Registers,
     instr_ptr: InstructionPointer,
 }
 
@@ -27,13 +28,13 @@ pub enum EmulationStatus {
 impl Emulator {
     pub fn new(mfa: &MFA, program: &Program) -> Emulator {
         Emulator {
-            registers: [0; 32].to_vec().iter().map(|_| Value::Nil).collect(),
+            registers: Registers::new(),
             instr_ptr: InstructionPointer::new(mfa, program),
         }
     }
 
-    pub fn preload(&mut self, x: usize, v: Value) -> &mut Emulator {
-        self.registers[x] = v;
+    pub fn preload(&mut self, x: u32, v: Value) -> &mut Emulator {
+        self.registers.put(Register::Global(x), v);
         self
     }
 
@@ -47,12 +48,7 @@ impl Emulator {
         let mut reductions = 0;
         while reductions < reduction_count {
             trace!("Reductions: {:?}", reductions);
-            trace!(
-                "Registers: \n    0 => {:?}\n    1 => {:?}\n    2 => {:?}",
-                self.registers[0],
-                self.registers[1],
-                self.registers[2]
-            );
+            trace!("Registers: {:?}", self.registers,);
             trace!("Instr => {:?}", self.instr_ptr.instr);
             match self.instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
@@ -65,18 +61,18 @@ impl Emulator {
                 //
                 // Working with the Register Machine
                 //
-                Instruction::Move(value, Register::X(rx)) => {
-                    self.registers[rx as usize] = value.clone();
+                Instruction::Move(value, target) => {
+                    self.registers.put(target, value.clone());
                     self.instr_ptr.next(&program);
                 }
 
-                Instruction::Swap(Register::X(rx0), Register::X(rx1)) => {
-                    self.registers.swap(rx0 as usize, rx1 as usize);
+                Instruction::Swap(a, b) => {
+                    self.registers.swap(a, b);
                     self.instr_ptr.next(&program);
                 }
 
-                Instruction::Clear(Register::X(rx)) => {
-                    self.registers[rx as usize] = Value::Nil;
+                Instruction::Clear(reg) => {
+                    self.registers.clear(reg);
                     self.instr_ptr.next(&program);
                 }
 
@@ -89,9 +85,12 @@ impl Emulator {
                     function,
                     arity,
                     arguments,
-                    destination: Register::X(rx),
+                    destination,
                 }) => {
-                    let args = self.fetch_values(&arguments);
+                    let args: Vec<Literal> = arguments
+                        .iter()
+                        .map(|a| self.registers.get_literal_from_value(&a))
+                        .collect();
                     let ret = runtime.execute(
                         &MFA {
                             module,
@@ -100,29 +99,25 @@ impl Emulator {
                         },
                         &args,
                     );
-                    self.registers[rx as usize] = Value::Literal(ret);
+                    self.registers.put(destination, ret.into());
                     self.instr_ptr.next(&program);
                 }
 
                 Instruction::Call(call) => {
-                    let arity = call.arity() as usize;
-                    let args = self.fetch_values(&self.registers[0..arity]);
+                    let arity = call.arity();
+                    let args = self.registers.get_many_literals_from_global_range(0, arity);
                     let ret = runtime.execute(&call.into(), &args);
-                    for i in 0..arity {
-                        self.registers[i] = Value::Nil;
-                    }
-                    self.registers[0] = Value::Literal(ret);
+                    self.registers.clear_globals(arity);
+                    self.registers.put_global(0, Value::Literal(ret));
                     self.instr_ptr.next(&program);
                 }
 
                 Instruction::TailCall(call) => {
-                    let arity = call.arity() as usize;
-                    let args = self.fetch_values(&self.registers[0..arity]);
+                    let arity = call.arity();
+                    let args = self.registers.get_many_literals_from_global_range(0, arity);
                     let ret = runtime.execute(&call.into(), &args);
-                    for i in 0..arity {
-                        self.registers[i] = Value::Nil;
-                    }
-                    self.registers[0] = Value::Literal(ret);
+                    self.registers.clear_globals(arity);
+                    self.registers.put_global(0, Value::Literal(ret));
                     self.instr_ptr.next(&program);
                 }
 
@@ -153,30 +148,25 @@ impl Emulator {
                 //
                 //  Creating Values
                 //
-                Instruction::ConsList {
-                    target: Register::X(rx),
-                    head,
-                    tail,
-                } => {
-                    let head = Box::new(self.fetch_value(&head));
-                    let tail = Box::new(self.fetch_value(&tail));
-                    self.registers[rx as usize] =
-                        Value::Literal(Literal::List(List::Cons(head, tail)));
+                Instruction::ConsList { target, head, tail } => {
+                    let head = Box::new(self.registers.get_literal_from_value(&head));
+                    let tail = Box::new(self.registers.get_literal_from_value(&tail));
+                    self.registers
+                        .put(target, Literal::List(List::Cons(head, tail)).into());
                     self.instr_ptr.next(&program);
                 }
 
-                Instruction::SplitList {
-                    list: Register::X(rl),
-                    head: Register::X(rh),
-                    tail: Register::X(rt),
-                } => {
-                    let value = &self.registers[rl as usize];
-                    match self.fetch_value(&value) {
+                Instruction::SplitList { list, head, tail } => {
+                    match self.registers.get(&list).into() {
                         Literal::List(List::Cons(boxed_head, boxed_tail)) => {
-                            self.registers[rh as usize] = Value::Literal(*boxed_head.clone());
-                            self.registers[rt as usize] = Value::Literal(*boxed_tail.clone());
+                            self.registers
+                                .put(head, Value::Literal(*boxed_head.clone()));
+                            self.registers
+                                .put(tail, Value::Literal(*boxed_tail.clone()));
                         }
-                        _ => panic!("Attempted to split a value that is not a list: {:?}", value),
+                        value => {
+                            panic!("Attempted to split a value that is not a list: {:?}", value)
+                        }
                     };
                     self.instr_ptr.next(&program);
                 }
@@ -186,10 +176,10 @@ impl Emulator {
                     element,
                     target,
                 } => {
-                    match self.fetch_register(&tuple) {
-                        Literal::Tuple(Tuple { elements, .. }) => {
+                    match self.registers.get(&tuple) {
+                        Value::Literal(Literal::Tuple(Tuple { elements, .. })) => {
                             let element = elements[element as usize].clone();
-                            self.put_register(target, Value::Literal(element));
+                            self.registers.put(target, Value::Literal(element));
                         }
                         v => panic!(
                             "Attempted to extract element from value that is not a tuple: {:?}",
@@ -212,27 +202,22 @@ impl Emulator {
         Ok(EmulationStatus::Continue)
     }
 
-    pub fn put_register(&mut self, r: Register, v: Value) {
-        let Register::X(rx) = r;
-        self.registers[rx as usize] = v;
-    }
-
     pub fn run_test(&self, test: &Test) -> bool {
         trace!("Running test: {:?}", test);
         match test {
             Test::IsGreaterOrEqualThan(a, b) => {
-                let a: BigInt = self.fetch_value(a).into();
-                let b: BigInt = self.fetch_value(b).into();
+                let a: BigInt = self.registers.get_literal_from_value(a).into();
+                let b: BigInt = self.registers.get_literal_from_value(b).into();
                 a >= b
             }
 
-            Test::IsNil(a) => match self.fetch_value(a) {
+            Test::IsNil(a) => match self.registers.get_literal_from_value(a) {
                 Literal::List(List::Nil) => true,
                 Literal::List(_) => false,
                 _ => panic!("Can not check if non list value {:?} is an empty list", a),
             },
 
-            Test::IsNonEmptyList(a) => match self.fetch_value(a) {
+            Test::IsNonEmptyList(a) => match self.registers.get_literal_from_value(a) {
                 Literal::List(List::Cons(_, _)) => true,
                 Literal::List(List::Nil) => false,
                 _ => panic!(
@@ -241,13 +226,15 @@ impl Emulator {
                 ),
             },
 
-            Test::Equals(a, b) => self.fetch_value(a) == self.fetch_value(b),
+            Test::Equals(a, b) => {
+                self.registers.get_literal_from_value(a) == self.registers.get_literal_from_value(b)
+            }
 
             Test::IsTaggedTuple {
                 value,
                 element,
                 atom,
-            } => match self.fetch_value(value) {
+            } => match self.registers.get_literal_from_value(value) {
                 Literal::Tuple(Tuple { elements, .. }) => match &elements[*element as usize] {
                     Literal::Atom(tag) => tag == atom,
                     _ => false,
@@ -256,25 +243,90 @@ impl Emulator {
             },
         }
     }
+}
 
-    pub fn fetch_values(&self, vs: &[Value]) -> Vec<Literal> {
-        vs.iter().map(|v| self.fetch_value(v)).collect()
+#[derive(Default, Debug, Clone)]
+#[repr(C)]
+pub struct Registers {
+    global: Vec<Value>,
+    local: VecDeque<Vec<Value>>,
+    current_local: Vec<Value>,
+}
+
+impl Registers {
+    pub fn new() -> Registers {
+        let empty: Vec<Value> = [0; 32].to_vec().iter().map(|_| Value::Nil).collect();
+        Registers {
+            global: empty.clone(),
+            local: VecDeque::new(),
+            current_local: empty,
+        }
     }
 
-    pub fn fetch_value(&self, v: &Value) -> Literal {
+    pub fn clear(&mut self, r: Register) -> &mut Registers {
+        self.put(r, Value::Nil);
+        self
+    }
+
+    pub fn clear_globals(&mut self, n: u32) -> &mut Registers {
+        for i in (n as usize)..self.global.len() {
+            self.global[i] = Value::Nil;
+        }
+        self
+    }
+
+    pub fn put_global(&mut self, n: u32, v: Value) -> &mut Registers {
+        self.global[n as usize] = v.clone();
+        self
+    }
+
+    pub fn put(&mut self, r: Register, v: Value) -> &mut Registers {
+        match r {
+            Register::Local(l) => self.current_local[l as usize] = v.clone(),
+            Register::Global(g) => self.global[g as usize] = v.clone(),
+        }
+        self
+    }
+
+    pub fn get(&self, r: &Register) -> Value {
+        trace!("fetching register: {:?}", r);
+        match r {
+            Register::Local(l) => self.current_local[*l as usize].clone(),
+            Register::Global(g) => self.global[*g as usize].clone(),
+        }
+    }
+
+    pub fn get_many_literals_from_global_range(&self, from: u32, to: u32) -> Vec<Literal> {
+        self.global[from as usize..to as usize]
+            .iter()
+            .map(|v| self.get_literal_from_value(v))
+            .collect()
+    }
+
+    pub fn get_literal_from_value(&self, v: &Value) -> Literal {
         trace!("fetching value: {:?}", v);
         match v {
             Value::Literal(l) => l.clone(),
-            Value::Register(Register::X(rx)) => {
-                trace!("found register, fetching from: {:?}", *rx);
-                self.fetch_value(&self.registers[*rx as usize])
-            }
+            Value::Register(reg) => self.get_literal_from_value(&self.get(reg)),
             Value::Nil => Literal::List(List::Nil),
         }
     }
 
-    pub fn fetch_register(&self, r: &Register) -> Literal {
-        self.fetch_value(&Value::Register(r.clone()))
+    pub fn swap(&mut self, a: Register, b: Register) {
+        match (a, b) {
+            (Register::Local(l0), Register::Local(l1)) => {
+                self.current_local.swap(l0 as usize, l1 as usize);
+            }
+            (Register::Global(g0), Register::Global(g1)) => {
+                self.global.swap(g0 as usize, g1 as usize);
+            }
+            (Register::Local(l), Register::Global(g))
+            | (Register::Global(g), Register::Local(l)) => {
+                let temp = self.current_local[l as usize].clone();
+                self.current_local[l as usize] = self.global[g as usize].clone();
+                self.global[g as usize] = temp;
+            }
+        }
     }
 }
 
