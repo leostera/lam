@@ -1,64 +1,8 @@
-use num_bigint::BigInt;
-use num_traits::cast::FromPrimitive;
+use super::literal::*;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
 
 pub type Label = u32;
 pub type Arity = u32;
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-#[repr(C)]
-pub struct Pid {
-    pub scheduler_id: u32,
-    pub process_id: u64,
-}
-
-impl Display for Pid {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
-        write!(fmt, "<{:?}.{:?}.0>", self.scheduler_id, self.process_id)
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-#[repr(C)]
-pub struct Tuple {
-    size: u32,
-    elements: Vec<Literal>,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-#[repr(C)]
-pub enum List {
-    Nil,
-    Cons(Box<Value>, Box<Value>),
-}
-
-pub type Map = Vec<(Literal, Literal)>;
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-#[repr(C)]
-pub enum Literal {
-    Atom(String),
-    Binary(String),
-    Bool(bool),
-    Character(u8),
-    Float(f64),
-    Integer(BigInt),
-    List(List),
-    Map(Map),
-    Pid(Pid),
-    Tuple(Tuple),
-}
-
-impl Into<BigInt> for Literal {
-    fn into(self) -> BigInt {
-        match self {
-            Literal::Integer(bi) => bi,
-            Literal::Float(f) => BigInt::from_f64(f).unwrap(),
-            _ => panic!("Could not turn {:?} into a BigInt", self),
-        }
-    }
-}
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
@@ -126,9 +70,15 @@ impl FnCall {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub enum Test {
+    Equals(Value, Value),
     IsGreaterOrEqualThan(Value, Value),
     IsNil(Value),
     IsNonEmptyList(Value),
+    IsTaggedTuple {
+        value: Value,
+        element: u32,
+        atom: Atom,
+    },
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -170,7 +120,9 @@ pub enum Instruction {
     },
 
     /** Deallocate */
-    Deallocate(u8),
+    Deallocate {
+        words: u8,
+    },
 
     ///////////////////////////////////////////////////////////////////////////
     ///
@@ -194,7 +146,7 @@ pub enum Instruction {
     /// Calling functions
     ///
 
-    /** Perform a function call with or without allocating a new stack frame.  */
+    /// Perform a function call with or without allocating a new stack frame.
     Call(FnCall),
     TailCall(FnCall),
 
@@ -203,14 +155,15 @@ pub enum Instruction {
     /// Working with Values
     ///
 
-    /** Create and put a value into a register */
-    PutValue {
-        register: Register,
-        value: Value,
+    /// Cons `head` onto `tail` and place it in the `target` register
+    ConsList {
+        head: Register,
+        tail: Register,
+        target: Register,
     },
 
-    /** Deconstruct a list from [list] and place its head in register
-     *  [head] and its tail in register [tail] */
+    /// Deconstruct a list from `list` and place its head in register `head` and its tail in
+    /// register `tail`
     SplitList {
         list: Register,
         head: Register,
@@ -232,4 +185,7 @@ pub enum Instruction {
 
     /** Puts the top of the */
     Receive,
+
+    /** Puts the identifier of the current process in a register */
+    PidSelf(Register),
 }
