@@ -67,7 +67,7 @@ jobs:
       - name: Cached Infra
         uses: actions/cache@v2
         env:
-          cache-name: cached-opam
+          cache-name: cached-cargo
         with:
           path: |
            ~/.cargo
@@ -109,7 +109,7 @@ jobs:
 
       - name: Check code formatting
         if: ${{ success() && startsWith(runner.os, 'Linux') }}
-        run: opam exec -- make fmt
+        run: make fmt
 
       - name: Create release archive
         if: ${{ success() }}
