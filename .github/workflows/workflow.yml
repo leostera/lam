@@ -122,7 +122,7 @@ jobs:
         run: make setup
 
       - name: Build project
-        run: make clean build
+        run: make build
 
       - name: Run tests
         run: make test
