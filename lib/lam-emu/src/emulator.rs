@@ -158,7 +158,7 @@ impl Emulator {
                     head,
                     tail,
                 } => {
-                    let head = Box::new(self.fetch_register(&head));
+                    let head = Box::new(self.fetch_value(&head));
                     let tail = Box::new(self.fetch_register(&tail));
                     self.registers[rx as usize] =
                         Value::Literal(Literal::List(List::Cons(head, tail)));
@@ -181,6 +181,24 @@ impl Emulator {
                     self.instr_ptr.next(&program);
                 }
 
+                Instruction::GetTupleElement {
+                    tuple,
+                    element,
+                    target,
+                } => {
+                    match self.fetch_register(&tuple) {
+                        Literal::Tuple(Tuple { elements, .. }) => {
+                            let element = elements[element as usize].clone();
+                            self.put_register(target, Value::Literal(element));
+                        }
+                        v => panic!(
+                            "Attempted to extract element from value that is not a tuple: {:?}",
+                            v
+                        ),
+                    }
+                    self.instr_ptr.next(&program);
+                }
+
                 Instruction::Kill => return Ok(EmulationStatus::Terminated),
 
                 ////////////////////////////////////////////////////////////////
@@ -192,6 +210,11 @@ impl Emulator {
             reductions += 1;
         }
         Ok(EmulationStatus::Continue)
+    }
+
+    pub fn put_register(&mut self, r: Register, v: Value) {
+        let Register::X(rx) = r;
+        self.registers[rx as usize] = v;
     }
 
     pub fn run_test(&self, test: &Test) -> bool {
@@ -247,7 +270,6 @@ impl Emulator {
                 self.fetch_value(&self.registers[*rx as usize])
             }
             Value::Nil => Literal::List(List::Nil),
-            _ => panic!("Could not fetch value: {:?}", v),
         }
     }
 

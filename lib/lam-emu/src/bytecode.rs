@@ -16,7 +16,6 @@ pub enum Value {
 #[repr(C)]
 pub enum Register {
     X(u32),
-    Y(u32),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -157,7 +156,7 @@ pub enum Instruction {
 
     /// Cons `head` onto `tail` and place it in the `target` register
     ConsList {
-        head: Register,
+        head: Value,
         tail: Register,
         target: Register,
     },
@@ -168,6 +167,13 @@ pub enum Instruction {
         list: Register,
         head: Register,
         tail: Register,
+    },
+
+    /// Copy a tuple element onto a specific registry
+    GetTupleElement {
+        tuple: Register,
+        element: u32,
+        target: Register,
     },
 
     ///////////////////////////////////////////////////////////////////////////
