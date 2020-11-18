@@ -12,6 +12,21 @@ pub enum Value {
     Nil,
 }
 
+impl Into<Literal> for Value {
+    fn into(self) -> Literal {
+        match self {
+            Value::Literal(l) => l.clone(),
+            _ => panic!("Can not turn {:?} into a Literal", self),
+        }
+    }
+}
+
+impl Into<Value> for Literal {
+    fn into(self) -> Value {
+        Value::Literal(self)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub enum Register {
