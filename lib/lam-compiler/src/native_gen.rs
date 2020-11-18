@@ -5,13 +5,13 @@ use std::io::Write;
 use super::target::Target;
 
 #[cfg(all(debug_assertions, windows))]
-const RUNTIME: &[u8] = include_bytes!("../../../target/debug/liblam_rts_native.lib");
+const RUNTIME: &[u8] = include_bytes!("../../../target/debug/lam_rts_native.lib");
 
 #[cfg(all(debug_assertions, not(windows)))]
 const RUNTIME: &[u8] = include_bytes!("../../../target/debug/liblam_rts_native.a");
 
 #[cfg(all(not(debug_assertions), windows))]
-const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblam_rts_native.lib");
+const RUNTIME: &[u8] = include_bytes!("../../../target/release/lam_rts_native.lib");
 
 #[cfg(all(not(debug_assertions), not(windows)))]
 const RUNTIME: &[u8] = include_bytes!("../../../target/release/liblam_rts_native.a");
