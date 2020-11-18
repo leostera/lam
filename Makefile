@@ -15,6 +15,10 @@ build.web:
 		./lib/lam-rts-web \
 		-- --package lam-rts-web
 
+.PHONY: test
+test:
+	cargo test
+
 .PHONY: release
 release: release.wasm release.web
 	cargo build --release
