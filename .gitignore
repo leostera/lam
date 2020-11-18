@@ -16,3 +16,4 @@ Cargo.lock
 .cache
 dist
 
+*.tar.gz
