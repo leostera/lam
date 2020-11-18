@@ -3,7 +3,7 @@
 ▒█▄▄░█▀█░█▒▀▒█ 
 </h1>
 
-> Native and WASM binaries for the BEAM
+> A Little Actor Machine that runs on Native and WebAssembly
 
 ## What is LAM?
 
