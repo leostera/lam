@@ -37,6 +37,11 @@ release.web:
 install: release
 	cargo install --path ./lib/lam-bin
 
+.PHONY: setup
+setup:
+	rustup target add wasm32-wasi
+	rustup target add wasm32-unknown-unknown
+
 .PHONY: clean
 clean:
 	cargo clean

@@ -31,7 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - aarch64-apple-darwin
           - armv7-unknown-linux-gnueabihf
           - x86_64-apple-darwin
           - x86_64-pc-windows-msvc
@@ -40,8 +39,6 @@ jobs:
         include:
           # macos builds
           - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
             os: macos-latest
 
           # linux builds
@@ -101,6 +98,8 @@ jobs:
         run: |
           echo "GITHUB_TAG=$(git describe --always --tags)" >> $Env:GITHUB_ENV
 
+      - name: Setup Rust targets
+        run: make setup
 
       - name: Build project
         run: make clean build
