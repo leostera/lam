@@ -39,6 +39,7 @@ install: release
 
 .PHONY: setup
 setup:
+	cargo install wasm-pack
 	rustup target add wasm32-wasi
 	rustup target add wasm32-unknown-unknown
 
