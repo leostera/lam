@@ -157,7 +157,7 @@ pub enum Instruction {
     /// Cons `head` onto `tail` and place it in the `target` register
     ConsList {
         head: Value,
-        tail: Register,
+        tail: Value,
         target: Register,
     },
 

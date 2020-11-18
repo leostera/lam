@@ -1,3 +1,5 @@
+use log::*;
+
 use lam_beam::external_term;
 use lam_beam::{
     AtomTable, Chunk, CodeTable, CompactTerm, ExportTable, ExternalTerm, ImportTable, LiteralTable,
@@ -111,6 +113,8 @@ impl ModuleTranslator {
         import_table: &lam_beam::ImportTable,
     ) -> Option<Instruction> {
         /* using the args, look up the right values in the right tables */
+        trace!("Translating instruction: {:?}", opcode);
+        trace!("arguments: {:?}", args);
         match opcode {
             ///////////////////////////////////////////////////////////////////
             //
@@ -374,7 +378,11 @@ impl ModuleTranslator {
                     &atom_table,
                     &literal_table,
                 );
-                let tail = ModuleTranslator::mk_reg(args[1].clone());
+                let tail = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
                 let target = ModuleTranslator::mk_reg(args[2].clone());
                 Some(Instruction::ConsList { target, head, tail })
             }
@@ -420,6 +428,7 @@ impl ModuleTranslator {
         atom_table: &lam_beam::AtomTable,
         literal_table: &lam_beam::LiteralTable,
     ) -> Value {
+        trace!("Translating compact term {:?} to a literal value", x);
         match x {
             CompactTerm::RegisterX(x) => Value::Register(Register::X(x)),
             // CompactTerm::RegisterY(y) => Value::Register(Register::Y(y)),
@@ -444,6 +453,7 @@ impl ModuleTranslator {
     }
 
     pub fn mk_literal_of_external_term(x: &ExternalTerm) -> Literal {
+        trace!("Translating external term {:?} to a literal value", x);
         match x {
             ExternalTerm::List(external_term::List { elements }) => {
                 elements.iter().fold(Literal::List(List::Nil), |acc, el| {
@@ -466,6 +476,7 @@ impl ModuleTranslator {
     }
 
     pub fn mk_int(x: lam_beam::Value) -> Value {
+        trace!("Translating {:?} to an integer value", x);
         match x {
             lam_beam::Value::Small(y) => Value::Literal(Literal::Integer(y.into())),
             lam_beam::Value::Large(z) => Value::Literal(Literal::Integer(z)),
@@ -473,6 +484,7 @@ impl ModuleTranslator {
     }
 
     pub fn mk_reg(x: CompactTerm) -> Register {
+        trace!("Translating {:?} to a register", x);
         match x {
             CompactTerm::RegisterX(x) => Register::X(x),
             // CompactTerm::RegisterY(y) => Register::Y(y),

@@ -159,7 +159,7 @@ impl Emulator {
                     tail,
                 } => {
                     let head = Box::new(self.fetch_value(&head));
-                    let tail = Box::new(self.fetch_register(&tail));
+                    let tail = Box::new(self.fetch_value(&tail));
                     self.registers[rx as usize] =
                         Value::Literal(Literal::List(List::Cons(head, tail)));
                     self.instr_ptr.next(&program);
