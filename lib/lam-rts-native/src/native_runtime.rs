@@ -12,14 +12,16 @@ impl NativeRuntime {
         num_cpus::get()
     }
 
-    pub fn args(&self) -> lam_emu::Value {
-        Value::Literal(
+    pub fn args(&self) -> Value {
+        Literal::List(
             env::args()
                 .skip(1) // skip the binary name
-                .fold(Literal::List(List::Nil), |acc, v| {
-                    Literal::List(List::Cons(Box::new(Literal::Binary(v)), Box::new(acc)))
+                .rev()
+                .fold(List::Nil, |acc, v| {
+                    List::Cons(Box::new(Literal::Binary(v)), Box::new(acc))
                 }),
         )
+        .into()
     }
 }
 
@@ -55,7 +57,7 @@ impl Runtime for NativeRuntime {
                 Literal::Binary(str) => Literal::Integer(BigInt::from_str(&str).unwrap()),
                 _ => panic!("Could not convert: {:?} to an integer", args[0]),
             },
-            (_, _) => panic!("How'd you get here?"),
+            (_, _) => panic!("How'd you get here? -- {:?} {:?}", mfa, args),
         }
     }
 
