@@ -8,7 +8,30 @@ use num_traits::cast::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
+pub type Label = u32;
+pub type Arity = u32;
 pub type Atom = String;
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
+pub struct Lambda {
+    /// The first label to execute when the Lambda runs.
+    pub first_label: Label,
+
+    /// The module in which the first label should be found
+    pub module: Atom,
+
+    /// The amount of values captured when the Lambda was created.
+    pub environment: Vec<Literal>,
+
+    pub arity: Arity,
+}
+
+impl Display for Lambda {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "fun {}/{}", self.first_label, self.arity)
+    }
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
@@ -30,12 +53,46 @@ pub struct Tuple {
     pub elements: Vec<Literal>,
 }
 
+impl Display for Tuple {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "{{")?;
+        for e in self.clone().elements {
+            write!(fmt, "{}, ", e)?;
+        }
+        write!(fmt, "}}")
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 /// NOTE(@ostera): consider reusing an existing implementation of cons lists
 pub enum List {
     Nil,
-    Cons(Box<Literal>, Box<Literal>),
+    Cons(Box<Literal>, Box<List>),
+}
+
+impl Into<Vec<Literal>> for List {
+    fn into(self) -> Vec<Literal> {
+        match self {
+            List::Nil => vec![],
+            List::Cons(head, tail) => {
+                let tail: Vec<Literal> = (*tail).into();
+                let res: Vec<Literal> = vec![*head].iter().chain(tail.iter()).cloned().collect();
+                res
+            }
+        }
+    }
+}
+
+impl Display for List {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "[")?;
+        let elements: Vec<Literal> = self.clone().into();
+        for e in elements {
+            write!(fmt, "{}, ", e)?;
+        }
+        write!(fmt, "]")
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -51,6 +108,7 @@ pub enum Literal {
     Character(u8),
     Float(f64),
     Integer(BigInt),
+    Lambda(Lambda),
     List(List),
     Pid(Pid),
     Tuple(Tuple),
@@ -63,6 +121,23 @@ impl Into<BigInt> for Literal {
             Literal::Integer(bi) => bi,
             Literal::Float(f) => BigInt::from_f64(f).unwrap(),
             _ => panic!("Could not turn {:?} into a BigInt", self),
+        }
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            Literal::Atom(atom) => write!(fmt, "{}", atom),
+            Literal::Binary(bin) => write!(fmt, "<<{}>>", bin),
+            Literal::Bool(b) => write!(fmt, "{}", b),
+            Literal::Character(char) => write!(fmt, "'{}'", char),
+            Literal::Float(f) => write!(fmt, "{}", f),
+            Literal::Integer(i) => write!(fmt, "{}", i.to_string()),
+            Literal::Lambda(l) => write!(fmt, "{}", l),
+            Literal::List(l) => write!(fmt, "{}", l),
+            Literal::Pid(p) => write!(fmt, "{}", p),
+            Literal::Tuple(t) => write!(fmt, "{}", t),
         }
     }
 }
