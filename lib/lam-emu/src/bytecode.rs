@@ -1,8 +1,6 @@
 use super::literal::*;
 use serde::{Deserialize, Serialize};
-
-pub type Label = u32;
-pub type Arity = u32;
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
@@ -24,6 +22,16 @@ impl Into<Literal> for Value {
 impl Into<Value> for Literal {
     fn into(self) -> Value {
         Value::Literal(self)
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            Value::Nil => write!(fmt, "nil"),
+            Value::Register(r) => write!(fmt, "{}", r),
+            Value::Literal(l) => write!(fmt, "{}", l),
+        }
     }
 }
 
@@ -73,24 +81,37 @@ pub enum Register {
     Local(u32),
 }
 
+impl Display for Register {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            Register::Local(l) => write!(fmt, "L#{}", l),
+            Register::Global(l) => write!(fmt, "G#{}", l),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
 pub enum FnCall {
     BuiltIn {
-        module: String,
-        function: String,
+        module: Atom,
+        function: Atom,
         arity: Arity,
         arguments: Vec<Value>,
         destination: Register,
     },
     Local {
-        function: String,
+        module: Atom,
+        label: Label,
         arity: Arity,
     },
     Qualified {
-        module: String,
-        function: String,
+        module: Atom,
+        function: Atom,
         arity: Arity,
+    },
+    ApplyLambda {
+        register: Register,
     },
 }
 
@@ -100,24 +121,26 @@ impl FnCall {
             FnCall::Local { arity, .. } => *arity,
             FnCall::Qualified { arity, .. } => *arity,
             FnCall::BuiltIn { arity, .. } => *arity,
+            FnCall::ApplyLambda { .. } => panic!("Lambdas do not have an arity?"),
         }
     }
 
     pub fn module(&self) -> Option<String> {
         match self {
-            FnCall::Local { .. } => None,
+            FnCall::Local { module, .. } => Some(module.to_string()),
             FnCall::Qualified { module, .. } => Some(module.to_string()),
             FnCall::BuiltIn { module, .. } => Some(module.to_string()),
+            FnCall::ApplyLambda { .. } => panic!("Lambdas do not have a module?"),
         }
     }
 
     pub fn function(&self) -> String {
         match self {
-            FnCall::Local { function, .. } => function,
-            FnCall::Qualified { function, .. } => function,
-            FnCall::BuiltIn { function, .. } => function,
+            FnCall::Qualified { function, .. } => function.clone(),
+            FnCall::BuiltIn { function, .. } => function.clone(),
+            FnCall::Local { .. } => panic!("Local calls don't have a name?"),
+            FnCall::ApplyLambda { .. } => panic!("Lambdas do not have a name?"),
         }
-        .clone()
     }
 }
 
@@ -208,6 +231,14 @@ pub enum Instruction {
     ///
     /// Working with Values
     ///
+
+    /// Create a boxed lambda and place it on `Global(0)`. When called with
+    /// `Call(Lambda { register })` execution will start at `first_label`.
+    MakeLambda {
+        first_label: Label,
+        module: Atom,
+        arity: Arity,
+    },
 
     /// Cons `head` onto `tail` and place it in the `target` register
     ConsList {
