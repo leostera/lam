@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 
 use super::bytecode::*;
+use super::literal::*;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
