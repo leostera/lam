@@ -3,7 +3,7 @@ use log::*;
 use lam_beam::external_term;
 use lam_beam::{
     AtomTable, Chunk, CodeTable, CompactTerm, ExportTable, ExternalTerm, ImportTable, LiteralTable,
-    OpCode, BEAM,
+    LocalFunctionTable, OpCode, BEAM,
 };
 use lam_emu::{
     FnCall, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register, Test,
@@ -13,6 +13,7 @@ use lam_emu::{
 #[derive(Debug, Clone, Default)]
 #[repr(C)]
 pub struct ModuleTranslator {
+    beam_local_fun_table: LocalFunctionTable,
     beam_export_table: ExportTable,
     beam_import_table: ImportTable,
     beam_atom_table: AtomTable,
@@ -30,6 +31,7 @@ pub struct ModuleTranslator {
 ///
 impl ModuleTranslator {
     pub fn from_bytecode(&mut self, beam: BEAM) -> &mut ModuleTranslator {
+        trace!("From Bytecode: {:#?}", beam);
         for chunk in beam.chunks() {
             match chunk {
                 Chunk::AtU8(chunk_data) => self.beam_atom_table = chunk_data.data.clone(),
@@ -38,6 +40,7 @@ impl ModuleTranslator {
                 Chunk::LitT(chunk_data) => self.beam_literal_table = chunk_data.data.clone(),
                 Chunk::ExpT(chunk_data) => self.beam_export_table = chunk_data.data.clone(),
                 Chunk::ImpT(chunk_data) => self.beam_import_table = chunk_data.data.clone(),
+                Chunk::LocT(chunk_data) => self.beam_local_fun_table = chunk_data.data.clone(),
                 _ => (),
             }
         }
@@ -88,12 +91,15 @@ impl ModuleTranslator {
                  * something we can handle in the emulator. */
                 _ => {
                     if let Some(lam_instr) = ModuleTranslator::mk_instr(
+                        &module,
                         &opcode,
                         &args,
+                        &self.beam_local_fun_table,
                         &self.beam_atom_table,
                         &self.beam_literal_table,
                         &self.beam_import_table,
                     ) {
+                        trace!("=> {:?}", lam_instr);
                         module.labels[current_label as usize]
                             .instructions
                             .push(lam_instr);
@@ -106,15 +112,16 @@ impl ModuleTranslator {
     }
 
     pub fn mk_instr(
+        module: &lam_emu::Module,
         opcode: &lam_beam::OpCode,
         args: &[lam_beam::CompactTerm],
+        local_fun_table: &lam_beam::LocalFunctionTable,
         atom_table: &lam_beam::AtomTable,
         literal_table: &lam_beam::LiteralTable,
         import_table: &lam_beam::ImportTable,
     ) -> Option<Instruction> {
         /* using the args, look up the right values in the right tables */
-        trace!("Translating instruction: {:?}", opcode);
-        trace!("arguments: {:?}", args);
+        trace!("{:?} <- {:?}", opcode, args);
         match opcode {
             ///////////////////////////////////////////////////////////////////
             //
@@ -159,9 +166,18 @@ impl ModuleTranslator {
             //
             //  Function Calls
             //
+            OpCode::CallFun => Some(Instruction::Call(FnCall::ApplyLambda {
+                register: Register::Global(0),
+            })),
+
             OpCode::Call | OpCode::CallOnly | OpCode::CallLast => {
+                let arity: u32 = args[0].clone().into();
                 let label: u32 = args[1].clone().into();
-                Some(Instruction::Jump(label - 1))
+                Some(Instruction::Call(FnCall::Local {
+                    module: module.name.clone(),
+                    label: label - 1,
+                    arity,
+                }))
             }
 
             OpCode::CallExt => {
@@ -272,10 +288,15 @@ impl ModuleTranslator {
             }
 
             OpCode::Bif0 => {
-                let name_idx: u32 = args[0].clone().into();
-                let name = &atom_table.atoms[(name_idx - 1) as usize].name;
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[0].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
 
-                match name.as_str() {
+                trace!("Bif0 MFA: {:?}", (&module, &function, &arity));
+
+                match function.as_str() {
                     "self" => {
                         let reg = ModuleTranslator::mk_reg(args[1].clone());
                         Some(Instruction::PidSelf(reg))
@@ -407,11 +428,24 @@ impl ModuleTranslator {
                 })
             }
 
+            OpCode::MakeFun | OpCode::MakeFun2 => {
+                //         label  ? ? arity
+                // {make_fun2,{f,16},0,0,2}.
+                let local_fun = {
+                    let lf_idx: u32 = args[0].clone().into();
+                    local_fun_table.data[lf_idx as usize].clone()
+                };
+                trace!("MakeFun2: {:?}", local_fun);
+                Some(Instruction::MakeLambda {
+                    module: module.name.clone(),
+                    first_label: local_fun.label - 1,
+                    arity: local_fun.arity,
+                })
+            }
+
             /*
             {case_end,{x,0}}.
 
-            //         label  ? ? arity
-            {make_fun2,{f,16},0,0,2}.
 
             {trim,1,1}.
                         */
@@ -428,8 +462,7 @@ impl ModuleTranslator {
         atom_table: &lam_beam::AtomTable,
         literal_table: &lam_beam::LiteralTable,
     ) -> Value {
-        trace!("Translating compact term {:?} to a literal value", x);
-        match x {
+        let res = match x.clone() {
             CompactTerm::RegisterX(x) => Value::Register(Register::Global(x)),
             CompactTerm::RegisterY(y) => Value::Register(Register::Local(y)),
             CompactTerm::Nil => Value::Literal(Literal::List(List::Nil)),
@@ -449,47 +482,56 @@ impl ModuleTranslator {
                 "Don't know how to turn CompactTerm {:?} into a lam_emu::Value",
                 x
             ),
-        }
+        };
+        trace!("mk_value_of_compact({:?}) -> {:?}", x, res);
+        res
     }
 
     pub fn mk_literal_of_external_term(x: &ExternalTerm) -> Literal {
-        trace!("Translating external term {:?} to a literal value", x);
-        match x {
+        let res = match x.clone() {
             ExternalTerm::List(external_term::List { elements }) => {
-                elements.iter().fold(Literal::List(List::Nil), |acc, el| {
-                    Literal::List(List::Cons(
+                Literal::List(elements.iter().fold(List::Nil, |acc, el| {
+                    List::Cons(
                         Box::new(ModuleTranslator::mk_literal_of_external_term(el)),
                         Box::new(acc),
-                    ))
-                })
+                    )
+                }))
+                .into()
             }
             ExternalTerm::Atom(atom) => Literal::Atom(atom.to_string()),
             ExternalTerm::Binary(bin) => Literal::Binary(
                 String::from_utf8(bin.bytes.clone())
                     .expect("Binary string had invalid utf-8 characters"),
             ),
+            ExternalTerm::FixInteger(external_term::FixInteger { value }) => {
+                Literal::Integer(value.into())
+            }
             _ => panic!(
                 "Don't know how to turn ExternalTerm {:?} into a lam_emu::Value",
                 x
             ),
-        }
+        };
+        trace!("mk_lit_of_ext({:?}) -> {:?}", x, res);
+        res
     }
 
     pub fn mk_int(x: lam_beam::Value) -> Value {
-        trace!("Translating {:?} to an integer value", x);
-        match x {
+        let res = match x.clone() {
             lam_beam::Value::Small(y) => Value::Literal(Literal::Integer(y.into())),
             lam_beam::Value::Large(z) => Value::Literal(Literal::Integer(z)),
-        }
+        };
+        trace!("mk_int({:?}) -> {:?}", x, res);
+        res
     }
 
     pub fn mk_reg(x: CompactTerm) -> Register {
-        trace!("Translating {:?} to a register", x);
-        match x {
+        let res = match x.clone() {
             CompactTerm::RegisterX(x) => Register::Global(x),
             CompactTerm::RegisterY(y) => Register::Local(y),
             _ => panic!("Tried to turn {:?} into a register", x),
-        }
+        };
+        trace!("mk_reg({:?}) -> {:?}", x, res);
+        res
     }
 
     pub fn mk_mfa_from_imports(
