@@ -202,17 +202,17 @@ pub struct LocalFunctionTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    data: Vec<LocationFunction>,
+    pub data: Vec<LocalFunction>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
-pub struct LocationFunction {
+pub struct LocalFunction {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    fun_atom_index: u32,
+    pub fun_atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    arity: u32,
+    pub arity: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    label: u32,
+    pub label: u32,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]

@@ -25,7 +25,7 @@ pub enum SimpleTag {
 
 impl Into<SimpleTag> for u8 {
     fn into(self) -> SimpleTag {
-        match self {
+        match self & 0b0000_0111 {
             0b000 => SimpleTag::Literal,
             0b001 => SimpleTag::Integer,
             0b010 => SimpleTag::Atom,
@@ -35,7 +35,7 @@ impl Into<SimpleTag> for u8 {
             0b110 => SimpleTag::Character,
             0b111 => SimpleTag::Extended,
             _ => panic!(
-                "Invalid u8->SimpleTag conversion: {:?} is not a valid tag",
+                "Invalid u8->SimpleTag conversion: {:b} is not a valid tag",
                 self
             ),
         }
@@ -53,13 +53,13 @@ pub enum ExtendedTag {
 
 impl Into<ExtendedTag> for u8 {
     fn into(self) -> ExtendedTag {
-        match self {
+        match self & 0b0111_1111 {
             0b0001_0111 => ExtendedTag::List,
             0b0010_0111 => ExtendedTag::RegisterFloat,
             0b0011_0111 => ExtendedTag::ListAllocation,
             0b0100_0111 => ExtendedTag::ExtendedLiteral,
             _ => panic!(
-                "Invalid u8->ExtendedTag conversion: {:?} is not a valid tag",
+                "Invalid u8->ExtendedTag conversion: {:b} is not a valid tag",
                 self
             ),
         }
