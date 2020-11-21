@@ -34,13 +34,7 @@ impl Runtime for NativeRuntime {
         } = mfa;
         match (module.as_str(), function.as_str()) {
             ("io", "format") => {
-                match args[1].clone() {
-                    Literal::List(List::Cons(boxed_int, _)) => match *boxed_int {
-                        Literal::Integer(bi) => println!("{}", bi.to_string()),
-                        x => println!("{:?}", x),
-                    },
-                    x => println!("{:?}", x),
-                }
+                println!("{:?}", args);
                 Literal::Atom("ok".to_string())
             }
             ("erlang", "-") => {
