@@ -147,6 +147,13 @@ impl FnCall {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
+pub enum FnKind {
+    Native,
+    User,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
 pub enum Test {
     Equals(Value, Value),
     IsGreaterOrEqualThan(Value, Value),
@@ -161,10 +168,27 @@ pub enum Test {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
+pub enum Spawn {
+    /// Spawn a new process by applying this lambda
+    Lambda { register: Register },
+
+    /// Spawn a new process starting with this MFA invocation
+    MFA {
+        module: Atom,
+        function: Atom,
+        arity: Arity,
+        arguments: Vec<Value>,
+    },
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
 pub enum Instruction {
     ///////////////////////////////////////////////////////////////////////////
     ///
     /// Kill-switch.
+    ///
+    /// A Halt instruction will stop an emulator.
     ///
     Halt,
 
@@ -225,8 +249,8 @@ pub enum Instruction {
     ///
 
     /// Perform a function call with or without allocating a new stack frame.
-    Call(FnCall),
-    TailCall(FnCall),
+    Call(FnCall, FnKind),
+    TailCall(FnCall, FnKind),
 
     ///////////////////////////////////////////////////////////////////////////
     ///
@@ -268,8 +292,10 @@ pub enum Instruction {
     /// Processes
     ///
 
-    /** Creates a new process and puts the Pid on the X(0) register */
-    Spawn,
+    /// Creates a new process looking for a lambda at Register, and puts the Pid on the X(0)
+    /// register
+    Spawn(Spawn),
+
     Kill,
     Monitor,
 

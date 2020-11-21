@@ -1,8 +1,6 @@
-use super::bytecode::*;
 use super::emulator::*;
 use super::literal::*;
 use super::process::*;
-use super::program::*;
 use log::*;
 use std::collections::VecDeque;
 
@@ -20,6 +18,10 @@ impl ProcessQueue {
         ProcessQueue::default()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.ready.is_empty()
+    }
+
     pub fn enqueue(&mut self, p: Process) -> &mut ProcessQueue {
         trace!("Enqueue: {}", p.pid());
         match p.status() {
@@ -30,15 +32,13 @@ impl ProcessQueue {
         self
     }
 
-    pub fn spawn(&mut self, mfa: &MFA, args: Value, program: &Program, scheduler_id: u32) -> Pid {
+    pub fn spawn_and_ready(&mut self, emulator: Emulator, scheduler_id: u32) -> Pid {
         let pid = Pid {
             scheduler_id,
             process_id: self.process_count,
         };
-        trace!("Spawned: {:?} with args {:?} as {} ", mfa, args, pid);
-        let mut emulator = Emulator::new(&mfa, &program);
-        emulator.preload(0, args);
-        self.enqueue(Process::new(pid.clone(), mfa.clone(), emulator));
+        let process = Process::new(pid.clone(), emulator);
+        self.enqueue(process);
         self.process_count += 1;
         pid
     }

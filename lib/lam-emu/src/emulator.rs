@@ -27,11 +27,25 @@ pub enum EmulationStatus {
 }
 
 impl Emulator {
-    pub fn new(mfa: &MFA, program: &Program) -> Emulator {
+    pub fn new() -> Emulator {
         Emulator {
             registers: Registers::new(),
-            instr_ptr: InstructionPointer::new(mfa, program),
+            instr_ptr: InstructionPointer::new(),
         }
+    }
+
+    pub fn set_initial_call_from_mfa(&mut self, mfa: &MFA, program: &Program) -> &mut Emulator {
+        self.instr_ptr.setup_mfa(&mfa, &program);
+        self
+    }
+
+    pub fn set_initial_call_from_lambda(
+        &mut self,
+        lambda: &Lambda,
+        program: &Program,
+    ) -> &mut Emulator {
+        self.instr_ptr.setup_lambda(&lambda, &program);
+        self
     }
 
     pub fn preload(&mut self, x: u32, v: Value) -> &mut Emulator {
@@ -43,21 +57,28 @@ impl Emulator {
         &mut self,
         reduction_count: u64,
         program: &Program,
-        _scheduler: &mut Scheduler,
+        scheduler: &mut Scheduler,
         runtime: &mut Box<dyn Runtime>,
         pid: Pid,
     ) -> Result<EmulationStatus, Error> {
         let mut reductions = 0;
+        let mut last_red = 0;
         while reductions < reduction_count {
-            trace!("Reduction Count: {}", reductions);
+            if last_red < reductions {
+                trace!(
+                    "================ reduction #{} ================",
+                    reductions
+                );
+                last_red = reductions;
+            }
             trace!("{}", self.registers,);
-            trace!("{:?}", self.instr_ptr.instr);
+            trace!("{}", self.instr_ptr);
             match self.instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
                 // Kill switch
                 //
-                Instruction::Halt => runtime.halt(),
+                Instruction::Halt => return Ok(EmulationStatus::Terminated),
 
                 ////////////////////////////////////////////////////////////////
                 //
@@ -93,13 +114,16 @@ impl Emulator {
                 //
                 // Function calls
                 //
-                Instruction::Call(FnCall::BuiltIn {
-                    module,
-                    function,
-                    arity,
-                    arguments,
-                    destination,
-                }) => {
+                Instruction::Call(
+                    FnCall::BuiltIn {
+                        module,
+                        function,
+                        arity,
+                        arguments,
+                        destination,
+                    },
+                    _,
+                ) => {
                     let args: Vec<Literal> = arguments
                         .iter()
                         .map(|a| self.registers.get_literal_from_value(&a))
@@ -114,29 +138,60 @@ impl Emulator {
                     );
                     self.registers.put(&destination, ret.into());
                     self.instr_ptr.next(&program);
+                    reductions += 1;
                 }
 
-                Instruction::Call(FnCall::ApplyLambda { register, .. }) => {
+                Instruction::Call(FnCall::ApplyLambda { register, .. }, _) => {
                     let value = self.registers.get(&register);
                     if let Literal::Lambda(lambda) = value.clone().into() {
                         self.registers.fill_globals(&lambda.environment);
-                        self.instr_ptr.jump_to_label(&program, &lambda.first_label);
+                        self.instr_ptr.call(
+                            &program,
+                            &FnCall::Local {
+                                module: lambda.module,
+                                label: lambda.first_label,
+                                arity: lambda.arity,
+                            },
+                        );
                     } else {
                         panic!(
                             "Can not apply value found in {:?} since it is not a lambda",
                             value
                         )
                     };
+                    reductions += 1;
                 }
 
-                Instruction::Call(call) => {
+                Instruction::Call(call, FnKind::User) => {
                     self.registers.clear_globals(call.arity());
                     self.instr_ptr.call(&program, &call);
+                    reductions += 1;
                 }
 
-                Instruction::TailCall(call) => {
+                Instruction::TailCall(call, FnKind::User) => {
                     self.registers.clear_globals(call.arity());
                     self.instr_ptr.call(&program, &call);
+                    reductions += 1;
+                }
+
+                Instruction::Call(call, FnKind::Native) => {
+                    let arity = call.arity();
+                    let args = self.registers.get_many_literals_from_global_range(0, arity);
+                    let ret = runtime.execute(&call.into(), &args);
+                    self.registers.clear_globals(arity);
+                    self.registers.put_global(0, Value::Literal(ret));
+                    self.instr_ptr.next(&program);
+                    reductions += 1;
+                }
+
+                Instruction::TailCall(call, FnKind::Native) => {
+                    let arity = call.arity();
+                    let args = self.registers.get_many_literals_from_global_range(0, arity);
+                    let ret = runtime.execute(&call.into(), &args);
+                    self.registers.clear_globals(arity);
+                    self.registers.put_global(0, Value::Literal(ret));
+                    self.instr_ptr.next(&program);
+                    reductions += 1;
                 }
 
                 ////////////////////////////////////////////////////////////////
@@ -144,8 +199,8 @@ impl Emulator {
                 // Flow-control operations
                 //
                 Instruction::Jump(label) => {
-                    trace!("Jump to label {}", label);
                     self.instr_ptr.jump_to_label(&program, &label);
+                    reductions += 1;
                 }
 
                 Instruction::Return => {
@@ -219,7 +274,9 @@ impl Emulator {
                     first_label,
                     arity,
                 } => {
-                    let environment = self.registers.get_many_literals_from_global_range(0, arity);
+                    let environment = self
+                        .registers
+                        .get_many_literals_from_global_range(0, arity - 1);
                     self.registers.put(
                         &Register::Global(0),
                         Value::Literal(Literal::Lambda(Lambda {
@@ -244,16 +301,29 @@ impl Emulator {
                     self.instr_ptr.next(&program);
                 }
 
-                Instruction::Spawn
-                | Instruction::Monitor
-                | Instruction::Send
-                | Instruction::Receive => {
+                Instruction::Spawn(spawn) => {
+                    let pid = match spawn {
+                        Spawn::Lambda { register } => {
+                            let value = self.registers.get(&register);
+                            if let Literal::Lambda(lambda) = value.clone().into() {
+                                scheduler.spawn_from_lambda(&lambda)
+                            } else {
+                                panic!("Value at {:?} is not a lambda", value)
+                            }
+                        }
+                        _ => panic!("mfa spawns are not supported yet"),
+                    };
+                    self.registers.put_global(0, Literal::Pid(pid).into());
+                    self.instr_ptr.next(&program);
+                    reductions += 1;
+                }
+
+                Instruction::Monitor | Instruction::Send | Instruction::Receive => {
                     self.instr_ptr.next(&program);
                 }
 
                 Instruction::Label(_) => self.instr_ptr.next(&program),
             }
-            reductions += 1;
         }
         Ok(EmulationStatus::Continue)
     }

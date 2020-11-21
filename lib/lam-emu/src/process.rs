@@ -19,15 +19,13 @@ pub enum Status {
 pub struct Process {
     status: Status,
     pid: Pid,
-    initial_mfa: MFA,
     emulator: Emulator,
 }
 
 impl Process {
-    pub fn new(pid: Pid, initial_mfa: MFA, emulator: Emulator) -> Process {
+    pub fn new(pid: Pid, emulator: Emulator) -> Process {
         Process {
             pid,
-            initial_mfa,
             status: Status::Alive,
             emulator,
         }

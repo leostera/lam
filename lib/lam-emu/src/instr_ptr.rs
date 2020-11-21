@@ -2,6 +2,7 @@ use super::bytecode::*;
 use super::literal::*;
 use super::program::*;
 use std::boxed::Box;
+use std::fmt::{Display, Formatter};
 
 use log::*;
 
@@ -15,9 +16,31 @@ pub struct InstructionPointer {
     pub instr: Instruction,
 }
 
+impl Display for InstructionPointer {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(
+            fmt,
+            "Current ML: {}/{} -- ",
+            self.current_module, self.current_label
+        )?;
+        write!(fmt, "Current Instr: {:?}", self.instr)
+    }
+}
+
 impl InstructionPointer {
-    pub fn new(mfa: &MFA, program: &Program) -> InstructionPointer {
-        trace!("Creating pointer for {:#?} in {:#?}", mfa, program);
+    pub fn new() -> InstructionPointer {
+        trace!("Creating empty instruction pointer");
+        InstructionPointer {
+            last_instr_ptr: None,
+            current_module: "".to_string(),
+            current_label: 0,
+            current_instruction: 0,
+            instr: Instruction::Halt,
+        }
+    }
+
+    pub fn setup_mfa(&mut self, mfa: &MFA, program: &Program) -> &mut InstructionPointer {
+        trace!("Setting pointer up for {:#?}", mfa);
         let module = program.modules.get(&mfa.module).unwrap();
         let function_key = (mfa.function.clone(), mfa.arity);
         let first_label = module
@@ -26,13 +49,26 @@ impl InstructionPointer {
             .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key));
         let first_instruction = module.labels[*first_label as usize].instructions[0].clone();
 
-        InstructionPointer {
-            last_instr_ptr: None,
-            current_module: module.name.clone(),
-            current_label: *first_label,
-            current_instruction: 0,
-            instr: first_instruction,
-        }
+        self.last_instr_ptr = None;
+        self.current_module = module.name.clone();
+        self.current_label = *first_label;
+        self.current_instruction = 0;
+        self.instr = first_instruction;
+        self
+    }
+
+    pub fn setup_lambda(&mut self, lambda: &Lambda, program: &Program) -> &mut InstructionPointer {
+        trace!("Setting pointer up for {:?}", lambda);
+
+        let module = program.modules.get(&lambda.module).unwrap();
+        let first_instruction = module.labels[lambda.first_label as usize].instructions[0].clone();
+
+        self.last_instr_ptr = None;
+        self.current_module = lambda.module.clone();
+        self.current_label = lambda.first_label;
+        self.current_instruction = 0;
+        self.instr = first_instruction;
+        self
     }
 
     pub fn get_next(&self, program: &Program) -> InstructionPointer {
@@ -96,8 +132,6 @@ impl InstructionPointer {
     pub fn jump_to_label(&mut self, program: &Program, label: &Label) {
         trace!("Jumping to label: {:?}", label);
 
-        let next_ptr = self.get_next(&program);
-
         let module_name = self.current_module.clone();
         let module = program
             .modules
@@ -113,12 +147,18 @@ impl InstructionPointer {
             current_label: *label,
             current_instruction: 0,
             instr: first_instruction,
-            last_instr_ptr: Some(Box::new(next_ptr)),
+            last_instr_ptr: None,
         }
     }
 
     pub fn return_to_last_instr(&mut self) {
-        let last_ptr = self.last_instr_ptr.clone().unwrap();
-        *self = *last_ptr;
+        match &self.last_instr_ptr {
+            Some(last_ptr) => {
+                *self = *last_ptr.clone();
+            }
+            None => {
+                self.instr = Instruction::Halt;
+            }
+        };
     }
 }

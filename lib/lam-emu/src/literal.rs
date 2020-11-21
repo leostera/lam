@@ -24,6 +24,7 @@ pub struct Lambda {
     /// The amount of values captured when the Lambda was created.
     pub environment: Vec<Literal>,
 
+    /// The amount of arguments this lambda takes
     pub arity: Arity,
 }
 
