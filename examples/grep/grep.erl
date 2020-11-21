@@ -1,42 +1,25 @@
 % Source code generated with Caramel.
 -module(grep).
 
--export([count/3]).
--export([count_all/2]).
--export([count_aux/2]).
 -export([main/1]).
 
--spec count_aux(any(), any()) -> integer().
-count_aux(Word, Data) -> 0.
-
--spec count(beam__erlang:pid(integer()), any(), binary()) -> ok.
-count(Top, Word, File) ->
-  erlang:spawn(fun
-  (_self, _recv) ->
-  case file:read_file(File) of
-    {ok, Data} -> C = count_aux(Word, Data),
-erlang:send(Top, C)
-  end
-end),
+count(File, Word, _Top) ->
+  erlang:spawn(
+    fun () ->
+        io:format(<<"I'm: ~p, and will read: ~p">>, [self(), File])
+        % case file:read_file(File) of
+        %   {ok, Data} -> C = count_aux(Word, Data),,
+        % end
+        % erlang:send(Top, C)
+    end),
   ok.
 
--spec count_all(integer(), integer()) -> integer().
-count_all(N, Acc) ->
-  case erlang:'=:='(N, 0) of
-    true -> Acc;
-    false -> case process:recv(infinity) of
-  {some, X} -> count_all(erlang:'-'(N, 1), erlang:'+'(Acc, X))
-end
-  end.
-
--spec main(list(binary())) -> ok.
 main([Word | Files]) ->
   Top = erlang:self(),
-  lists:foreach(fun
-  (File) -> count(Top, Word, File)
-end, Files),
-  Total = count_all(erlang:length(Files), 0),
-  io:format(<<"Found ~p occurrences of">>, [Total | []]),
-  io:format(<<"~p">>, [Word | []]).
+  Run = fun (File) -> count(File, Word, Top) end,
+  lists:foreach(Run, Files).
 
-
+%% count_all(0, Acc) -> Acc;
+%% count_all(N, Acc) -> receive X -> count_all(N - 1, Acc + X) end.
+%%   Total = count_all(erlang:length(Files), 0),
+%%   io:format(<<"Found ~p occurrences of ~p">>, [Total, Word]).
