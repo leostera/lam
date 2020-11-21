@@ -494,7 +494,7 @@ impl ModuleTranslator {
     pub fn mk_literal_of_external_term(x: &ExternalTerm) -> Literal {
         let res = match x.clone() {
             ExternalTerm::List(external_term::List { elements }) => {
-                Literal::List(elements.iter().fold(List::Nil, |acc, el| {
+                Literal::List(elements.iter().rev().fold(List::Nil, |acc, el| {
                     List::Cons(
                         Box::new(ModuleTranslator::mk_literal_of_external_term(el)),
                         Box::new(acc),
