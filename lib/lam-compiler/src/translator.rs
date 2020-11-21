@@ -166,9 +166,13 @@ impl ModuleTranslator {
             //
             //  Function Calls
             //
-            OpCode::CallFun => Some(Instruction::Call(FnCall::ApplyLambda {
-                register: Register::Global(0),
-            })),
+            OpCode::CallFun => {
+                let arity = args[0].clone().into();
+                Some(Instruction::Call(FnCall::ApplyLambda {
+                    arity,
+                    register: Register::Global(arity),
+                }))
+            }
 
             OpCode::Call | OpCode::CallOnly | OpCode::CallLast => {
                 let arity: u32 = args[0].clone().into();
