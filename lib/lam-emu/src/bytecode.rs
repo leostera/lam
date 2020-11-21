@@ -111,6 +111,7 @@ pub enum FnCall {
         arity: Arity,
     },
     ApplyLambda {
+        arity: Arity,
         register: Register,
     },
 }

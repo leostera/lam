@@ -49,9 +49,9 @@ impl Emulator {
     ) -> Result<EmulationStatus, Error> {
         let mut reductions = 0;
         while reductions < reduction_count {
-            trace!("Reductions: {}", reductions);
-            trace!("Registers: {}", self.registers,);
-            trace!("Instr => {:?}", self.instr_ptr.instr);
+            trace!("Reduction Count: {}", reductions);
+            trace!("{}", self.registers,);
+            trace!("{:?}", self.instr_ptr.instr);
             match self.instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
@@ -116,14 +116,15 @@ impl Emulator {
                     self.instr_ptr.next(&program);
                 }
 
-                Instruction::Call(FnCall::ApplyLambda { register }) => {
-                    if let Literal::Lambda(lambda) = self.registers.get(&register).into() {
+                Instruction::Call(FnCall::ApplyLambda { register, .. }) => {
+                    let value = self.registers.get(&register);
+                    if let Literal::Lambda(lambda) = value.clone().into() {
                         self.registers.fill_globals(&lambda.environment);
                         self.instr_ptr.jump_to_label(&program, &lambda.first_label);
                     } else {
                         panic!(
                             "Can not apply value found in {:?} since it is not a lambda",
-                            register
+                            value
                         )
                     };
                 }
@@ -134,12 +135,8 @@ impl Emulator {
                 }
 
                 Instruction::TailCall(call) => {
-                    let arity = call.arity();
-                    let args = self.registers.get_many_literals_from_global_range(0, arity);
-                    let ret = runtime.execute(&call.into(), &args);
-                    self.registers.clear_globals(arity);
-                    self.registers.put_global(0, Value::Literal(ret));
-                    self.instr_ptr.next(&program);
+                    self.registers.clear_globals(call.arity());
+                    self.instr_ptr.call(&program, &call);
                 }
 
                 ////////////////////////////////////////////////////////////////
