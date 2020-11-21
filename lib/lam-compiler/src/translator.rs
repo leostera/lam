@@ -6,8 +6,8 @@ use lam_beam::{
     LocalFunctionTable, OpCode, BEAM,
 };
 use lam_emu::{
-    FnCall, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register, Test,
-    Value,
+    FnCall, FnKind, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register,
+    Spawn, Test, Value,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -168,46 +168,57 @@ impl ModuleTranslator {
             //
             OpCode::CallFun => {
                 let arity = args[0].clone().into();
-                Some(Instruction::Call(FnCall::ApplyLambda {
-                    arity,
-                    register: Register::Global(arity),
-                }))
+                Some(Instruction::Call(
+                    FnCall::ApplyLambda {
+                        arity,
+                        register: Register::Global(arity),
+                    },
+                    FnKind::User,
+                ))
             }
 
             OpCode::Call | OpCode::CallOnly | OpCode::CallLast => {
                 let arity: u32 = args[0].clone().into();
                 let label: u32 = args[1].clone().into();
-                Some(Instruction::Call(FnCall::Local {
-                    module: module.name.clone(),
-                    label: label - 1,
-                    arity,
-                }))
+                Some(Instruction::Call(
+                    FnCall::Local {
+                        module: module.name.clone(),
+                        label: label - 1,
+                        arity,
+                    },
+                    FnKind::User,
+                ))
             }
 
-            OpCode::CallExt => {
+            /* Translate fully qualified calls */
+            opcode @ OpCode::CallExt
+            | opcode @ OpCode::CallExtOnly
+            | opcode @ OpCode::CallExtLast => {
                 let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
                     args[1].clone().into(),
                     &import_table,
                     &atom_table,
                 );
-                Some(Instruction::Call(FnCall::Qualified {
-                    module,
-                    function,
-                    arity,
-                }))
-            }
-
-            OpCode::CallExtOnly | OpCode::CallExtLast => {
-                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
-                    args[1].clone().into(),
-                    &import_table,
-                    &atom_table,
-                );
-                Some(Instruction::TailCall(FnCall::Qualified {
-                    module,
-                    function,
-                    arity,
-                }))
+                let kind = match module.as_str() {
+                    "io" | "erlang" => FnKind::Native,
+                    _ => FnKind::User,
+                };
+                Some(match (module.as_str(), function.as_str(), arity) {
+                    ("erlang", "spawn", 1) => Instruction::Spawn(Spawn::Lambda {
+                        register: Register::Global(0),
+                    }),
+                    (_, _, _) => {
+                        let call = FnCall::Qualified {
+                            module,
+                            function,
+                            arity,
+                        };
+                        match opcode {
+                            OpCode::CallExt => Instruction::Call(call, kind),
+                            _ => Instruction::TailCall(call, kind),
+                        }
+                    }
+                })
             }
 
             OpCode::GcBif1 => {
@@ -229,7 +240,7 @@ impl ModuleTranslator {
                     arguments: vec![a],
                     destination: dest,
                 };
-                Some(Instruction::Call(bif))
+                Some(Instruction::Call(bif, FnKind::Native))
             }
 
             OpCode::GcBif2 => {
@@ -256,7 +267,7 @@ impl ModuleTranslator {
                     arguments: vec![a, b],
                     destination: dest,
                 };
-                Some(Instruction::Call(bif))
+                Some(Instruction::Call(bif, FnKind::Native))
             }
 
             OpCode::GcBif3 => {
@@ -288,7 +299,7 @@ impl ModuleTranslator {
                     arguments: vec![a, b, c],
                     destination: dest,
                 };
-                Some(Instruction::Call(bif))
+                Some(Instruction::Call(bif, FnKind::Native))
             }
 
             OpCode::Bif0 => {
