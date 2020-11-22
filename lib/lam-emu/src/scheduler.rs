@@ -24,7 +24,7 @@ impl<'a> Scheduler<'a> {
             id,
             program,
             sleep_delay: 20,
-            reduction_count: 2,
+            reduction_count: 100,
             current_process: 0,
             process_queue: ProcessQueue::new(),
         }
