@@ -1,15 +1,14 @@
 #!/bin/bash
 
-N=$1
+N=$*
 
-echo "Running grep(${N})..."
+echo "Running grep ${N}..."
 
-caramelc compile *.ml
 erlc -S *.erl
 erlc *.erl
 
-cargo run --release -- build grep.beam -o grep.opt.exe -t native -e grep
-cargo run --release -- build grep.beam -o grep.opt.wasm -t wasm -e grep
+lam build *.beam -o grep.opt.exe -t native -e grep
+lam build *.beam -o grep.opt.wasm -t wasm -e grep
 
 hyperfine \
   --warmup 50 \

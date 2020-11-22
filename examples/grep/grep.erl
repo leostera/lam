@@ -11,9 +11,11 @@ print_matches(Word, [_ | T], File)->
 print_matches(_, _, _) -> ok.
 
 count(File, Word) ->
-  {ok, Data} = file:read_file(File),
-  Words = binary:split(Data, <<" ">>, [global]),
-  print_matches(Word, Words, File).
+  erlang:spawn(fun () ->
+    {ok, Data} = file:read_file(File),
+    Words = binary:split(Data, <<" ">>, [global]),
+    print_matches(Word, Words, File)
+  end).
 
 main([Word | Files]) ->
   Run = fun (File) -> count(File, Word) end,
