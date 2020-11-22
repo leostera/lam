@@ -17,3 +17,6 @@ Cargo.lock
 dist
 
 *.tar.gz
+
+debug
+docs/.rustc_info.json

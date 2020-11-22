@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["start","Safety *  This function is marked as unsafe because the native runtime will dereference *  the data pointer to read and then execute the bytecode."]]});
