@@ -11,7 +11,7 @@ sometimes they span multiple concerns.
 * 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
 * 2020 Q4 - Milestone 2: Single Process Programs :hammer:
 * Milestone 3: Multi-Process Programs :hammer:
-* Milestone 4: Multi-core Processing :hammer:
+* Milestone 4: Multi-Core Scheduling :hammer:
 * Milestone 5: Native Extensions :crystal_ball:
 * Milestone 6: WebIDL API :rocket:
 * Milestone 7: Native Graphics :rocket:
@@ -75,10 +75,16 @@ for:
 At this point I'd expect us to support the core OTP modules: `supervisor` and
 `gen_server`.
 
-## Milestone 4: Multi-core Processing :crystal_ball:
+## Milestone 4: Multi-Core Scheduling :crystal_ball:
 
 Implement symmetric multi-processing to spread the work across several cores by
 means of either job-stealing or some other configurable policy.
+
+Stuff that needs doing:
+
+* maintain and run as many schedulers as cores there are :heavy_check_mark:
+* load-balancing / work stealing
+* message routing
 
 ## Milestone 5: Native Extensions :hammer:
 
