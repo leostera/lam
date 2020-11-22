@@ -116,6 +116,15 @@ pub enum Literal {
     // Map(Map),
 }
 
+impl Into<String> for Literal {
+    fn into(self) -> String {
+        match self {
+            Literal::Binary(str) => str,
+            _ => panic!("Could not turn {:?} into a String", self),
+        }
+    }
+}
+
 impl Into<BigInt> for Literal {
     fn into(self) -> BigInt {
         match self {
@@ -130,7 +139,7 @@ impl Display for Literal {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
         match self {
             Literal::Atom(atom) => write!(fmt, "{}", atom),
-            Literal::Binary(bin) => write!(fmt, "<<{}>>", bin),
+            Literal::Binary(bin) => write!(fmt, "<<{:?}>>", bin),
             Literal::Bool(b) => write!(fmt, "{}", b),
             Literal::Character(char) => write!(fmt, "'{}'", char),
             Literal::Float(f) => write!(fmt, "{}", f),
