@@ -3,12 +3,15 @@
 This is a list of all the research and work I'd like to do within the context
 of LAM.
 
+Milestones are fairly small and try to be self-contained, but of course
+sometimes they span multiple concerns.
+
 #### Milestones
 
 * 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
 * 2020 Q4 - Milestone 2: Single Process Programs :hammer:
-* Milestone 3: Multi-Process Programs :crystal_ball:
-* Milestone 4: Multi-core Processing :crystal_ball:
+* Milestone 3: Multi-Process Programs :hammer:
+* Milestone 4: Multi-core Processing :hammer:
 * Milestone 5: Native Extensions :crystal_ball:
 * Milestone 6: WebIDL API :rocket:
 * Milestone 7: Native Graphics :rocket:
@@ -42,16 +45,10 @@ $ parcel serve index.html
 > Hello, Joe!
 ```
 
-## 2020 Q4 - Milestone 2: Single Process Programs :hammer:
+## 2020 Q4 - Milestone 2: Fast Single-process Programs :hammer:
 
 For this milestone, I'd like to be able to write arbitrary single-process
-Erlang programs. So we should support a larger surface area of the BEAM
-bytecode including:
-
-- [ ] y register and heap allocations
-- [ ] all value creation
-- [ ] all calls ops
-- [ ] all tests
+Erlang programs. 
 
 The goal here would be to be able to create any sort of values that are valid
 in Erlang, and call functions in any way valid in Erlang as well, so that 
@@ -60,23 +57,30 @@ we can build some command line tools.
 Some things that should be possible are:
 
 * run infinitely: `f() -> f().` should just run and run and run.
-* run relatively fast
+* run relatively fast: boot time should be under 10ms
 
-## Milestone 3: Multi-Process Programs :crystal_ball:
+## Milestone 3: Multi-Process Programs :hammer:
 
-Implement the rest of the bytecode for message passing including:
+Implement the rest of the bytecode for message passing including equivalents
+for:
 
-* spawn, kill, monitor, link
-* send, receive, select_receive, remove_message, wait
+* spawn :heavy_check_mark:
+* kill
+* monitor / demonitor
+* link / unlink
+* send
+* receive, select_receive, remove_message
+* wait
 
 At this point I'd expect us to support the core OTP modules: `supervisor` and
 `gen_server`.
 
 ## Milestone 4: Multi-core Processing :crystal_ball:
 
-Implement symmetric multi-processing to spread the work across several cores.
+Implement symmetric multi-processing to spread the work across several cores by
+means of either job-stealing or some other configurable policy.
 
-## Milestone 5: Native Extensions :crystal_ball:
+## Milestone 5: Native Extensions :hammer:
 
 To support building useful native and web applications, we need to figure out
 how to allow people to link custom code that interfaces with the runtime, and
