@@ -26,7 +26,9 @@ test:
 .PHONY: release
 release: release.wasm release.web
 	cargo build --release
-	tar czf release.tar.gz -C ./target/release/ lam*
+	tar czf release.tar.gz -C ./target/release/ \
+		$(shell find ./target/release -name "lam" -or -name "lam.exe" \
+		        | sed 's@./target/release/@@g' )
 
 .PHONY: release.wasm
 release.wasm:
