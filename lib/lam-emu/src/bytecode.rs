@@ -259,6 +259,7 @@ pub enum Instruction {
         first_label: Label,
         module: Atom,
         arity: Arity,
+        environment_size: u32,
     },
 
     /// Cons `head` onto `tail` and place it in the `target` register

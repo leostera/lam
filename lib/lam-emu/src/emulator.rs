@@ -281,10 +281,11 @@ impl Emulator {
                     module,
                     first_label,
                     arity,
+                    environment_size,
                 } => {
                     let environment = self
                         .registers
-                        .get_many_literals_from_global_range(0, arity - 1);
+                        .get_many_literals_from_global_range(0, environment_size);
                     self.registers.put(
                         &Register::Global(0),
                         Value::Literal(Literal::Lambda(Lambda {

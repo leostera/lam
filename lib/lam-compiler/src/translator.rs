@@ -450,7 +450,8 @@ impl ModuleTranslator {
                 Some(Instruction::MakeLambda {
                     module: module.name.clone(),
                     first_label: local_fun.label - 1,
-                    arity: local_fun.arity,
+                    arity: 0,
+                    environment_size: local_fun.arity,
                 })
             }
 
