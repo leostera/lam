@@ -1,5 +1,6 @@
 use anyhow::Error;
-use lam_emu::{List, Literal, Runtime, Scheduler, Value, MFA};
+use lam_emu::{List, Literal, Runtime, Scheduler, Tuple, Value, MFA};
+use log::*;
 use num_bigint::BigInt;
 use std::env;
 use std::str::FromStr;
@@ -30,28 +31,46 @@ impl Runtime for NativeRuntime {
         let MFA {
             module,
             function,
-            arity: _,
+            arity,
         } = mfa;
-        match (module.as_str(), function.as_str()) {
-            ("io", "format") => {
-                println!("{:?}", args);
+        trace!("{}:{}({:?})", module, function, args.clone());
+        match (module.as_str(), function.as_str(), arity) {
+            ("binary", "split", 3) => {
+                let string: String = args[0].clone().into();
+                let at: String = args[1].clone().into();
+                let parts: Vec<&str> = string.split(&at).collect();
+
+                Literal::List(parts.iter().rev().fold(List::Nil, |acc, el| {
+                    List::Cons(Box::new(Literal::Binary(el.to_string())), Box::new(acc))
+                }))
+            }
+            ("file", "read_file", 1) => {
+                let path: String = args[0].clone().into();
+                let data = std::fs::read_to_string(&path).unwrap().replace("\n", "");
+                Literal::Tuple(Tuple {
+                    elements: vec![Literal::Atom("ok".to_string()), Literal::Binary(data)],
+                    size: 2,
+                })
+            }
+            ("io", "format", _) => {
+                println!("{}", args[1]);
                 Literal::Atom("ok".to_string())
             }
-            ("erlang", "-") => {
+            ("erlang", "-", 2) => {
                 let a: BigInt = args[0].clone().into();
                 let b: BigInt = args[1].clone().into();
                 Literal::Integer(a - b)
             }
-            ("erlang", "+") => {
+            ("erlang", "+", 2) => {
                 let a: BigInt = args[0].clone().into();
                 let b: BigInt = args[1].clone().into();
                 Literal::Integer(a + &b)
             }
-            ("erlang", "list_to_integer") => match args[0].clone() {
+            ("erlang", "list_to_integer", 1) => match args[0].clone() {
                 Literal::Binary(str) => Literal::Integer(BigInt::from_str(&str).unwrap()),
                 _ => panic!("Could not convert: {:?} to an integer", args[0]),
             },
-            (_, _) => panic!("How'd you get here? -- {:?} {:?}", mfa, args),
+            (_, _, _) => panic!("How'd you get here? -- {:?} {:?}", mfa, args),
         }
     }
 
