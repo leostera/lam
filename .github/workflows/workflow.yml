@@ -131,8 +131,12 @@ jobs:
         if: ${{ success() && startsWith(runner.os, 'Linux') }}
         run: make fmt
 
-      - name: Create release archive
-        if: ${{ success() }}
+      - name: Create release archive (Windows)
+        if: ${{ success() && runner.os == 'Windows' }}
+        run: make release.win
+
+      - name: Create release archive (Unix)
+        if: ${{ success() && runner.os != 'Windows' }}
         run: make release
 
       - name: Upload LAM build artifact

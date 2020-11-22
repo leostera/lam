@@ -1,3 +1,5 @@
+LAM_EXE=lam
+
 .PHONY: build
 build: build.wasm build.web
 	cargo build
@@ -23,10 +25,14 @@ docs:
 test:
 	cargo test
 
+.PHONY: release.win
+release.win: LAM_EXE=lam.exe
+release.win: release
+
 .PHONY: release
 release: release.wasm release.web
 	cargo build --release
-	tar czf release.tar.gz -C ./target/release/ lam
+	tar czf release.tar.gz -C ./target/release/ $(LAM_EXE)
 
 .PHONY: release.wasm
 release.wasm:
