@@ -10,8 +10,8 @@ mainly guiding the work by building utilities like `cat`, or `grep`.
 #### Milestones
 
 * 2020 Q4 - Milestone 1: BEAM Binaries :heavy_check_mark:
-* 2020 Q4 - Milestone 2: Single Process Programs :hammer:
-* Milestone 3: Multi-Process Programs :hammer:
+* Milestone 2: Single Process Programs :hammer:
+* Milestone 3: Concurrency-Oriented Programming :hammer:
 * Milestone 4: Multi-Core Scheduling :hammer:
 * Milestone 5: Native Extensions :crystal_ball:
 * Milestone 6: WebIDL API :rocket:
@@ -46,7 +46,7 @@ $ parcel serve index.html
 > Hello, Joe!
 ```
 
-## 2020 Q4 - Milestone 2: Fast Single-process Programs :hammer:
+## Milestone 2: Fast Single-process Programs :hammer:
 
 For this milestone, I'd like to be able to write arbitrary single-process
 Erlang programs. 
