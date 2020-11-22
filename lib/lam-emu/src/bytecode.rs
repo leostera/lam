@@ -44,7 +44,7 @@ pub enum Register {
     ///
     /// Calling `f(1)` is roughly translated to:
     ///
-    /// ```
+    /// ```lam
     /// Global(0) = 1
     /// Call(f)
     /// ```
@@ -68,7 +68,7 @@ pub enum Register {
     ///
     /// Roughly translates to:
     ///
-    /// ```
+    /// ```lam
     /// Local(0) = Global(0)
     /// Global(0) = 1
     /// Call(g)
