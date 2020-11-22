@@ -94,10 +94,16 @@ impl InstructionPointer {
         next_instr_ptr
     }
 
+    /// Advance the planned execution.
     pub fn next(&mut self, program: &Program) {
         *self = self.get_next(&program);
     }
 
+    /// Performs a jump based on the function call, by looking up the appropriate next instruction
+    /// and threading the function's instructions in the middle.
+    ///
+    /// Will jump back right into the planned execution after the function call is over.
+    ///
     pub fn call(&mut self, program: &Program, call: &FnCall) {
         let next_ptr = self.get_next(&program);
 
@@ -129,6 +135,12 @@ impl InstructionPointer {
         }
     }
 
+    /// Performs a jump to a label in the same module, by looking up the label number into the
+    /// Program.
+    ///
+    /// It will preserve the _last instruction pointer_, so it will jump right back into the
+    /// planned execution after the jump is over.
+    ///
     pub fn jump_to_label(&mut self, program: &Program, label: &Label) {
         trace!("Jumping to label: {:?}", label);
 
@@ -147,10 +159,15 @@ impl InstructionPointer {
             current_label: *label,
             current_instruction: 0,
             instr: first_instruction,
-            last_instr_ptr: None,
+            last_instr_ptr: self.last_instr_ptr.clone(),
         }
     }
 
+    /// If there is an instruction to return to, this will jump back there, continuing the planned
+    /// execution.
+    ///
+    /// If there isn't one, it will consider this program halted.
+    ///
     pub fn return_to_last_instr(&mut self) {
         match &self.last_instr_ptr {
             Some(last_ptr) => {

@@ -71,7 +71,7 @@ impl Emulator {
                 );
                 last_red = reductions;
             }
-            trace!("{}", self.registers,);
+            trace!("{}", self.registers);
             trace!("{}", self.instr_ptr);
             match self.instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
@@ -141,10 +141,17 @@ impl Emulator {
                     reductions += 1;
                 }
 
-                Instruction::Call(FnCall::ApplyLambda { register, .. }, _) => {
+                Instruction::Call(
+                    FnCall::ApplyLambda {
+                        register, arity, ..
+                    },
+                    _,
+                ) => {
                     let value = self.registers.get(&register);
                     if let Literal::Lambda(lambda) = value.clone().into() {
-                        self.registers.fill_globals(&lambda.environment);
+                        self.registers
+                            .fill_globals_from_offset(arity, &lambda.environment);
+                        self.registers.push_new_local();
                         self.instr_ptr.call(
                             &program,
                             &FnCall::Local {
@@ -204,6 +211,7 @@ impl Emulator {
                 }
 
                 Instruction::Return => {
+                    self.registers.restore_last_local();
                     self.instr_ptr.return_to_last_instr();
                 }
 

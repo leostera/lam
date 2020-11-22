@@ -14,13 +14,39 @@ pub struct Registers {
 }
 
 impl Registers {
+    fn empty_register() -> Vec<Value> {
+        [0; 4].to_vec().iter().map(|_| Value::Nil).collect()
+    }
+
     pub fn new() -> Registers {
-        let empty: Vec<Value> = [0; 4].to_vec().iter().map(|_| Value::Nil).collect();
+        let empty = Registers::empty_register();
         Registers {
             global: empty.clone(),
             local: VecDeque::new(),
             current_local: empty,
         }
+    }
+
+    pub fn global(&self) -> Vec<Value> {
+        self.global.clone()
+    }
+
+    pub fn local(&self) -> Vec<Value> {
+        self.current_local.clone()
+    }
+
+    pub fn push_new_local(&mut self) -> &mut Registers {
+        self.local.push_back(self.current_local.clone());
+        self.current_local = Registers::empty_register();
+        self
+    }
+
+    pub fn restore_last_local(&mut self) -> &mut Registers {
+        match self.local.pop_back() {
+            None => self.current_local = Registers::empty_register(),
+            Some(regs) => self.current_local = regs,
+        }
+        self
     }
 
     pub fn clear(&mut self, r: &Register) -> &mut Registers {
@@ -35,9 +61,9 @@ impl Registers {
         self
     }
 
-    pub fn fill_globals(&mut self, vs: &Vec<Literal>) -> &mut Registers {
+    pub fn fill_globals_from_offset(&mut self, offset: u32, vs: &Vec<Literal>) -> &mut Registers {
         for (i, v) in vs.iter().enumerate() {
-            self.global[i as usize] = v.clone().into();
+            self.global[offset as usize + i] = v.clone().into();
         }
         self
     }
