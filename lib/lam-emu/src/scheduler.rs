@@ -80,9 +80,7 @@ impl<'a> Scheduler<'a> {
     pub fn spawn_from_lambda(&mut self, lambda: &Lambda) -> Pid {
         let mut emulator = Emulator::new();
 
-        emulator
-            .preload(0, Literal::Lambda(lambda.clone()).into())
-            .set_initial_call_from_lambda(lambda, &self.program);
+        emulator.set_initial_call_from_lambda(lambda, &self.program);
 
         let pid = self.process_queue.spawn_and_ready(emulator, self.id);
         trace!("Spawned Lambda {:?} into {}", lambda, pid);

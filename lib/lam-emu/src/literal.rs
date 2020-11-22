@@ -120,7 +120,7 @@ impl Into<String> for Literal {
     fn into(self) -> String {
         match self {
             Literal::Binary(str) => str,
-            _ => panic!("Could not turn {:?} into a String", self),
+            x => format!("{}", x),
         }
     }
 }
