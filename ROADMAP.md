@@ -1,10 +1,11 @@
 # Roadmap
 
 This is a list of all the research and work I'd like to do within the context
-of LAM.
+of LAM sort of organized in small chunks of work that are more or less self
+contained.
 
-Milestones are fairly small and try to be self-contained, but of course
-sometimes they span multiple concerns.
+There is no promise that I'll address these sequentially or completely, as I'm
+mainly guiding the work by building utilities like `cat`, or `grep`.
 
 #### Milestones
 
@@ -56,27 +57,32 @@ we can build some command line tools.
 
 Some things that should be possible are:
 
-* run infinitely: `f() -> f().` should just run and run and run.
-* run relatively fast: boot time should be under 10ms
+* run infinitely: `f() -> f().` should just run and run and run :heavy_check_mark:
+* run relatively fast: boot time should be under 10ms :heavy_check_mark:
 
-## Milestone 3: Multi-Process Programs :hammer:
+## Milestone 3: Concurrency-Oriented Programming :hammer:
 
-Implement the rest of the bytecode for message passing including equivalents
-for:
+Here the goal should be to enable building solutions that scale by
+orchestrating hundreds of thousands of processes that communicate with each
+other.
 
-* spawn :heavy_check_mark:
-* kill
-* monitor / demonitor
-* link / unlink
-* send
-* receive, select_receive, remove_message
-* wait
+We'll need to support:
+* spawning processes :heavy_check_mark:
+* terminating processes
+* monitor / demonitor processes
+* link / unlink processes
+* sending messages
+* selectively receive messages
 
-At this point I'd expect us to support the core OTP modules: `supervisor` and
-`gen_server`.
+Some things that should be possible are:
+* spawn millions of processes in constant time (shouldn't get slower to spin up
+  new processes)
+* core OTP modules like `supervisor` or `gen_server` should have all the
+  instructions needed to run (give or take small changes)
 
 ## Milestone 4: Multi-Core Scheduling :crystal_ball:
 
+The goal here is to
 Implement symmetric multi-processing to spread the work across several cores by
 means of either job-stealing or some other configurable policy.
 
@@ -85,6 +91,11 @@ Stuff that needs doing:
 * maintain and run as many schedulers as cores there are :heavy_check_mark:
 * load-balancing / work stealing
 * message routing
+
+We should be able to run things like:
+
+* map-reduce patterns, like a `word count` program, across all cores without
+  modifications
 
 ## Milestone 5: Native Extensions :hammer:
 
