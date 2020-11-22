@@ -15,6 +15,10 @@ build.web:
 		./lib/lam-rts-web \
 		-- --package lam-rts-web
 
+.PHONY: docs
+docs:
+	cargo doc --target-dir ./docs --workspace --no-deps
+
 .PHONY: test
 test:
 	cargo test
