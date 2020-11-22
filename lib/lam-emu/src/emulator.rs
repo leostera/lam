@@ -44,6 +44,8 @@ impl Emulator {
         lambda: &Lambda,
         program: &Program,
     ) -> &mut Emulator {
+        self.registers
+            .fill_globals_from_offset(lambda.arity, &lambda.environment);
         self.instr_ptr.setup_lambda(&lambda, &program);
         self
     }
@@ -323,6 +325,7 @@ impl Emulator {
                         _ => panic!("mfa spawns are not supported yet"),
                     };
                     self.registers.put_global(0, Literal::Pid(pid).into());
+                    self.registers.restore_last_local();
                     self.instr_ptr.next(&program);
                     reductions += 1;
                 }
