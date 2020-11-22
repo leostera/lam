@@ -200,7 +200,7 @@ impl ModuleTranslator {
                     &atom_table,
                 );
                 let kind = match module.as_str() {
-                    "io" | "erlang" => FnKind::Native,
+                    "binary" | "file" | "io" | "erlang" => FnKind::Native,
                     _ => FnKind::User,
                 };
                 Some(match (module.as_str(), function.as_str(), arity) {
