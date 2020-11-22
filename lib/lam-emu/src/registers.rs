@@ -106,13 +106,35 @@ impl Registers {
 
 impl Display for Registers {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
-        write!(fmt, "Globals {{")?;
+        /* Print global registers */
+
+        write!(fmt, "\n\t\tGlobals {{")?;
         for i in 0..self.global.len() {
             write!(fmt, "{}: {}, ", i, &self.global[i])?
         }
-        write!(fmt, "}}; Locals {{")?;
+        write!(fmt, "}};")?;
+
+        /* Print current local registers */
+
+        write!(fmt, "\n\t\tLocals {{")?;
         for i in 0..self.current_local.len() {
             write!(fmt, "{}: {}, ", i, &self.current_local[i])?
+        }
+        write!(fmt, "}};")?;
+
+        /* Print saved local registers */
+
+        write!(fmt, "\n\t\tSaved Locals {{")?;
+        for (i, l) in self.local.iter().enumerate() {
+            write!(fmt, "\n\t\t\t{}: ", i)?;
+            write!(fmt, "Locals {{")?;
+            for (i, r) in l.iter().enumerate() {
+                write!(fmt, "{}: {}, ", i, r)?;
+            }
+            write!(fmt, "}};")?;
+        }
+        if !self.local.is_empty() {
+            write!(fmt, "\n\t\t")?;
         }
         write!(fmt, "}}")
     }
