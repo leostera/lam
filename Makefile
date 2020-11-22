@@ -26,7 +26,7 @@ test:
 .PHONY: release
 release: release.wasm release.web
 	cargo build --release
-	tar czf release.tar.gz -C ./target/release/ lam
+	tar czf release.tar.gz -C ./target/release/ lam*
 
 .PHONY: release.wasm
 release.wasm:
