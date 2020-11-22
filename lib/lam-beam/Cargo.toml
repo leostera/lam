@@ -1,7 +1,7 @@
 [package]
 name = "lam-beam"
 description = "LAM .beam file support"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Leandro Ostera <leandro@ostera.io>"]
 edition = "2018"
 publish = false
