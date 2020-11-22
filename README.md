@@ -7,19 +7,21 @@
 
 ## What is LAM?
 
-LAM aims to be a **lightweight alternative to the BEAM** that runs as **Native
-and WebAssembly binaries**, both on WASI-enabled systems and browsers.
+LAM is a research project exploring a **lightweight alternative to the BEAM**
+that runs as **Native and WebAssembly binaries**, both on WASI-enabled systems
+and browsers.
 
 It will supports:
 
 * Immutable functional programming with proper tail calls
 * Concurrency via processes and message passing
 * Multi-core scheduling (except on the Web)
+* Erlang/OTP architectural patterns (such as supervision trees)
 
-It does not support _hot-code reloading_ and _distribution_ so not all BEAM
+It will _not support_ hot-code reloading or distribution, and so not all BEAM
 programs will be supported.
 
-You should use this if you want to build:
+It will be useful for building:
 
 * short-lived, fast-startup services (e.g AWS Lambdas / Google Cloud Functions)
 * web apps
@@ -28,7 +30,44 @@ You should use this if you want to build:
 
 ## Getting Started
 
-...
+You can download the latest binary from the [releases
+page](https://github.com/AbstractMachinesLab/lam/releases). After
+unpacking it you should be able to add it to your PATH env and start playing
+around with the `lam` binary.
+
+Like this:
+
+```sh
+# in this example I'm running linux with glibc
+$ wget https://github.com/AbstractMachinesLab/lam/releases/download/v0.0.5/lam-v0.0.5-x86_64-unknown-linux-gnu.tar.gz
+$ tar xzf lam-*
+$ export PATH=$(pwd)/lam/bin:$PATH
+```
+
+Now we can do a quick test. Make a file `test.erl` with this contents:
+
+```erl
+-module(test).
+
+-export([main/1]).
+
+main([]) -> ok;
+main([Name|T]) ->
+  io:format(<<"Hello, ~p!\n">>, [Name]),
+  main(T).
+```
+
+And we can compile it to BEAM byte code and use LAM to build a binary for it,
+like this:
+
+```sh
+$ erlc test.erl
+$ lam build test.beam --output test.exe --target native --entrypoint test
+$ ./test.exe Joe Robert Mike
+Hello, Joe!
+Hello, Robert!
+Hello, Mike!
+```
 
 ## How does it work?
 
