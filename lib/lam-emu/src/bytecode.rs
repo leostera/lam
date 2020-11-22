@@ -159,11 +159,7 @@ pub enum Test {
     IsGreaterOrEqualThan(Value, Value),
     IsNil(Value),
     IsNonEmptyList(Value),
-    IsTaggedTuple {
-        value: Value,
-        element: u32,
-        atom: Atom,
-    },
+    IsTaggedTuple { value: Value, size: u32, atom: Atom },
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

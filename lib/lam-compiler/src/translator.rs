@@ -388,18 +388,14 @@ impl ModuleTranslator {
                     &literal_table,
                 );
 
-                let element: u32 = args[2].clone().into();
+                let size: u32 = args[2].clone().into();
 
                 let atom_idx: u32 = args[3].clone().into();
                 let atom = atom_table.atoms[(atom_idx - 1) as usize].name.to_string();
 
                 Some(Instruction::Test(
                     label - 1,
-                    Test::IsTaggedTuple {
-                        value,
-                        element,
-                        atom,
-                    },
+                    Test::IsTaggedTuple { value, size, atom },
                 ))
             }
 

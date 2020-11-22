@@ -353,17 +353,15 @@ impl Emulator {
                 self.registers.get_literal_from_value(a) == self.registers.get_literal_from_value(b)
             }
 
-            Test::IsTaggedTuple {
-                value,
-                element,
-                atom,
-            } => match self.registers.get_literal_from_value(value) {
-                Literal::Tuple(Tuple { elements, .. }) => match &elements[*element as usize] {
-                    Literal::Atom(tag) => tag == atom,
-                    _ => false,
-                },
-                x => panic!("Cannot check if value {} is a tagged tuple", x),
-            },
+            Test::IsTaggedTuple { value, atom, .. } => {
+                match self.registers.get_literal_from_value(value) {
+                    Literal::Tuple(Tuple { elements, .. }) => match elements[0].clone() {
+                        Literal::Atom(tag) => tag.eq(atom),
+                        _ => false,
+                    },
+                    x => panic!("Cannot check if value {} is a tagged tuple", x),
+                }
+            }
         }
     }
 }
