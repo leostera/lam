@@ -1,7 +1,5 @@
 #!/bin/bash
 
-caramelc compile hello_joe.ml
-
 erlc -S hello_joe.erl
 erlc hello_joe.erl
 

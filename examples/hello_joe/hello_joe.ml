@@ -1,1 +1,1 @@
-let main () = Io.format "Hello, Joe!" []
+let main _args = Io.format "Hello, Joe!" []

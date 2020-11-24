@@ -1,9 +1,7 @@
-% Source code generated with Caramel.
 -module(hello_joe).
 
--export([main/0]).
+-export([main/1]).
 
--spec main() -> ok.
-main() -> io:format(<<"Hello, Joe!">>, []).
+main(_) -> io:format(<<"~p">>, [<<"Hello, Joe!">>]).
 
 
