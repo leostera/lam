@@ -13,6 +13,7 @@ lam build *.beam -o grep.opt.wasm -t wasm -e grep
 hyperfine \
   --warmup 50 \
   --ignore-failure \
+  "grep ${N}" \
   "escript grep.erl ${N}" \
   "wasmtime --dir=. ./grep.opt.wasm ${N}" \
   "./grep.opt.exe ${N}"
