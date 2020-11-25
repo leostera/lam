@@ -1,5 +1,6 @@
 use super::emulator::*;
 use super::literal::*;
+use super::mailbox::*;
 use super::program::*;
 use super::runtime::*;
 use super::scheduler::*;
@@ -14,12 +15,19 @@ pub enum Status {
     Terminated,
 }
 
+impl Status {
+    pub fn suspend(&mut self) {
+        *self = Status::Suspended;
+    }
+}
+
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Process {
     status: Status,
     pid: Pid,
     emulator: Emulator,
+    pub mailbox: Mailbox,
 }
 
 impl Process {
@@ -28,6 +36,7 @@ impl Process {
             pid,
             status: Status::Alive,
             emulator,
+            mailbox: Mailbox::new(),
         }
     }
 
@@ -51,10 +60,16 @@ impl Process {
         runtime: &mut Box<dyn Runtime>,
     ) -> Result<(), Error> {
         debug!("Active process {}", self.pid);
-        match self
-            .emulator
-            .run(reduction_count, program, scheduler, runtime, self.pid())?
-        {
+        let pid = self.pid();
+        match self.emulator.run(
+            reduction_count,
+            program,
+            scheduler,
+            runtime,
+            &mut self.status,
+            &mut self.mailbox,
+            pid,
+        )? {
             EmulationStatus::Terminated => self.terminate(),
             EmulationStatus::Continue => (),
         };
