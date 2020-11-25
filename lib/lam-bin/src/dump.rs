@@ -7,7 +7,11 @@ use structopt::StructOpt;
 use lam_beam::beam_reader;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "dump", about = "dump the parsed instructions")]
+#[structopt(
+    name = "dump",
+    setting = structopt::clap::AppSettings::ColoredHelp,
+    about = "dump the parsed instructions"
+)]
 pub struct DumpOpt {
     #[structopt(
         name = "FILES",

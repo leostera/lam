@@ -8,7 +8,11 @@ use lam_beam::beam_reader;
 use lam_compiler::target::Target;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "build", about = "build this project")]
+#[structopt(
+    name = "build",
+    setting = structopt::clap::AppSettings::ColoredHelp,
+    about = "build this project"
+)]
 pub struct BuildOpt {
     #[structopt(
         name = "FILES",

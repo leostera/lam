@@ -8,7 +8,11 @@ use lam_compiler::target::Target;
 use lam_emu::Program;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "link", about = "link LAM bytecode objects into a binary")]
+#[structopt(
+    name = "link",
+    setting = structopt::clap::AppSettings::ColoredHelp,
+    about = "link LAM bytecode objects into a binary"
+)]
 pub struct LinkOpt {
     #[structopt(name = "FILES", help = "the .lam files to compile", parse(from_os_str))]
     files: Vec<PathBuf>,

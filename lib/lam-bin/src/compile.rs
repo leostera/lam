@@ -7,7 +7,11 @@ use lam_beam::beam_reader::Reader;
 use lam_compiler::Translator;
 
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "compile", about = "compile .beam to .lam bytecode objects")]
+#[structopt(
+    name = "compile",
+    setting = structopt::clap::AppSettings::ColoredHelp,
+    about = "compile .beam to .lam bytecode objects"
+)]
 pub struct CompileOpt {
     #[structopt(
         name = "FILES",
