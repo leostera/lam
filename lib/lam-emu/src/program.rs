@@ -1,4 +1,4 @@
-use anyhow::{Context, Error};
+use anyhow::{anyhow, Context, Error};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::iter::FromIterator;
@@ -86,6 +86,30 @@ impl Default for Program {
 }
 
 impl Program {
+    pub fn new() -> Program {
+        Program::default()
+    }
+
+    pub fn link(ps: Vec<Program>) -> Result<Program, Error> {
+        let mut modules: HashMap<String, Module> = HashMap::new();
+
+        for p in ps.iter() {
+            for (name, m) in p.modules.iter() {
+                // extend modules with these ones
+                // return an error if there's a duplicated module name
+                if modules.contains_key(name) {
+                    return Err(anyhow!("Oops! We found a duplicated module name: {:?}, any chance you're accidentally linking the same program twice?", name));
+                };
+                modules.insert(name.to_string(), m.clone());
+            }
+        }
+
+        Ok(Program {
+            modules,
+            ..Program::new()
+        })
+    }
+
     pub fn with_modules(self, mods: Vec<Module>) -> Program {
         let modules = HashMap::from_iter(mods.iter().cloned().map(|m| (m.name.clone(), m)));
         Program { modules, ..self }
@@ -105,6 +129,7 @@ impl Program {
     pub fn serialize(&self) -> Result<Vec<u8>, Error> {
         bincode::serialize(self).context("Could not serialize program")
     }
+
     pub fn deserialize(data: &[u8]) -> Result<Program, Error> {
         bincode::deserialize(data).context("Could not serialize program")
     }
