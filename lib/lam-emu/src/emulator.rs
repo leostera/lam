@@ -1,6 +1,8 @@
 use super::bytecode::*;
 use super::instr_ptr::*;
 use super::literal::*;
+use super::mailbox::*;
+use super::process::*;
 use super::program::*;
 use super::registers::*;
 use super::runtime::Runtime;
@@ -61,6 +63,8 @@ impl Emulator {
         program: &Program,
         scheduler: &mut Scheduler,
         runtime: &mut Box<dyn Runtime>,
+        process_status: &mut Status,
+        mailbox: &mut Mailbox,
         pid: Pid,
     ) -> Result<EmulationStatus, Error> {
         let mut reductions = 0;
@@ -227,6 +231,9 @@ impl Emulator {
                     }
                 }
 
+                /* NOTE(@ostera): this needs work, why did we not match? what's the error? */
+                Instruction::Badmatch => return Ok(EmulationStatus::Terminated),
+
                 ////////////////////////////////////////////////////////////////
                 //
                 //  Creating Values
@@ -252,9 +259,30 @@ impl Emulator {
                     match self.registers.get(&list).into() {
                         Literal::List(List::Cons(boxed_head, boxed_tail)) => {
                             self.registers
-                                .put(&head, Value::Literal(*boxed_head.clone()));
+                                .put(&head, Value::Literal(*boxed_head.clone()))
+                                .put(&tail, Literal::List(*boxed_tail.clone()).into());
+                        }
+                        value => panic!("Attempted to split a value that is not a list: {}", value),
+                    };
+                    self.instr_ptr.next(&program);
+                }
+
+                Instruction::SplitListTail { list, tail } => {
+                    match self.registers.get(&list).into() {
+                        Literal::List(List::Cons(_, boxed_tail)) => {
                             self.registers
                                 .put(&tail, Literal::List(*boxed_tail.clone()).into());
+                        }
+                        value => panic!("Attempted to split a value that is not a list: {}", value),
+                    };
+                    self.instr_ptr.next(&program);
+                }
+
+                Instruction::SplitListHead { list, head } => {
+                    match self.registers.get(&list).into() {
+                        Literal::List(List::Cons(boxed_head, _)) => {
+                            self.registers
+                                .put(&head, Value::Literal(*boxed_head.clone()));
                         }
                         value => panic!("Attempted to split a value that is not a list: {}", value),
                     };
@@ -330,7 +358,40 @@ impl Emulator {
                     reductions += 1;
                 }
 
-                Instruction::Monitor | Instruction::Send | Instruction::Receive => {
+                Instruction::Sleep => {
+                    process_status.suspend();
+                    self.instr_ptr.next(&program);
+                }
+
+                Instruction::PeekMessage {
+                    on_mailbox_empty,
+                    message,
+                } => match mailbox.peek_next() {
+                    None => self.instr_ptr.jump_to_label(&program, &on_mailbox_empty),
+                    Some(msg) => {
+                        self.registers.put(&message, msg.clone().into());
+                        self.instr_ptr.next(&program);
+                        reductions += 1;
+                    }
+                },
+
+                Instruction::RemoveMessage => {
+                    mailbox.drop_current();
+                    self.instr_ptr.next(&program);
+                }
+
+                Instruction::Send { message, process } => {
+                    let message = self.registers.get_literal_from_value(&message);
+                    let pid = match self.registers.get_literal_from_value(&process) {
+                        Literal::Pid(pid) => pid,
+                        x => panic!("Can not send a message to non-pid: {}", x),
+                    };
+                    scheduler.send_message(&pid, &message);
+                    self.registers.put_global(0, Value::Literal(message));
+                    self.instr_ptr.next(&program);
+                }
+
+                Instruction::Monitor => {
                     self.instr_ptr.next(&program);
                 }
 
@@ -374,6 +435,11 @@ impl Emulator {
                     x => panic!("Cannot check if value {} is a tagged tuple", x),
                 }
             }
+
+            Test::IsFunctionWithArity { fun, arity, .. } => match self.registers.get(&fun) {
+                Value::Literal(Literal::Lambda(Lambda { arity: a2, .. })) => arity.clone() == a2,
+                x => panic!("Cannot check arity of non-function value: {}", x),
+            },
         }
     }
 }
