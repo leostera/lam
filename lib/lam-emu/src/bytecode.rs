@@ -156,6 +156,7 @@ pub enum FnKind {
 #[repr(C)]
 pub enum Test {
     Equals(Value, Value),
+    IsFunctionWithArity { fun: Register, arity: Arity },
     IsGreaterOrEqualThan(Value, Value),
     IsNil(Value),
     IsNonEmptyList(Value),
@@ -239,6 +240,9 @@ pub enum Instruction {
     /** Perform a test and jump to label if it fails. */
     Test(Label, Test),
 
+    /// Could not match a value to a pattern
+    Badmatch,
+
     ///////////////////////////////////////////////////////////////////////////
     ///
     /// Calling functions
@@ -277,6 +281,18 @@ pub enum Instruction {
         tail: Register,
     },
 
+    /// Split a list and put the tail in a register
+    SplitListTail {
+        list: Register,
+        tail: Register,
+    },
+
+    /// Split a list and put the head in a register
+    SplitListHead {
+        list: Register,
+        head: Register,
+    },
+
     /// Copy a tuple element onto a specific registry
     GetTupleElement {
         tuple: Register,
@@ -293,15 +309,27 @@ pub enum Instruction {
     /// register
     Spawn(Spawn),
 
+    /// Put a process to sleep. Will be woken up by a new message.
+    Sleep,
+
     Kill,
     Monitor,
 
-    /** Puts the message (value in X(1)) into the mailbox of the pid in X(0) */
-    Send,
+    /// Puts the message into the mailbox of the pid
+    Send {
+        message: Value,
+        process: Value,
+    },
 
-    /** Puts the top of the */
-    Receive,
+    /// Check if the mailbox is empty and jump to a label if it is
+    PeekMessage {
+        on_mailbox_empty: Label,
+        message: Register,
+    },
 
-    /** Puts the identifier of the current process in a register */
+    /// Removes the currently selected message in the mailbox
+    RemoveMessage,
+
+    /// Puts the identifier of the current process in a register
     PidSelf(Register),
 }
