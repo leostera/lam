@@ -147,10 +147,12 @@ impl ModuleTranslator {
             //
             //  Working with the Heap
             //
-            OpCode::TestHeap | OpCode::Allocate => Some(Instruction::Allocate {
-                words: args[0].clone().into(),
-                keep_registers: args[1].clone().into(),
-            }),
+            OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate => {
+                Some(Instruction::Allocate {
+                    words: args[0].clone().into(),
+                    keep_registers: args[1].clone().into(),
+                })
+            }
 
             OpCode::Deallocate => Some(Instruction::Deallocate {
                 words: args[0].clone().into(),
@@ -161,6 +163,8 @@ impl ModuleTranslator {
             //  Control-Flow
             //
             OpCode::Return => Some(Instruction::Return),
+
+            OpCode::Badmatch => Some(Instruction::Badmatch),
 
             ///////////////////////////////////////////////////////////////////
             //
@@ -399,6 +403,19 @@ impl ModuleTranslator {
                 ))
             }
 
+            OpCode::IsFunction2 => {
+                // {test,is_function2,{f,1},[{x,0},{integer,1}]}.
+                let label: u32 = args[0].clone().into();
+
+                let fun = ModuleTranslator::mk_reg(args[1].clone());
+                let arity: u32 = args[2].clone().into();
+
+                Some(Instruction::Test(
+                    label - 1,
+                    Test::IsFunctionWithArity { fun, arity },
+                ))
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Creating Values
@@ -425,6 +442,18 @@ impl ModuleTranslator {
                 let head = ModuleTranslator::mk_reg(args[1].clone());
                 let tail = ModuleTranslator::mk_reg(args[2].clone());
                 Some(Instruction::SplitList { list, head, tail })
+            }
+
+            OpCode::GetTl => {
+                let list = ModuleTranslator::mk_reg(args[0].clone());
+                let tail = ModuleTranslator::mk_reg(args[1].clone());
+                Some(Instruction::SplitListTail { list, tail })
+            }
+
+            OpCode::GetHd => {
+                let list = ModuleTranslator::mk_reg(args[0].clone());
+                let head = ModuleTranslator::mk_reg(args[1].clone());
+                Some(Instruction::SplitListHead { list, head })
             }
 
             OpCode::GetTupleElement => {
@@ -455,17 +484,43 @@ impl ModuleTranslator {
                 })
             }
 
-            /*
-            {case_end,{x,0}}.
+            ///////////////////////////////////////////////////////////////////
+            //
+            //  Message Passing and Processes
+            //
+            OpCode::LoopRec => {
+                let label: u32 = args[0].clone().into();
+                let on_mailbox_empty = label - 1;
 
+                let message = ModuleTranslator::mk_reg(args[1].clone());
 
-            {trim,1,1}.
-                        */
+                Some(Instruction::PeekMessage {
+                    on_mailbox_empty,
+                    message,
+                })
+            }
+
+            OpCode::Wait => Some(Instruction::Sleep),
+
+            OpCode::LoopRecEnd => {
+                let label: u32 = args[0].clone().into();
+                let label = label - 1;
+                Some(Instruction::Jump(label))
+            }
+
+            OpCode::RemoveMessage => Some(Instruction::RemoveMessage),
+
+            OpCode::Send => Some(Instruction::Send {
+                process: Value::Register(Register::Global(0)),
+                message: Value::Register(Register::Global(1)),
+            }),
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Other!
             //
-            _ => None,
+            OpCode::Trim | OpCode::FuncInfo | OpCode::Line | OpCode::IntCodeEnd => None,
+            x => panic!("Unsupported instruction: {:?}", x),
         }
     }
 
