@@ -22,12 +22,12 @@ pub struct CompileOpt {
 
     #[structopt(
         short = "o",
-        long = "output",
-        name = "OUTPUT",
-        help = "the output path where the .lam files will be written",
+        long = "output-dir",
+        name = "OUTPUT_DIR",
+        help = "the output dir where the .lam files will be written",
         parse(from_os_str)
     )]
-    output: PathBuf,
+    output_dir: PathBuf,
 }
 
 impl CompileOpt {
@@ -50,7 +50,7 @@ impl CompileOpt {
 
             // write .lam file
             std::fs::write(
-                PathBuf::from(self.output.join(filename)),
+                PathBuf::from(self.output_dir.join(filename)),
                 program.serialize()?,
             )?;
 
