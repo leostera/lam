@@ -1,11 +1,11 @@
-use anyhow::Error;
-use byteorder::ReadBytesExt;
 /**
  * This module is heavily inspired from @kvakvs/ErlangRT's compat_term.rs
  * and @sile/eetf's codec.rs
  *
  * Thanks to both of you for the inspiration and guidance :)
  */
+use anyhow::Error;
+use byteorder::ReadBytesExt;
 use log::trace;
 use num_bigint::BigInt;
 use std::io;
@@ -13,14 +13,14 @@ use std::io;
 #[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum SimpleTag {
-    Literal = 0b000,
-    Integer = 0b001,
-    Atom = 0b010,
-    RegisterX = 0b011,
-    RegisterY = 0b100,
-    Label = 0b101,
-    Character = 0b110,
-    Extended = 0b111,
+    Literal = 0b0000_0000,
+    Integer = 0b0000_0001,
+    Atom = 0b0000_0010,
+    RegisterX = 0b0000_0011,
+    RegisterY = 0b0000_0100,
+    Label = 0b0000_0101,
+    Character = 0b0000_0110,
+    Extended = 0b0000_0111,
 }
 
 impl Into<SimpleTag> for u8 {
@@ -84,6 +84,7 @@ impl Into<CompactTerm> for TagKind {
     fn into(self) -> CompactTerm {
         match self {
             TagKind::Simple(SimpleTag::Literal, Value::Small(x)) => CompactTerm::Literal(x),
+            TagKind::Simple(SimpleTag::Literal, x) => CompactTerm::Integer(x),
             TagKind::Simple(SimpleTag::Integer, value) => CompactTerm::Integer(value),
             TagKind::Simple(SimpleTag::Atom, Value::Small(0)) => CompactTerm::Nil,
             TagKind::Simple(SimpleTag::Atom, Value::Small(index)) => CompactTerm::Atom(index),
@@ -135,16 +136,19 @@ impl<R: io::Read> Decoder<R> {
         let byte: u8 = self.reader.read_u8()?;
 
         /* First 3 bits indicate the tag of this value */
-        let tag = byte & 0b111;
+        let tag = byte & 0b000_0111;
 
         let tagged_value = if tag < SimpleTag::Extended as u8 {
             /* The 4th bit indicates if the _value_ is extended */
-            let is_small_value = 0 == (byte & 0b0000_1000);
-            let is_large_value = 0 == (byte & 0b0001_0000);
+
+            let is_small_value = 0b0000_0000 == (byte & 0b0000_1000);
+            let is_large_value = 0b0000_1000 == (byte & 0b0000_1000);
 
             let value = if is_small_value {
+                trace!("Is small value: {:?}", byte);
                 Value::Small((byte >> 4).into())
             } else if is_large_value {
+                trace!("Is large value: {:?}", byte);
                 let shift_value = ((byte as u32) & 0b1110_0000) << 3;
                 let next_byte = self.reader.read_u8()? as u32;
                 Value::Small(shift_value | next_byte)

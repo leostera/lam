@@ -158,7 +158,7 @@ impl CodeTable {
         while let Ok(()) = cursor.read_exact(&mut opcode_buf) {
             let opcode: OpCode = opcode_buf[0].into();
             let arity: u8 = opcode.arity();
-            trace!("==> Reading opcode {:?}/{:?}", opcode, arity);
+            trace!("#{:#010b} @ {:?}/{:?}", opcode_buf[0], opcode, arity);
             let mut args: Vec<CompactTerm> = vec![];
             for _ in 0..arity {
                 let term = CompactTerm::decode(&mut cursor).expect("Could not decode compact term");
