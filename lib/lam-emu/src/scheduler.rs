@@ -1,7 +1,9 @@
 use super::bytecode::*;
 use super::emulator::*;
 use super::literal::*;
+use super::mailbox::*;
 use super::process_queue::*;
+use super::process_registry::*;
 use super::program::*;
 use super::runtime::*;
 use anyhow::Error;
@@ -14,6 +16,7 @@ pub struct Scheduler<'a> {
     sleep_delay: u64,
     reduction_count: u64,
     current_process: u32,
+    process_registry: ProcessRegistry,
     process_queue: ProcessQueue,
     program: &'a Program,
 }
@@ -27,6 +30,7 @@ impl<'a> Scheduler<'a> {
             reduction_count: 100,
             current_process: 0,
             process_queue: ProcessQueue::new(),
+            process_registry: ProcessRegistry::new(),
         }
     }
 
@@ -34,12 +38,15 @@ impl<'a> Scheduler<'a> {
         debug!("Scheduler {:?} started...", self.id);
 
         loop {
-            if let Some(mut process) = self.process_queue.next_process() {
-                debug!("Working on process {}", process.pid());
-                if let Ok(_) =
-                    process.run(self.reduction_count, self.program, &mut self, &mut runtime)
-                {
-                    self.process_queue.enqueue(process);
+            if let Some(pid) = self.process_queue.next_process() {
+                if let Some(mut process) = self.process_registry.get(&pid) {
+                    debug!("Working on process {}", &pid);
+                    if let Ok(_) =
+                        process.run(self.reduction_count, self.program, &mut self, &mut runtime)
+                    {
+                        self.process_queue.enqueue(&process);
+                    }
+                    self.process_registry.update(&process);
                 }
             } else {
                 break;
@@ -72,7 +79,8 @@ impl<'a> Scheduler<'a> {
             emulator.preload(i as u32, a.clone());
         }
 
-        let pid = self.process_queue.spawn_and_ready(emulator, self.id);
+        let pid = self.process_registry.spawn(emulator, self.id);
+        self.process_queue.ready(&pid);
         trace!("Spawned MFA {:?} with args {:?} into {}", mfa, args, pid);
         pid
     }
@@ -82,9 +90,17 @@ impl<'a> Scheduler<'a> {
 
         emulator.set_initial_call_from_lambda(lambda, &self.program);
 
-        let pid = self.process_queue.spawn_and_ready(emulator, self.id);
+        let pid = self.process_registry.spawn(emulator, self.id);
+        self.process_queue.ready(&pid);
         trace!("Spawned Lambda {:?} into {}", lambda, pid);
         pid
+    }
+
+    pub fn send_message(&mut self, pid: &Pid, message: &Message) {
+        match self.process_registry.get(&pid) {
+            None => (),
+            Some(mut p) => p.mailbox.deliver(message.clone()),
+        }
     }
 
     /*
