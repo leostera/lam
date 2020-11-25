@@ -57,8 +57,24 @@ we can build some command line tools.
 
 Some things that should be possible are:
 
-* run infinitely: `f() -> f().` should just run and run and run :heavy_check_mark:
-* run relatively fast: boot time should be under 10ms :heavy_check_mark:
+* run forever:
+  * `f() -> f().` should just run and run and run :heavy_check_mark:
+
+* run fast:
+  * no-op boot time should be under 10ms :heavy_check_mark:
+
+* use common data types:
+  * atoms :heavy_check_mark:
+  * integers :heavy_check_mark:
+  * floats
+  * binary strings :heavy_check_mark:
+  * lists :heavy_check_mark:
+  * tuples
+  * maps
+
+* first class functions:
+  * creating lambdas and applying them :heavy_check_mark:
+  * passing lambdas around as values :heavy_check_mark:
 
 ## Milestone 3: Concurrency-Oriented Programming :hammer:
 
