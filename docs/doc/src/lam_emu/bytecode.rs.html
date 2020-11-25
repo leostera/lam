@@ -305,6 +305,34 @@
 <span id="305">305</span>
 <span id="306">306</span>
 <span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -352,7 +380,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Calling `f(1)` is roughly translated to:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// ```lam</span>
     <span class="doccomment">/// Global(0) = 1</span>
     <span class="doccomment">/// Call(f)</span>
     <span class="doccomment">/// ```</span>
@@ -376,7 +404,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Roughly translates to:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// ```lam</span>
     <span class="doccomment">/// Local(0) = Global(0)</span>
     <span class="doccomment">/// Global(0) = 1</span>
     <span class="doccomment">/// Call(g)</span>
@@ -464,6 +492,7 @@
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Test</span> {
     <span class="ident">Equals</span>(<span class="ident">Value</span>, <span class="ident">Value</span>),
+    <span class="ident">IsFunctionWithArity</span> { <span class="ident">fun</span>: <span class="ident">Register</span>, <span class="ident">arity</span>: <span class="ident">Arity</span> },
     <span class="ident">IsGreaterOrEqualThan</span>(<span class="ident">Value</span>, <span class="ident">Value</span>),
     <span class="ident">IsNil</span>(<span class="ident">Value</span>),
     <span class="ident">IsNonEmptyList</span>(<span class="ident">Value</span>),
@@ -547,6 +576,9 @@
     <span class="doccomment">/** Perform a test and jump to label if it fails. */</span>
     <span class="ident">Test</span>(<span class="ident">Label</span>, <span class="ident">Test</span>),
 
+    <span class="doccomment">/// Could not match a value to a pattern</span>
+    <span class="ident">Badmatch</span>,
+
     <span class="comment">///////////////////////////////////////////////////////////////////////////</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Calling functions</span>
@@ -585,6 +617,18 @@
         <span class="ident">tail</span>: <span class="ident">Register</span>,
     },
 
+    <span class="doccomment">/// Split a list and put the tail in a register</span>
+    <span class="ident">SplitListTail</span> {
+        <span class="ident">list</span>: <span class="ident">Register</span>,
+        <span class="ident">tail</span>: <span class="ident">Register</span>,
+    },
+
+    <span class="doccomment">/// Split a list and put the head in a register</span>
+    <span class="ident">SplitListHead</span> {
+        <span class="ident">list</span>: <span class="ident">Register</span>,
+        <span class="ident">head</span>: <span class="ident">Register</span>,
+    },
+
     <span class="doccomment">/// Copy a tuple element onto a specific registry</span>
     <span class="ident">GetTupleElement</span> {
         <span class="ident">tuple</span>: <span class="ident">Register</span>,
@@ -601,16 +645,28 @@
     <span class="doccomment">/// register</span>
     <span class="ident">Spawn</span>(<span class="ident">Spawn</span>),
 
+    <span class="doccomment">/// Put a process to sleep. Will be woken up by a new message.</span>
+    <span class="ident">Sleep</span>,
+
     <span class="ident">Kill</span>,
     <span class="ident">Monitor</span>,
 
-    <span class="doccomment">/** Puts the message (value in X(1)) into the mailbox of the pid in X(0) */</span>
-    <span class="ident">Send</span>,
+    <span class="doccomment">/// Puts the message into the mailbox of the pid</span>
+    <span class="ident">Send</span> {
+        <span class="ident">message</span>: <span class="ident">Value</span>,
+        <span class="ident">process</span>: <span class="ident">Value</span>,
+    },
 
-    <span class="doccomment">/** Puts the top of the */</span>
-    <span class="ident">Receive</span>,
+    <span class="doccomment">/// Check if the mailbox is empty and jump to a label if it is</span>
+    <span class="ident">PeekMessage</span> {
+        <span class="ident">on_mailbox_empty</span>: <span class="ident">Label</span>,
+        <span class="ident">message</span>: <span class="ident">Register</span>,
+    },
 
-    <span class="doccomment">/** Puts the identifier of the current process in a register */</span>
+    <span class="doccomment">/// Removes the currently selected message in the mailbox</span>
+    <span class="ident">RemoveMessage</span>,
+
+    <span class="doccomment">/// Puts the identifier of the current process in a register</span>
     <span class="ident">PidSelf</span>(<span class="ident">Register</span>),
 }
 </pre></div>

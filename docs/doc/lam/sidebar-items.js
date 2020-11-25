@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["BuildTarget",""],["Goal",""]],"fn":[["main",""]],"struct":[["BuildOpt",""],["DumpOpt",""],["LAM",""]]});
+initSidebarItems({"enum":[["Goal",""]],"fn":[["main",""]],"struct":[["LAM",""]]});

@@ -245,15 +245,19 @@
 <span id="245">245</span>
 <span id="246">246</span>
 <span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">byteorder</span>::<span class="ident">ReadBytesExt</span>;
 <span class="doccomment">/**
  * This module is heavily inspired from @kvakvs/ErlangRT&#39;s compat_term.rs
  * and @sile/eetf&#39;s codec.rs
  *
  * Thanks to both of you for the inspiration and guidance :)
  */</span>
+<span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">byteorder</span>::<span class="ident">ReadBytesExt</span>;
 <span class="kw">use</span> <span class="ident">log</span>::<span class="ident">trace</span>;
 <span class="kw">use</span> <span class="ident">num_bigint</span>::<span class="ident">BigInt</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
@@ -261,14 +265,14 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SimpleTag</span> {
-    <span class="ident">Literal</span> <span class="op">=</span> <span class="number">0b000</span>,
-    <span class="ident">Integer</span> <span class="op">=</span> <span class="number">0b001</span>,
-    <span class="ident">Atom</span> <span class="op">=</span> <span class="number">0b010</span>,
-    <span class="ident">RegisterX</span> <span class="op">=</span> <span class="number">0b011</span>,
-    <span class="ident">RegisterY</span> <span class="op">=</span> <span class="number">0b100</span>,
-    <span class="ident">Label</span> <span class="op">=</span> <span class="number">0b101</span>,
-    <span class="ident">Character</span> <span class="op">=</span> <span class="number">0b110</span>,
-    <span class="ident">Extended</span> <span class="op">=</span> <span class="number">0b111</span>,
+    <span class="ident">Literal</span> <span class="op">=</span> <span class="number">0b0000_0000</span>,
+    <span class="ident">Integer</span> <span class="op">=</span> <span class="number">0b0000_0001</span>,
+    <span class="ident">Atom</span> <span class="op">=</span> <span class="number">0b0000_0010</span>,
+    <span class="ident">RegisterX</span> <span class="op">=</span> <span class="number">0b0000_0011</span>,
+    <span class="ident">RegisterY</span> <span class="op">=</span> <span class="number">0b0000_0100</span>,
+    <span class="ident">Label</span> <span class="op">=</span> <span class="number">0b0000_0101</span>,
+    <span class="ident">Character</span> <span class="op">=</span> <span class="number">0b0000_0110</span>,
+    <span class="ident">Extended</span> <span class="op">=</span> <span class="number">0b0000_0111</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">SimpleTag</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u8</span> {
@@ -332,6 +336,7 @@
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">TagKind</span>::<span class="ident">Simple</span>(<span class="ident">SimpleTag</span>::<span class="ident">Literal</span>, <span class="ident">Value</span>::<span class="ident">Small</span>(<span class="ident">x</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span>::<span class="ident">Literal</span>(<span class="ident">x</span>),
+            <span class="ident">TagKind</span>::<span class="ident">Simple</span>(<span class="ident">SimpleTag</span>::<span class="ident">Literal</span>, <span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span>::<span class="ident">Integer</span>(<span class="ident">x</span>),
             <span class="ident">TagKind</span>::<span class="ident">Simple</span>(<span class="ident">SimpleTag</span>::<span class="ident">Integer</span>, <span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span>::<span class="ident">Integer</span>(<span class="ident">value</span>),
             <span class="ident">TagKind</span>::<span class="ident">Simple</span>(<span class="ident">SimpleTag</span>::<span class="ident">Atom</span>, <span class="ident">Value</span>::<span class="ident">Small</span>(<span class="number">0</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span>::<span class="ident">Nil</span>,
             <span class="ident">TagKind</span>::<span class="ident">Simple</span>(<span class="ident">SimpleTag</span>::<span class="ident">Atom</span>, <span class="ident">Value</span>::<span class="ident">Small</span>(<span class="ident">index</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CompactTerm</span>::<span class="ident">Atom</span>(<span class="ident">index</span>),
@@ -383,16 +388,19 @@
         <span class="kw">let</span> <span class="ident">byte</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">reader</span>.<span class="ident">read_u8</span>()<span class="question-mark">?</span>;
 
         <span class="comment">/* First 3 bits indicate the tag of this value */</span>
-        <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b111</span>;
+        <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b000_0111</span>;
 
         <span class="kw">let</span> <span class="ident">tagged_value</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">tag</span> <span class="op">&lt;</span> <span class="ident">SimpleTag</span>::<span class="ident">Extended</span> <span class="kw">as</span> <span class="ident">u8</span> {
             <span class="comment">/* The 4th bit indicates if the _value_ is extended */</span>
-            <span class="kw">let</span> <span class="ident">is_small_value</span> <span class="op">=</span> <span class="number">0</span> <span class="op">=</span><span class="op">=</span> (<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b0000_1000</span>);
-            <span class="kw">let</span> <span class="ident">is_large_value</span> <span class="op">=</span> <span class="number">0</span> <span class="op">=</span><span class="op">=</span> (<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b0001_0000</span>);
+
+            <span class="kw">let</span> <span class="ident">is_small_value</span> <span class="op">=</span> <span class="number">0b0000_0000</span> <span class="op">=</span><span class="op">=</span> (<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b0000_1000</span>);
+            <span class="kw">let</span> <span class="ident">is_large_value</span> <span class="op">=</span> <span class="number">0b0000_1000</span> <span class="op">=</span><span class="op">=</span> (<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0b0000_1000</span>);
 
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_small_value</span> {
+                <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Is small value: {:?}&quot;</span>, <span class="ident">byte</span>);
                 <span class="ident">Value</span>::<span class="ident">Small</span>((<span class="ident">byte</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">4</span>).<span class="ident">into</span>())
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_large_value</span> {
+                <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Is large value: {:?}&quot;</span>, <span class="ident">byte</span>);
                 <span class="kw">let</span> <span class="ident">shift_value</span> <span class="op">=</span> ((<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&amp;</span> <span class="number">0b1110_0000</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
                 <span class="kw">let</span> <span class="ident">next_byte</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">reader</span>.<span class="ident">read_u8</span>()<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="ident">Value</span>::<span class="ident">Small</span>(<span class="ident">shift_value</span> <span class="op">|</span> <span class="ident">next_byte</span>)

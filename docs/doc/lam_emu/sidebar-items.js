@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["bytecode",""],["coordinator",""],["emulator",""],["instr_ptr",""],["literal",""],["process",""],["process_queue",""],["program",""],["registers",""],["runtime",""],["scheduler",""]]});
+initSidebarItems({"mod":[["bytecode",""],["coordinator",""],["emulator",""],["instr_ptr",""],["literal",""],["mailbox",""],["process",""],["process_queue",""],["process_registry",""],["program",""],["registers",""],["runtime",""],["scheduler",""]]});

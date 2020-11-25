@@ -7,10 +7,9 @@
 they are used for passing arguments to other function calls, and for
 receiving return values.</p>
 <p>Calling <code>f(1)</code> is roughly translated to:</p>
-
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="ident">Global</span>(<span class="number">0</span>) <span class="op">=</span> <span class="number">1</span>
-<span class="ident">Call</span>(<span class="ident">f</span>)</pre></div>
+<pre><code class="language-lam">Global(0) = 1
+Call(f)
+</code></pre>
 <p>And after it runs, <code>Global(0)</code> will have the return value.</p>
 </div><div id="variant.Local" class="variant small-section-header"><a href="#variant.Local" class="anchor field"></a><code>Local(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.u32.html">u32</a>)</code></div><div class='docblock'><p>Local registers are private to a function call, and are used to save
 intermediary values necessary to compute the final result.</p>
@@ -21,12 +20,11 @@ after.</p>
 <pre><code class="language-erlang">f(A) -&gt; g(1) + A.
 </code></pre>
 <p>Roughly translates to:</p>
-
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="ident">Local</span>(<span class="number">0</span>) <span class="op">=</span> <span class="ident">Global</span>(<span class="number">0</span>)
-<span class="ident">Global</span>(<span class="number">0</span>) <span class="op">=</span> <span class="number">1</span>
-<span class="ident">Call</span>(<span class="ident">g</span>)
-<span class="ident">Add</span>(<span class="ident">Global</span>(<span class="number">0</span>), <span class="ident">Local</span>(<span class="number">0</span>))</pre></div>
+<pre><code class="language-lam">Local(0) = Global(0)
+Global(0) = 1
+Call(g)
+Add(Global(0), Local(0))
+</code></pre>
 <p>And the return value will be available at <code>Global(0)</code> (assuming that's
 where Add puts it).</p>
 </div><h2 id='trait-implementations' class='small-section-header'>Trait Implementations<a href='#trait-implementations' class='anchor'></a></h2><div id='trait-implementations-list'><h3 id='impl-Clone' class='impl'><code class='in-band'>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> for <a class="enum" href="../../lam_emu/bytecode/enum.Register.html" title="enum lam_emu::bytecode::Register">Register</a></code><a href='#impl-Clone' class='anchor'></a><a class='srclink' href='../../src/lam_emu/bytecode.rs.html#38' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.clone' class="method hidden"><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class="enum" href="../../lam_emu/bytecode/enum.Register.html" title="enum lam_emu::bytecode::Register">Register</a></code><a class='srclink' href='../../src/lam_emu/bytecode.rs.html#38' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>

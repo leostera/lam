@@ -579,6 +579,61 @@
 <span id="579">579</span>
 <span id="580">580</span>
 <span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
 
@@ -729,10 +784,12 @@
             <span class="comment">//</span>
             <span class="comment">//  Working with the Heap</span>
             <span class="comment">//</span>
-            <span class="ident">OpCode</span>::<span class="ident">TestHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Allocate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Allocate</span> {
-                <span class="ident">words</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
-                <span class="ident">keep_registers</span>: <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
-            }),
+            <span class="ident">OpCode</span>::<span class="ident">AllocateHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">TestHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Allocate</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Allocate</span> {
+                    <span class="ident">words</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
+                    <span class="ident">keep_registers</span>: <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
+                })
+            }
 
             <span class="ident">OpCode</span>::<span class="ident">Deallocate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Deallocate</span> {
                 <span class="ident">words</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
@@ -743,6 +800,8 @@
             <span class="comment">//  Control-Flow</span>
             <span class="comment">//</span>
             <span class="ident">OpCode</span>::<span class="ident">Return</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Return</span>),
+
+            <span class="ident">OpCode</span>::<span class="ident">Badmatch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Badmatch</span>),
 
             <span class="comment">///////////////////////////////////////////////////////////////////</span>
             <span class="comment">//</span>
@@ -981,6 +1040,19 @@
                 ))
             }
 
+            <span class="ident">OpCode</span>::<span class="ident">IsFunction2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// {test,is_function2,{f,1},[{x,0},{integer,1}]}.</span>
+                <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
+
+                <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>());
+                <span class="kw">let</span> <span class="ident">arity</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">2</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
+
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Test</span>(
+                    <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>,
+                    <span class="ident">Test</span>::<span class="ident">IsFunctionWithArity</span> { <span class="ident">fun</span>, <span class="ident">arity</span> },
+                ))
+            }
+
             <span class="comment">///////////////////////////////////////////////////////////////////</span>
             <span class="comment">//</span>
             <span class="comment">//  Creating Values</span>
@@ -1007,6 +1079,18 @@
                 <span class="kw">let</span> <span class="ident">head</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>());
                 <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">2</span>].<span class="ident">clone</span>());
                 <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">SplitList</span> { <span class="ident">list</span>, <span class="ident">head</span>, <span class="ident">tail</span> })
+            }
+
+            <span class="ident">OpCode</span>::<span class="ident">GetTl</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>());
+                <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>());
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">SplitListTail</span> { <span class="ident">list</span>, <span class="ident">tail</span> })
+            }
+
+            <span class="ident">OpCode</span>::<span class="ident">GetHd</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>());
+                <span class="kw">let</span> <span class="ident">head</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>());
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">SplitListHead</span> { <span class="ident">list</span>, <span class="ident">head</span> })
             }
 
             <span class="ident">OpCode</span>::<span class="ident">GetTupleElement</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1037,17 +1121,43 @@
                 })
             }
 
-            <span class="comment">/*
-            {case_end,{x,0}}.
+            <span class="comment">///////////////////////////////////////////////////////////////////</span>
+            <span class="comment">//</span>
+            <span class="comment">//  Message Passing and Processes</span>
+            <span class="comment">//</span>
+            <span class="ident">OpCode</span>::<span class="ident">LoopRec</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">on_mailbox_empty</span> <span class="op">=</span> <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>;
 
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">ModuleTranslator</span>::<span class="ident">mk_reg</span>(<span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>());
 
-            {trim,1,1}.
-                        */</span>
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">PeekMessage</span> {
+                    <span class="ident">on_mailbox_empty</span>,
+                    <span class="ident">message</span>,
+                })
+            }
+
+            <span class="ident">OpCode</span>::<span class="ident">Wait</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Sleep</span>),
+
+            <span class="ident">OpCode</span>::<span class="ident">LoopRecEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>;
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Jump</span>(<span class="ident">label</span>))
+            }
+
+            <span class="ident">OpCode</span>::<span class="ident">RemoveMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">RemoveMessage</span>),
+
+            <span class="ident">OpCode</span>::<span class="ident">Send</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Send</span> {
+                <span class="ident">process</span>: <span class="ident">Value</span>::<span class="ident">Register</span>(<span class="ident">Register</span>::<span class="ident">Global</span>(<span class="number">0</span>)),
+                <span class="ident">message</span>: <span class="ident">Value</span>::<span class="ident">Register</span>(<span class="ident">Register</span>::<span class="ident">Global</span>(<span class="number">1</span>)),
+            }),
+
             <span class="comment">///////////////////////////////////////////////////////////////////</span>
             <span class="comment">//</span>
             <span class="comment">//  Other!</span>
             <span class="comment">//</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">OpCode</span>::<span class="ident">Trim</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">FuncInfo</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Line</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">IntCodeEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">x</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unsupported instruction: {:?}&quot;</span>, <span class="ident">x</span>),
         }
     }
 
