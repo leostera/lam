@@ -34,7 +34,7 @@ impl Display for Lambda {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 pub struct Pid {
     pub scheduler_id: u32,
