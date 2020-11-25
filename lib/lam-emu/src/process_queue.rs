@@ -1,4 +1,3 @@
-use super::emulator::*;
 use super::literal::*;
 use super::process::*;
 use log::*;
@@ -7,10 +6,9 @@ use std::collections::VecDeque;
 #[derive(Default, Debug, Clone)]
 #[repr(C)]
 pub struct ProcessQueue {
-    process_count: u64,
-    ready: VecDeque<Process>,
-    asleep: VecDeque<Process>,
-    dead: VecDeque<Process>,
+    ready: VecDeque<Pid>,
+    asleep: VecDeque<Pid>,
+    dead: VecDeque<Pid>,
 }
 
 impl ProcessQueue {
@@ -22,28 +20,23 @@ impl ProcessQueue {
         self.ready.is_empty()
     }
 
-    pub fn enqueue(&mut self, p: Process) -> &mut ProcessQueue {
-        trace!("Enqueue: {}", p.pid());
+    pub fn enqueue(&mut self, p: &Process) -> &mut ProcessQueue {
+        let pid = p.pid();
+        trace!("Enqueue: {}", pid);
         match p.status() {
-            Status::Alive => self.ready.push_back(p),
-            Status::Terminated => self.dead.push_back(p),
-            Status::Suspended => self.asleep.push_back(p),
+            Status::Alive => self.ready.push_back(pid),
+            Status::Terminated => self.dead.push_back(pid),
+            Status::Suspended => self.asleep.push_back(pid),
         }
         self
     }
 
-    pub fn spawn_and_ready(&mut self, emulator: Emulator, scheduler_id: u32) -> Pid {
-        let pid = Pid {
-            scheduler_id,
-            process_id: self.process_count,
-        };
-        let process = Process::new(pid.clone(), emulator);
-        self.enqueue(process);
-        self.process_count += 1;
-        pid
+    pub fn ready(&mut self, p: &Pid) -> &mut ProcessQueue {
+        self.ready.push_back(p.clone());
+        self
     }
 
-    pub fn next_process(&mut self) -> Option<Process> {
+    pub fn next_process(&mut self) -> Option<Pid> {
         self.ready.pop_front()
     }
 }
