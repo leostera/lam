@@ -6,6 +6,7 @@ use super::runtime::*;
 use super::scheduler::*;
 use anyhow::Error;
 use log::*;
+use std::cell::RefCell;
 
 #[derive(Debug, Clone)]
 #[repr(C)]
@@ -15,16 +16,10 @@ pub enum Status {
     Terminated,
 }
 
-impl Status {
-    pub fn suspend(&mut self) {
-        *self = Status::Suspended;
-    }
-}
-
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Process {
-    status: Status,
+    status: RefCell<Status>,
     pid: Pid,
     emulator: Emulator,
     pub mailbox: Mailbox,
@@ -34,37 +29,26 @@ impl Process {
     pub fn new(pid: Pid, emulator: Emulator) -> Process {
         Process {
             pid,
-            status: Status::Alive,
+            status: RefCell::new(Status::Alive),
             emulator,
             mailbox: Mailbox::new(),
         }
     }
 
-    pub fn set_status(&mut self, s: Status) -> &mut Process {
-        self.status = s;
-        self
-    }
-
-    pub fn set_emulator(&mut self, e: Emulator) -> &mut Process {
-        self.emulator = e;
-        self
-    }
-
-    pub fn send_message(&mut self, m: Message) -> &mut Process {
+    pub fn send_message(&self, m: Message) {
         self.mailbox.deliver(m);
-        self
     }
 
-    pub fn terminate(&mut self) {
-        self.status = Status::Terminated;
+    pub fn suspend(&self) {
+        *self.status.borrow_mut() = Status::Suspended;
     }
 
-    pub fn emulator(&self) -> &Emulator {
-        &self.emulator
+    pub fn terminate(&self) {
+        *self.status.borrow_mut() = Status::Terminated;
     }
 
     pub fn status(&self) -> Status {
-        self.status.clone()
+        self.status.borrow().clone()
     }
 
     pub fn pid(&self) -> Pid {
@@ -72,7 +56,7 @@ impl Process {
     }
 
     pub fn run(
-        &mut self,
+        &self,
         reduction_count: u64,
         program: &Program,
         scheduler: &mut Scheduler,
@@ -85,10 +69,10 @@ impl Process {
             program,
             scheduler,
             runtime,
-            &mut self.status,
-            &mut self.mailbox,
+            &self.mailbox,
             pid,
         )? {
+            EmulationStatus::Suspended => self.suspend(),
             EmulationStatus::Terminated => self.terminate(),
             EmulationStatus::Continue => (),
         };
