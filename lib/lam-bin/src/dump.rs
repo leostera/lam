@@ -75,6 +75,6 @@ impl DumpOpt {
         }
 
         info!("Done in {}ms", t0.elapsed().as_millis());
-        return Ok(());
+        Ok(())
     }
 }

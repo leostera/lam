@@ -49,10 +49,7 @@ impl CompileOpt {
             let program = Translator::default().from_bytecode(vec![beam]);
 
             // write .lam file
-            std::fs::write(
-                PathBuf::from(self.output_dir.join(filename)),
-                program.serialize()?,
-            )?;
+            std::fs::write(self.output_dir.join(filename), program.serialize()?)?;
 
             debug!("Compiled {:?} in {}ms", f, t.elapsed().as_millis());
         }
