@@ -3,12 +3,13 @@ use super::literal::*;
 use super::process::*;
 use log::*;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Default, Debug, Clone)]
 #[repr(C)]
 pub struct ProcessRegistry {
     process_count: u64,
-    processes: HashMap<Pid, Process>,
+    processes: HashMap<Pid, Rc<Process>>,
 }
 
 impl ProcessRegistry {
@@ -27,25 +28,12 @@ impl ProcessRegistry {
         };
         trace!("Spawned {}", &pid);
         let process = Process::new(pid.clone(), emulator);
-        self.processes.insert(pid.clone(), process);
+        self.processes.insert(pid.clone(), Rc::new(process));
         self.process_count += 1;
         pid
     }
 
-    pub fn get(&mut self, p: &Pid) -> Option<Process> {
+    pub fn get(&mut self, p: &Pid) -> Option<Rc<Process>> {
         self.processes.get(&p).cloned()
-    }
-
-    pub fn get_mut(&mut self, p: &Pid) -> Option<&mut Process> {
-        self.processes.get_mut(&p)
-    }
-
-    pub fn update(&mut self, p: &Process) {
-        match self.get_mut(&p.pid()) {
-            None => (),
-            Some(p2) => {
-                p2.set_status(p.status()).set_emulator(p.emulator().clone());
-            }
-        }
     }
 }
