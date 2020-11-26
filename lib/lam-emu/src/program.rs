@@ -95,8 +95,6 @@ impl Program {
 
         for p in ps.iter() {
             for (name, m) in p.modules.iter() {
-                // extend modules with these ones
-                // return an error if there's a duplicated module name
                 if modules.contains_key(name) {
                     return Err(anyhow!("Oops! We found a duplicated module name: {:?}, any chance you're accidentally linking the same program twice?", name));
                 };
