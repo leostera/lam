@@ -1,6 +1,5 @@
 use super::program::*;
 use super::runtime::*;
-use super::scheduler::*;
 use anyhow::Error;
 
 #[repr(C)]
@@ -20,12 +19,7 @@ impl Coordinator {
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
-        let scheduler_count = self.scheduler_count;
-        let mut schedulers = vec![];
-        for i in 0..scheduler_count {
-            let s = Scheduler::new(i, &self.program);
-            schedulers.push(s);
-        }
-        self.runtime.run_schedulers(schedulers)
+        self.runtime
+            .run_schedulers(self.scheduler_count, &self.program)
     }
 }

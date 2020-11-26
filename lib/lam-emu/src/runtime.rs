@@ -1,6 +1,5 @@
 use super::literal::*;
 use super::program::*;
-use super::scheduler::*;
 use anyhow::Error;
 
 /** This trait represents a runtime system and is used to plug the emulator's
@@ -9,7 +8,7 @@ use anyhow::Error;
 pub trait Runtime {
     fn execute(&mut self, call: &MFA, args: &[Literal]) -> Literal;
 
-    fn run_schedulers(&mut self, schedulers: Vec<Scheduler>) -> Result<(), Error>;
+    fn run_schedulers(&mut self, scheduler_count: u32, program: &Program) -> Result<(), Error>;
 
     fn sleep(&self, duration: u64);
 
