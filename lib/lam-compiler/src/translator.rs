@@ -500,7 +500,11 @@ impl ModuleTranslator {
                 })
             }
 
-            OpCode::Wait => Some(Instruction::Sleep),
+            OpCode::Wait => {
+                let label: u32 = args[0].clone().into();
+                let label = label - 1;
+                Some(Instruction::Sleep(label))
+            }
 
             OpCode::LoopRecEnd => {
                 let label: u32 = args[0].clone().into();
