@@ -40,8 +40,27 @@ impl Process {
         }
     }
 
+    pub fn set_status(&mut self, s: Status) -> &mut Process {
+        self.status = s;
+        self
+    }
+
+    pub fn set_emulator(&mut self, e: Emulator) -> &mut Process {
+        self.emulator = e;
+        self
+    }
+
+    pub fn send_message(&mut self, m: Message) -> &mut Process {
+        self.mailbox.deliver(m);
+        self
+    }
+
     pub fn terminate(&mut self) {
         self.status = Status::Terminated;
+    }
+
+    pub fn emulator(&self) -> &Emulator {
+        &self.emulator
     }
 
     pub fn status(&self) -> Status {
