@@ -81,6 +81,11 @@ impl InstructionPointer {
 
         let next_instr = self.current_instruction + 1;
 
+        let should_fall_through = match self.instr {
+            Instruction::Call(_, _) | Instruction::TailCall(_, _) => false,
+            _ => true,
+        };
+
         let mut next_instr_ptr = self.clone();
         if next_instr < last_offset {
             next_instr_ptr.current_instruction += 1;
@@ -88,6 +93,10 @@ impl InstructionPointer {
                 instructions[next_instr_ptr.current_instruction as usize].clone();
         } else if let Some(last_ptr) = &self.last_instr_ptr {
             next_instr_ptr = (**last_ptr).clone();
+        } else if should_fall_through && label + 1 < module.labels.len() {
+            /* Follow to the next label if we're done with this one */
+            next_instr_ptr.current_instruction = 0;
+            next_instr_ptr.instr = module.labels[label + 1].instructions[0].clone();
         } else {
             next_instr_ptr.instr = Instruction::Halt;
         }
