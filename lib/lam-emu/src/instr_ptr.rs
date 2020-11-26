@@ -87,17 +87,25 @@ impl InstructionPointer {
         };
 
         let mut next_instr_ptr = self.clone();
+        // First lets try to advance to the next instruciton in the current label
         if next_instr < last_offset {
             next_instr_ptr.current_instruction += 1;
             next_instr_ptr.instr =
                 instructions[next_instr_ptr.current_instruction as usize].clone();
-        } else if let Some(last_ptr) = &self.last_instr_ptr {
-            next_instr_ptr = (**last_ptr).clone();
-        } else if should_fall_through && label + 1 < module.labels.len() {
+        }
+        // Otherwise, lets check if the last instruction grants us a label fall through
+        else if should_fall_through && label + 1 < module.labels.len() {
             /* Follow to the next label if we're done with this one */
             next_instr_ptr.current_instruction = 0;
+            next_instr_ptr.current_label = (label + 1) as u32;
             next_instr_ptr.instr = module.labels[label + 1].instructions[0].clone();
-        } else {
+        }
+        // if we shouldn't fall through, lets see if we can jump back
+        else if let Some(last_ptr) = &self.last_instr_ptr {
+            next_instr_ptr = (**last_ptr).clone();
+        }
+        // lastly, there's nothing more to do, so we just halt
+        else {
             next_instr_ptr.instr = Instruction::Halt;
         }
         next_instr_ptr
