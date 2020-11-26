@@ -79,6 +79,7 @@ impl Emulator {
             }
             trace!("{}", self.registers);
             trace!("{}", self.instr_ptr);
+            trace!("{:#?}", mailbox);
             match self.instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
@@ -358,9 +359,10 @@ impl Emulator {
                     reductions += 1;
                 }
 
-                Instruction::Sleep => {
+                Instruction::Sleep(label) => {
                     process_status.suspend();
-                    self.instr_ptr.next(&program);
+                    self.instr_ptr.jump_to_label(&program, &label);
+                    return Ok(EmulationStatus::Continue);
                 }
 
                 Instruction::PeekMessage {
@@ -387,6 +389,7 @@ impl Emulator {
                         x => panic!("Can not send a message to non-pid: {}", x),
                     };
                     scheduler.send_message(&pid, &message);
+                    trace!("{:?}", mailbox);
                     self.registers.put_global(0, Value::Literal(message));
                     self.instr_ptr.next(&program);
                 }
