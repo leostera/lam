@@ -2,42 +2,41 @@ use super::bytecode::*;
 use super::instr_ptr::*;
 use super::literal::*;
 use super::mailbox::*;
-use super::process::*;
 use super::program::*;
 use super::registers::*;
 use super::runtime::Runtime;
 use super::scheduler::*;
 use anyhow::Error;
-use std::boxed::Box;
-
 use log::*;
-
 use num_bigint::BigInt;
+use std::boxed::Box;
+use std::cell::RefCell;
 
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Emulator {
-    registers: Registers,
-    instr_ptr: InstructionPointer,
+    registers: RefCell<Registers>,
+    instr_ptr: RefCell<InstructionPointer>,
 }
 
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub enum EmulationStatus {
     Continue,
+    Suspended,
     Terminated,
 }
 
 impl Emulator {
     pub fn new() -> Emulator {
         Emulator {
-            registers: Registers::new(),
-            instr_ptr: InstructionPointer::new(),
+            registers: RefCell::new(Registers::new()),
+            instr_ptr: RefCell::new(InstructionPointer::new()),
         }
     }
 
     pub fn set_initial_call_from_mfa(&mut self, mfa: &MFA, program: &Program) -> &mut Emulator {
-        self.instr_ptr.setup_mfa(&mfa, &program);
+        self.instr_ptr.borrow_mut().setup_mfa(&mfa, &program);
         self
     }
 
@@ -47,28 +46,32 @@ impl Emulator {
         program: &Program,
     ) -> &mut Emulator {
         self.registers
+            .borrow_mut()
             .fill_globals_from_offset(lambda.arity, &lambda.environment);
-        self.instr_ptr.setup_lambda(&lambda, &program);
+        self.instr_ptr.borrow_mut().setup_lambda(&lambda, &program);
         self
     }
 
     pub fn preload(&mut self, x: u32, v: Value) -> &mut Emulator {
-        self.registers.put(&Register::Global(x), v);
+        self.registers.borrow_mut().put(&Register::Global(x), v);
         self
     }
 
     pub fn run(
-        &mut self,
+        &self,
         reduction_count: u64,
         program: &Program,
         scheduler: &mut Scheduler,
         runtime: &mut Box<dyn Runtime>,
-        process_status: &mut Status,
-        mailbox: &mut Mailbox,
+        mailbox: &Mailbox,
         pid: Pid,
     ) -> Result<EmulationStatus, Error> {
         let mut reductions = 0;
         let mut last_red = 0;
+
+        let mut registers = self.registers.borrow_mut();
+        let mut instr_ptr = self.instr_ptr.borrow_mut();
+
         while reductions < reduction_count {
             if last_red < reductions {
                 trace!(
@@ -77,10 +80,10 @@ impl Emulator {
                 );
                 last_red = reductions;
             }
-            trace!("{}", self.registers);
-            trace!("{}", self.instr_ptr);
+            trace!("{}", registers);
+            trace!("{}", instr_ptr);
             trace!("{:#?}", mailbox);
-            match self.instr_ptr.instr.clone() {
+            match instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
                 // Kill switch
@@ -94,27 +97,27 @@ impl Emulator {
                 Instruction::Move(value, target) => {
                     match value {
                         Value::Register(reg) => {
-                            self.registers.copy(&reg, &target);
+                            registers.copy(&reg, &target);
                         }
                         v => {
-                            self.registers.put(&target, v.clone());
+                            registers.put(&target, v.clone());
                         }
                     }
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Swap(a, b) => {
-                    self.registers.swap(a, b);
-                    self.instr_ptr.next(&program);
+                    registers.swap(a, b);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Clear(reg) => {
-                    self.registers.clear(&reg);
-                    self.instr_ptr.next(&program);
+                    registers.clear(&reg);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Deallocate { .. } | Instruction::Allocate { .. } => {
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 ////////////////////////////////////////////////////////////////
@@ -133,7 +136,7 @@ impl Emulator {
                 ) => {
                     let args: Vec<Literal> = arguments
                         .iter()
-                        .map(|a| self.registers.get_literal_from_value(&a))
+                        .map(|a| registers.get_literal_from_value(&a))
                         .collect();
                     let ret = runtime.execute(
                         &MFA {
@@ -143,8 +146,8 @@ impl Emulator {
                         },
                         &args,
                     );
-                    self.registers.put(&destination, ret.into());
-                    self.instr_ptr.next(&program);
+                    registers.put(&destination, ret.into());
+                    instr_ptr.next(&program);
                     reductions += 1;
                 }
 
@@ -154,12 +157,11 @@ impl Emulator {
                     },
                     _,
                 ) => {
-                    let value = self.registers.get(&register);
+                    let value = registers.get(&register);
                     if let Literal::Lambda(lambda) = value.clone().into() {
-                        self.registers
-                            .fill_globals_from_offset(arity, &lambda.environment);
-                        self.registers.push_new_local();
-                        self.instr_ptr.call(
+                        registers.fill_globals_from_offset(arity, &lambda.environment);
+                        registers.push_new_local();
+                        instr_ptr.call(
                             &program,
                             &FnCall::Local {
                                 module: lambda.module,
@@ -177,34 +179,34 @@ impl Emulator {
                 }
 
                 Instruction::Call(call, FnKind::User) => {
-                    self.registers.clear_globals(call.arity());
-                    self.instr_ptr.call(&program, &call);
+                    registers.clear_globals(call.arity());
+                    instr_ptr.call(&program, &call);
                     reductions += 1;
                 }
 
                 Instruction::TailCall(call, FnKind::User) => {
-                    self.registers.clear_globals(call.arity());
-                    self.instr_ptr.call(&program, &call);
+                    registers.clear_globals(call.arity());
+                    instr_ptr.call(&program, &call);
                     reductions += 1;
                 }
 
                 Instruction::Call(call, FnKind::Native) => {
                     let arity = call.arity();
-                    let args = self.registers.get_many_literals_from_global_range(0, arity);
+                    let args = registers.get_many_literals_from_global_range(0, arity);
                     let ret = runtime.execute(&call.into(), &args);
-                    self.registers.clear_globals(arity);
-                    self.registers.put_global(0, Value::Literal(ret));
-                    self.instr_ptr.next(&program);
+                    registers.clear_globals(arity);
+                    registers.put_global(0, Value::Literal(ret));
+                    instr_ptr.next(&program);
                     reductions += 1;
                 }
 
                 Instruction::TailCall(call, FnKind::Native) => {
                     let arity = call.arity();
-                    let args = self.registers.get_many_literals_from_global_range(0, arity);
+                    let args = registers.get_many_literals_from_global_range(0, arity);
                     let ret = runtime.execute(&call.into(), &args);
-                    self.registers.clear_globals(arity);
-                    self.registers.put_global(0, Value::Literal(ret));
-                    self.instr_ptr.next(&program);
+                    registers.clear_globals(arity);
+                    registers.put_global(0, Value::Literal(ret));
+                    instr_ptr.next(&program);
                     reductions += 1;
                 }
 
@@ -213,22 +215,22 @@ impl Emulator {
                 // Flow-control operations
                 //
                 Instruction::Jump(label) => {
-                    self.instr_ptr.jump_to_label(&program, &label);
+                    instr_ptr.jump_to_label(&program, &label);
                     reductions += 1;
                 }
 
                 Instruction::Return => {
-                    self.registers.restore_last_local();
-                    self.instr_ptr.return_to_last_instr();
+                    registers.restore_last_local();
+                    instr_ptr.return_to_last_instr();
                 }
 
                 Instruction::Test(label, test) => {
-                    if self.run_test(&test) {
+                    if self.run_test(&test, &mut registers) {
                         trace!("Test passed! continuing...");
-                        self.instr_ptr.next(&program);
+                        instr_ptr.next(&program);
                     } else {
                         trace!("Test failed! Jumping to: {}", label);
-                        self.instr_ptr.jump_to_label(&program, &label);
+                        instr_ptr.jump_to_label(&program, &label);
                     }
                 }
 
@@ -240,9 +242,9 @@ impl Emulator {
                 //  Creating Values
                 //
                 Instruction::ConsList { target, head, tail } => {
-                    let head = Box::new(self.registers.get_literal_from_value(&head));
+                    let head = Box::new(registers.get_literal_from_value(&head));
                     let tail = {
-                        let lit = self.registers.get_literal_from_value(&tail);
+                        let lit = registers.get_literal_from_value(&tail);
                         match lit {
                             Literal::List(t) => Box::new(t),
                             _ => panic!(
@@ -251,43 +253,40 @@ impl Emulator {
                             ),
                         }
                     };
-                    self.registers
-                        .put(&target, Literal::List(List::Cons(head, tail)).into());
-                    self.instr_ptr.next(&program);
+                    registers.put(&target, Literal::List(List::Cons(head, tail)).into());
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::SplitList { list, head, tail } => {
-                    match self.registers.get(&list).into() {
+                    match registers.get(&list).into() {
                         Literal::List(List::Cons(boxed_head, boxed_tail)) => {
-                            self.registers
+                            registers
                                 .put(&head, Value::Literal(*boxed_head.clone()))
                                 .put(&tail, Literal::List(*boxed_tail.clone()).into());
                         }
                         value => panic!("Attempted to split a value that is not a list: {}", value),
                     };
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::SplitListTail { list, tail } => {
-                    match self.registers.get(&list).into() {
+                    match registers.get(&list).into() {
                         Literal::List(List::Cons(_, boxed_tail)) => {
-                            self.registers
-                                .put(&tail, Literal::List(*boxed_tail.clone()).into());
+                            registers.put(&tail, Literal::List(*boxed_tail.clone()).into());
                         }
                         value => panic!("Attempted to split a value that is not a list: {}", value),
                     };
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::SplitListHead { list, head } => {
-                    match self.registers.get(&list).into() {
+                    match registers.get(&list).into() {
                         Literal::List(List::Cons(boxed_head, _)) => {
-                            self.registers
-                                .put(&head, Value::Literal(*boxed_head.clone()));
+                            registers.put(&head, Value::Literal(*boxed_head.clone()));
                         }
                         value => panic!("Attempted to split a value that is not a list: {}", value),
                     };
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::GetTupleElement {
@@ -295,17 +294,17 @@ impl Emulator {
                     element,
                     target,
                 } => {
-                    match self.registers.get(&tuple) {
+                    match registers.get(&tuple) {
                         Value::Literal(Literal::Tuple(Tuple { elements, .. })) => {
                             let element = elements[element as usize].clone();
-                            self.registers.put(&target, Value::Literal(element));
+                            registers.put(&target, Value::Literal(element));
                         }
                         v => panic!(
                             "Attempted to extract element from value that is not a tuple: {}",
                             v
                         ),
                     }
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::MakeLambda {
@@ -314,10 +313,9 @@ impl Emulator {
                     arity,
                     environment_size,
                 } => {
-                    let environment = self
-                        .registers
-                        .get_many_literals_from_global_range(0, environment_size);
-                    self.registers.put(
+                    let environment =
+                        registers.get_many_literals_from_global_range(0, environment_size);
+                    registers.put(
                         &Register::Global(0),
                         Value::Literal(Literal::Lambda(Lambda {
                             first_label,
@@ -326,7 +324,7 @@ impl Emulator {
                             arity,
                         })),
                     );
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 ////////////////////////////////////////////////////////////////
@@ -336,15 +334,14 @@ impl Emulator {
                 Instruction::Kill => return Ok(EmulationStatus::Terminated),
 
                 Instruction::PidSelf(target) => {
-                    self.registers
-                        .put(&target, Literal::Pid(pid.clone()).into());
-                    self.instr_ptr.next(&program);
+                    registers.put(&target, Literal::Pid(pid.clone()).into());
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Spawn(spawn) => {
                     let pid = match spawn {
                         Spawn::Lambda { register } => {
-                            let value = self.registers.get(&register);
+                            let value = registers.get(&register);
                             if let Literal::Lambda(lambda) = value.clone().into() {
                                 scheduler.spawn_from_lambda(&lambda)
                             } else {
@@ -353,84 +350,88 @@ impl Emulator {
                         }
                         _ => panic!("mfa spawns are not supported yet"),
                     };
-                    self.registers.put_global(0, Literal::Pid(pid).into());
-                    self.registers.restore_last_local();
-                    self.instr_ptr.next(&program);
+                    registers.put_global(0, Literal::Pid(pid).into());
+                    registers.restore_last_local();
+                    instr_ptr.next(&program);
                     reductions += 1;
                 }
 
                 Instruction::Sleep(label) => {
-                    process_status.suspend();
-                    self.instr_ptr.jump_to_label(&program, &label);
-                    return Ok(EmulationStatus::Continue);
+                    instr_ptr.jump_to_label(&program, &label);
+                    return Ok(EmulationStatus::Suspended);
                 }
 
                 Instruction::PeekMessage {
                     on_mailbox_empty,
                     message,
                 } => match mailbox.peek_next() {
-                    None => self.instr_ptr.jump_to_label(&program, &on_mailbox_empty),
+                    None => {
+                        trace!("No messages");
+                        instr_ptr.jump_to_label(&program, &on_mailbox_empty);
+                    }
                     Some(msg) => {
-                        self.registers.put(&message, msg.clone().into());
-                        self.instr_ptr.next(&program);
+                        trace!("Peeked message: {}", msg);
+                        registers.put(&message, msg.clone().into());
+                        trace!("{:?}", instr_ptr);
+                        instr_ptr.next(&program);
+                        trace!("{:?}", instr_ptr);
                         reductions += 1;
                     }
                 },
 
                 Instruction::RemoveMessage => {
                     mailbox.drop_current();
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Send { message, process } => {
-                    let message = self.registers.get_literal_from_value(&message);
-                    let pid = match self.registers.get_literal_from_value(&process) {
+                    let message = registers.get_literal_from_value(&message);
+                    let pid = match registers.get_literal_from_value(&process) {
                         Literal::Pid(pid) => pid,
                         x => panic!("Can not send a message to non-pid: {}", x),
                     };
                     scheduler.send_message(&pid, &message);
-                    trace!("{:?}", mailbox);
-                    self.registers.put_global(0, Value::Literal(message));
-                    self.instr_ptr.next(&program);
+                    registers.put_global(0, Value::Literal(message));
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Monitor => {
-                    self.instr_ptr.next(&program);
+                    instr_ptr.next(&program);
                 }
 
-                Instruction::Label(_) => self.instr_ptr.next(&program),
+                Instruction::Label(_) => instr_ptr.next(&program),
             }
         }
         Ok(EmulationStatus::Continue)
     }
 
-    pub fn run_test(&self, test: &Test) -> bool {
+    pub fn run_test(&self, test: &Test, registers: &mut Registers) -> bool {
         trace!("Running test: {:?}", test);
         match test {
             Test::IsGreaterOrEqualThan(a, b) => {
-                let a: BigInt = self.registers.get_literal_from_value(a).into();
-                let b: BigInt = self.registers.get_literal_from_value(b).into();
+                let a: BigInt = registers.get_literal_from_value(a).into();
+                let b: BigInt = registers.get_literal_from_value(b).into();
                 a >= b
             }
 
-            Test::IsNil(a) => match self.registers.get_literal_from_value(a) {
+            Test::IsNil(a) => match registers.get_literal_from_value(a) {
                 Literal::List(List::Nil) => true,
                 Literal::List(_) => false,
                 _ => panic!("Can not check if non list value {} is an empty list", a),
             },
 
-            Test::IsNonEmptyList(a) => match self.registers.get_literal_from_value(a) {
+            Test::IsNonEmptyList(a) => match registers.get_literal_from_value(a) {
                 Literal::List(List::Cons(_, _)) => true,
                 Literal::List(List::Nil) => false,
                 _ => panic!("Can not check if non list value {} is a non empty list", a),
             },
 
             Test::Equals(a, b) => {
-                self.registers.get_literal_from_value(a) == self.registers.get_literal_from_value(b)
+                registers.get_literal_from_value(a) == registers.get_literal_from_value(b)
             }
 
             Test::IsTaggedTuple { value, atom, .. } => {
-                match self.registers.get_literal_from_value(value) {
+                match registers.get_literal_from_value(value) {
                     Literal::Tuple(Tuple { elements, .. }) => match elements[0].clone() {
                         Literal::Atom(tag) => tag.eq(atom),
                         _ => false,
@@ -439,7 +440,7 @@ impl Emulator {
                 }
             }
 
-            Test::IsFunctionWithArity { fun, arity, .. } => match self.registers.get(&fun) {
+            Test::IsFunctionWithArity { fun, arity, .. } => match registers.get(&fun) {
                 Value::Literal(Literal::Lambda(Lambda { arity: a2, .. })) => arity.clone() == a2,
                 x => panic!("Cannot check arity of non-function value: {}", x),
             },
