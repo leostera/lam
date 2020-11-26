@@ -2,9 +2,9 @@
 
 -export([main/1]).
 
-main(_) ->
+main([Msg|_]) ->
   Top = self(),
-  Top ! ok,
+  Top ! Msg,
   receive
     X -> io:format(<<"~p">>, [X])
   end.
