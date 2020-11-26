@@ -146,7 +146,7 @@ impl ModuleTranslator {
             ///////////////////////////////////////////////////////////////////
             //
             //  Working with the Heap
-            //
+            /*
             OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate => {
                 Some(Instruction::Allocate {
                     words: args[0].clone().into(),
@@ -157,6 +157,10 @@ impl ModuleTranslator {
             OpCode::Deallocate => Some(Instruction::Deallocate {
                 words: args[0].clone().into(),
             }),
+            */
+            // NOTE(@ostera): temporarily disable this so the traces are smaller, we aren't using
+            // the allocation anyway
+            OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate | OpCode::Deallocate => None,
 
             ///////////////////////////////////////////////////////////////////
             //
