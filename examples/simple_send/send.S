@@ -12,9 +12,10 @@
     {line,[{location,"send.erl",5}]}.
     {func_info,{atom,send},{atom,main},1}.
   {label,2}.
-    {allocate,0,0}.
+    {test,is_nonempty_list,{f,1},[{x,0}]}.
+    {allocate,0,1}.
+    {get_hd,{x,0},{x,1}}.
     {bif,self,{f,0},[],{x,0}}.
-    {move,{atom,ok},{x,1}}.
     {line,[{location,"send.erl",7}]}.
     send.
   {label,3}.
