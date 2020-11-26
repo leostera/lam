@@ -33,10 +33,19 @@ impl ProcessRegistry {
     }
 
     pub fn get(&mut self, p: &Pid) -> Option<Process> {
-        self.processes.get_mut(&p).cloned()
+        self.processes.get(&p).cloned()
+    }
+
+    pub fn get_mut(&mut self, p: &Pid) -> Option<&mut Process> {
+        self.processes.get_mut(&p)
     }
 
     pub fn update(&mut self, p: &Process) {
-        self.processes.insert(p.pid(), p.clone());
+        match self.get_mut(&p.pid()) {
+            None => (),
+            Some(p2) => {
+                p2.set_status(p.status()).set_emulator(p.emulator().clone());
+            }
+        }
     }
 }
