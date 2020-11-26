@@ -3,7 +3,7 @@ use anyhow::Error;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
-use lam_emu::{List, Literal, Runtime, Scheduler, MFA};
+use lam_emu::{List, Literal, Program, Runtime, Scheduler, MFA};
 use num_bigint::BigInt;
 
 #[wasm_bindgen]
@@ -42,8 +42,8 @@ impl Runtime for WebRuntime {
             (_, _) => panic!("How'd you get here?"),
         }
     }
-    fn run_schedulers(&mut self, schedulers: Vec<Scheduler>) -> Result<(), Error> {
-        schedulers[0].clone().run(Box::new(self.clone()))
+    fn run_schedulers(&mut self, _scheduler_count: u32, program: &Program) -> Result<(), Error> {
+        Scheduler::new(0, &program).run(Box::new(self.clone()))
     }
 
     fn sleep(&self, _delay: u64) {}
