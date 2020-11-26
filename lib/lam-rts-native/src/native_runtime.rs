@@ -1,5 +1,5 @@
 use anyhow::Error;
-use lam_emu::{List, Literal, Runtime, Scheduler, Tuple, Value, MFA};
+use lam_emu::{List, Literal, Program, Runtime, Scheduler, Tuple, Value, MFA};
 use log::*;
 use num_bigint::BigInt;
 use std::env;
@@ -74,15 +74,16 @@ impl Runtime for NativeRuntime {
         }
     }
 
-    fn run_schedulers(&mut self, schedulers: Vec<Scheduler>) -> Result<(), Error> {
+    fn run_schedulers(&mut self, scheduler_count: u32, program: &Program) -> Result<(), Error> {
         crossbeam::thread::scope(|scope| {
-            let mut scopes = vec![];
-            for s in schedulers[1..].to_vec() {
-                scopes.push(scope.spawn(|_| {
-                    s.run(Box::new(self.clone())).unwrap();
-                }));
+            for s in 1..=scheduler_count {
+                let runtime = Box::new(self.clone());
+                scope.spawn(move |_| {
+                    Scheduler::new(s, &program).run(runtime).unwrap();
+                });
             }
-            let mut main_scheduler = schedulers[0].clone();
+            let mut main_scheduler = Scheduler::new(0, program);
+
             main_scheduler
                 .boot(self.args())
                 .clone()
