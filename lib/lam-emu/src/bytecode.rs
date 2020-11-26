@@ -309,8 +309,8 @@ pub enum Instruction {
     /// register
     Spawn(Spawn),
 
-    /// Put a process to sleep. Will be woken up by a new message.
-    Sleep,
+    /// Put a process to sleep. Will be woken up by a new message and jump to Label
+    Sleep(Label),
 
     Kill,
     Monitor,
