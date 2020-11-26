@@ -575,8 +575,7 @@ impl ModuleTranslator {
             }
             ExternalTerm::Atom(atom) => Literal::Atom(atom.to_string()),
             ExternalTerm::Binary(bin) => Literal::Binary(
-                String::from_utf8(bin.bytes.clone())
-                    .expect("Binary string had invalid utf-8 characters"),
+                String::from_utf8(bin.bytes).expect("Binary string had invalid utf-8 characters"),
             ),
             ExternalTerm::FixInteger(external_term::FixInteger { value }) => {
                 Literal::Integer(value.into())
@@ -600,7 +599,7 @@ impl ModuleTranslator {
     }
 
     pub fn mk_reg(x: CompactTerm) -> Register {
-        let res = match x.clone() {
+        let res = match x {
             CompactTerm::RegisterX(x) => Register::Global(x),
             CompactTerm::RegisterY(y) => Register::Local(y),
             _ => panic!("Tried to turn {:?} into a register", x),
