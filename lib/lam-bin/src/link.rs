@@ -1,5 +1,5 @@
 use anyhow::Error;
-use log::{debug, info};
+use log::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -74,6 +74,7 @@ impl LinkOpt {
         let t1 = std::time::Instant::now();
         let mut programs = Vec::new();
         for f in self.files {
+            trace!("Reading {:?}...", f);
             let bytes = std::fs::read(f)?;
             programs.push(lam_emu::Program::deserialize(&bytes)?);
         }
