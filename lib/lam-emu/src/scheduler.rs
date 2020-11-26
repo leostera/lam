@@ -39,14 +39,13 @@ impl<'a> Scheduler<'a> {
 
         loop {
             if let Some(pid) = self.process_queue.next_process() {
-                if let Some(mut process) = self.process_registry.get(&pid) {
+                if let Some(process) = self.process_registry.get(&pid) {
                     debug!("Working on process {}", &pid);
                     if let Ok(_) =
                         process.run(self.reduction_count, self.program, &mut self, &mut runtime)
                     {
                         self.process_queue.enqueue(&process);
                     }
-                    self.process_registry.update(&process);
                 }
             } else {
                 break;
@@ -97,7 +96,7 @@ impl<'a> Scheduler<'a> {
     }
 
     pub fn send_message(&mut self, pid: &Pid, message: &Message) {
-        match self.process_registry.get_mut(&pid) {
+        match self.process_registry.get(&pid) {
             None => {
                 trace!(
                     "Attempted to send message {} to {}, but couldn't find it",
