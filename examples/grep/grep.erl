@@ -4,7 +4,7 @@
 -export([main/1]).
 
 print_matches(Word, [Word | T], File) ->
-  io:format("~p: ~p\n", [File, Word]),
+  io:format(<<"~p: ~p\n">>, [File, Word]),
   print_matches(Word, T, File);
 print_matches(Word, [_ | T], File)->
   print_matches(Word, T, File);
@@ -15,16 +15,11 @@ count(Top, File, Word) ->
     {ok, Data} = file:read_file(File),
     Words = binary:split(Data, <<" ">>, [global]),
     print_matches(Word, Words, File),
-    Top ! {word_count, File, length(Words)}
+    Top ! done
   end).
 
 count_all([]) -> ok;
-count_all([_|T]) ->
-  receive
-    _ -> count_all(T)
-  after
-    1000 -> timeout
-  end.
+count_all([_|T]) -> receive done -> count_all(T) end.
 
 main([Word | Files]) ->
   Top = self(),

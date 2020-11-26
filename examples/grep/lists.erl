@@ -29,4 +29,4 @@
 foreach(F, [Hd|Tail]) ->
     F(Hd),
     foreach(F, Tail);
-foreach(F, []) when is_function(F, 1) -> ok.
+foreach(_, []) -> ok.

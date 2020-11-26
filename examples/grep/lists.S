@@ -24,7 +24,6 @@
     {call_last,2,{f,2},2}.
   {label,3}.
     {test,is_nil,{f,1},[{x,1}]}.
-    {test,is_function2,{f,1},[{x,0},{integer,1}]}.
     {move,{atom,ok},{x,0}}.
     return.
 
