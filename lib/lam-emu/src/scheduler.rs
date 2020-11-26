@@ -60,7 +60,7 @@ impl<'a> Scheduler<'a> {
                 is_asleep = true;
 
                 */
-            }
+            };
         }
 
         Ok(())
@@ -97,9 +97,18 @@ impl<'a> Scheduler<'a> {
     }
 
     pub fn send_message(&mut self, pid: &Pid, message: &Message) {
-        match self.process_registry.get(&pid) {
-            None => (),
-            Some(mut p) => p.mailbox.deliver(message.clone()),
+        match self.process_registry.get_mut(&pid) {
+            None => {
+                trace!(
+                    "Attempted to send message {} to {}, but couldn't find it",
+                    message,
+                    pid
+                );
+            }
+            Some(p) => {
+                trace!("Sending message {} to {}", message, pid);
+                p.send_message(message.clone());
+            }
         }
     }
 
