@@ -12,7 +12,7 @@ use num_bigint::BigInt;
 use std::boxed::Box;
 use std::cell::RefCell;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 #[repr(C)]
 pub struct Emulator {
     registers: RefCell<Registers>,
@@ -29,10 +29,7 @@ pub enum EmulationStatus {
 
 impl Emulator {
     pub fn new() -> Emulator {
-        Emulator {
-            registers: RefCell::new(Registers::new()),
-            instr_ptr: RefCell::new(InstructionPointer::new()),
-        }
+        Emulator::default()
     }
 
     pub fn set_initial_call_from_mfa(&mut self, mfa: &MFA, program: &Program) -> &mut Emulator {
@@ -441,7 +438,7 @@ impl Emulator {
             }
 
             Test::IsFunctionWithArity { fun, arity, .. } => match registers.get(&fun) {
-                Value::Literal(Literal::Lambda(Lambda { arity: a2, .. })) => arity.clone() == a2,
+                Value::Literal(Literal::Lambda(Lambda { arity: a2, .. })) => *arity == a2,
                 x => panic!("Cannot check arity of non-function value: {}", x),
             },
         }

@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 
 pub type Message = Literal;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 #[repr(C)]
 pub struct Mailbox {
     messages: RefCell<VecDeque<Message>>,
@@ -13,10 +13,7 @@ pub struct Mailbox {
 
 impl Mailbox {
     pub fn new() -> Mailbox {
-        Mailbox {
-            messages: RefCell::new(VecDeque::default()),
-            current: RefCell::new(0),
-        }
+        Mailbox::default()
     }
 
     pub fn deliver(&self, m: Message) {

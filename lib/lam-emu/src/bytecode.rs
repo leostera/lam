@@ -13,7 +13,7 @@ pub enum Value {
 impl Into<Literal> for Value {
     fn into(self) -> Literal {
         match self {
-            Value::Literal(l) => l.clone(),
+            Value::Literal(l) => l,
             _ => panic!("Can not turn {:?} into a Literal", self),
         }
     }
@@ -332,4 +332,10 @@ pub enum Instruction {
 
     /// Puts the identifier of the current process in a register
     PidSelf(Register),
+}
+
+impl Default for Instruction {
+    fn default() -> Instruction {
+        Instruction::Halt
+    }
 }

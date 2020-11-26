@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 
 use log::*;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 #[repr(C)]
 pub struct InstructionPointer {
     last_instr_ptr: Option<Box<InstructionPointer>>,

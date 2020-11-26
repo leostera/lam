@@ -61,7 +61,7 @@ impl Registers {
         self
     }
 
-    pub fn fill_globals_from_offset(&mut self, offset: u32, vs: &Vec<Literal>) -> &mut Registers {
+    pub fn fill_globals_from_offset(&mut self, offset: u32, vs: &[Literal]) -> &mut Registers {
         for (i, v) in vs.iter().enumerate() {
             self.global[offset as usize + i] = v.clone().into();
         }
@@ -69,14 +69,14 @@ impl Registers {
     }
 
     pub fn put_global(&mut self, n: u32, v: Value) -> &mut Registers {
-        self.global[n as usize] = v.clone();
+        self.global[n as usize] = v;
         self
     }
 
     pub fn put(&mut self, r: &Register, v: Value) -> &mut Registers {
         match r {
-            Register::Local(l) => self.current_local[*l as usize] = v.clone(),
-            Register::Global(g) => self.global[*g as usize] = v.clone(),
+            Register::Local(l) => self.current_local[*l as usize] = v,
+            Register::Global(g) => self.global[*g as usize] = v,
         }
         self
     }

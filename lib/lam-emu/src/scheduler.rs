@@ -41,8 +41,9 @@ impl<'a> Scheduler<'a> {
             if let Some(pid) = self.process_queue.next_process() {
                 if let Some(process) = self.process_registry.get(&pid) {
                     debug!("Working on process {}", &pid);
-                    if let Ok(_) =
-                        process.run(self.reduction_count, self.program, &mut self, &mut runtime)
+                    if process
+                        .run(self.reduction_count, self.program, &mut self, &mut runtime)
+                        .is_ok()
                     {
                         self.process_queue.enqueue(&process);
                     }
