@@ -33,7 +33,7 @@ impl Runtime for NativeRuntime {
             function,
             arity,
         } = mfa;
-        trace!("{}:{}({:?})", module, function, args.clone());
+        trace!("{}:{}({:?})", module, function, args);
         match (module.as_str(), function.as_str(), arity) {
             ("binary", "split", 3) => {
                 let string: String = args[0].clone().into();
