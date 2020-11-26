@@ -7,7 +7,6 @@ use std::collections::VecDeque;
 #[repr(C)]
 pub struct ProcessQueue {
     ready: VecDeque<Pid>,
-    asleep: VecDeque<Pid>,
     dead: VecDeque<Pid>,
 }
 
@@ -26,7 +25,7 @@ impl ProcessQueue {
         match p.status() {
             Status::Alive => self.ready.push_back(pid),
             Status::Terminated => self.dead.push_back(pid),
-            Status::Suspended => self.asleep.push_back(pid),
+            Status::Suspended => self.ready.push_back(pid),
         }
         self
     }
