@@ -28,8 +28,11 @@ impl Mailbox {
     }
 
     pub fn peek_next(&mut self) -> Option<&Message> {
-        let msg = self.messages.get(self.current as usize);
-        self.current += 1;
-        msg
+        if let Some(msg) = self.messages.get(self.current as usize) {
+            self.current += 1;
+            Some(msg)
+        } else {
+            None
+        }
     }
 }
