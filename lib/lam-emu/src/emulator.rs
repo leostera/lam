@@ -186,6 +186,7 @@ impl Emulator {
 
                 Instruction::Call(call, FnKind::User) => {
                     registers.clear_globals(call.arity());
+                    registers.push_new_local();
                     instr_ptr.call(&program, &call);
                     reductions += 1;
                 }
