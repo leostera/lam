@@ -146,8 +146,8 @@ impl ModuleTranslator {
             ///////////////////////////////////////////////////////////////////
             //
             //  Working with the Heap
-            /*
-            OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate => {
+            //
+            OpCode::AllocateZero | OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate => {
                 Some(Instruction::Allocate {
                     words: args[0].clone().into(),
                     keep_registers: args[1].clone().into(),
@@ -157,10 +157,12 @@ impl ModuleTranslator {
             OpCode::Deallocate => Some(Instruction::Deallocate {
                 words: args[0].clone().into(),
             }),
-            */
-            // NOTE(@ostera): temporarily disable this so the traces are smaller, we aren't using
-            // the allocation anyway
-            OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate | OpCode::Deallocate => None,
+
+            OpCode::Trim => Some(Instruction::ShiftLocals {
+                amount: args[0].clone().into(),
+            }),
+
+            OpCode::Init => None,
 
             ///////////////////////////////////////////////////////////////////
             //
@@ -185,17 +187,20 @@ impl ModuleTranslator {
                 ))
             }
 
-            OpCode::Call | OpCode::CallOnly | OpCode::CallLast => {
+            opcode @ OpCode::Call | opcode @ OpCode::CallOnly | opcode @ OpCode::CallLast => {
                 let arity: u32 = args[0].clone().into();
                 let label: u32 = args[1].clone().into();
-                Some(Instruction::Call(
-                    FnCall::Local {
-                        module: module.name.clone(),
-                        label: label - 1,
-                        arity,
-                    },
-                    FnKind::User,
-                ))
+                let call = FnCall::Local {
+                    module: module.name.clone(),
+                    label: label - 1,
+                    arity,
+                };
+                let kind = FnKind::User;
+
+                Some(match opcode {
+                    OpCode::Call => Instruction::Call(call, kind),
+                    _ => Instruction::TailCall(call, kind),
+                })
             }
 
             /* Translate fully qualified calls */
@@ -527,7 +532,7 @@ impl ModuleTranslator {
             //
             //  Other!
             //
-            OpCode::Trim | OpCode::FuncInfo | OpCode::Line | OpCode::IntCodeEnd => None,
+            OpCode::FuncInfo | OpCode::Line | OpCode::IntCodeEnd => None,
             x => panic!("Unsupported instruction: {:?}", x),
         }
     }
