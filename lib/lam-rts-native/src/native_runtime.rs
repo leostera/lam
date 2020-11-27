@@ -35,26 +35,45 @@ impl Runtime for NativeRuntime {
         } = mfa;
         trace!("{}:{}({:?})", module, function, args);
         match (module.as_str(), function.as_str(), arity) {
+            ("binary", "list_to_bin", 1) => Literal::Binary(args[0].clone().into()),
             ("binary", "split", 3) => {
                 let string: String = args[0].clone().into();
-                let at: String = args[1].clone().into();
-                let parts: Vec<&str> = string.split(&at).collect();
 
-                Literal::List(parts.iter().rev().fold(List::Nil, |acc, el| {
-                    List::Cons(Box::new(Literal::Binary(el.to_string())), Box::new(acc))
+                let split_by = args[1].clone();
+
+                let elements: Vec<String> = match split_by {
+                    Literal::Binary(str) => vec![str],
+                    Literal::List(list) => {
+                        let separators: Vec<Literal> = list.into();
+                        let separators: Vec<String> =
+                            separators.iter().map(|sp| sp.clone().into()).collect();
+                        string
+                            .split(|c: char| separators.contains(&c.to_string()))
+                            .map(|s| s.to_string())
+                            .collect()
+                    }
+                    x => panic!("Cannot call binary:split/3 with a second non-list/non-string parameter: {}", x)
+                };
+
+                Literal::List(elements.iter().cloned().rev().fold(List::Nil, |acc, el| {
+                    List::Cons(Box::new(Literal::Binary(el)), Box::new(acc))
                 }))
             }
             ("file", "read_file", 1) => {
                 let path: String = args[0].clone().into();
-                let data = std::fs::read_to_string(&path).unwrap().replace("\n", "");
+                let data = std::fs::read_to_string(&path).unwrap();
                 Literal::Tuple(Tuple {
                     elements: vec![Literal::Atom("ok".to_string()), Literal::Binary(data)],
                     size: 2,
                 })
             }
             ("io", "format", _) => {
-                println!("{}", args[1]);
+                println!("{} {}", args[0], args[1]);
                 Literal::Atom("ok".to_string())
+            }
+            ("erlang", "length", 1) => {
+                let list: Vec<Literal> = args[0].clone().into();
+                Literal::Integer(list.len().into())
             }
             ("erlang", "-", 2) => {
                 let a: BigInt = args[0].clone().into();
