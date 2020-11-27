@@ -23,6 +23,7 @@ impl Mailbox {
     pub fn drop_current(&self) {
         let idx = *self.current.borrow();
         self.messages.borrow_mut().remove(idx as usize);
+        *self.current.borrow_mut() = 0;
     }
 
     pub fn peek_next(&self) -> Option<Message> {
