@@ -179,6 +179,26 @@
 <span id="179">179</span>
 <span id="180">180</span>
 <span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">bytecode</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
@@ -188,7 +208,7 @@
 
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstructionPointer</span> {
     <span class="ident">last_instr_ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">InstructionPointer</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -263,14 +283,34 @@
 
         <span class="kw">let</span> <span class="ident">next_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_instruction</span> <span class="op">+</span> <span class="number">1</span>;
 
+        <span class="kw">let</span> <span class="ident">should_fall_through</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">instr</span> {
+            <span class="ident">Instruction</span>::<span class="ident">Return</span>
+            <span class="op">|</span> <span class="ident">Instruction</span>::<span class="ident">Spawn</span> { .. }
+            <span class="op">|</span> <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="kw">_</span>, <span class="kw">_</span>)
+            <span class="op">|</span> <span class="ident">Instruction</span>::<span class="ident">TailCall</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        };
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">next_instr_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
+        <span class="comment">// First lets try to advance to the next instruciton in the current label</span>
         <span class="kw">if</span> <span class="ident">next_instr</span> <span class="op">&lt;</span> <span class="ident">last_offset</span> {
             <span class="ident">next_instr_ptr</span>.<span class="ident">current_instruction</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
             <span class="ident">next_instr_ptr</span>.<span class="ident">instr</span> <span class="op">=</span>
                 <span class="ident">instructions</span>[<span class="ident">next_instr_ptr</span>.<span class="ident">current_instruction</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">clone</span>();
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last_ptr</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">last_instr_ptr</span> {
+        }
+        <span class="comment">// Otherwise, lets check if the last instruction grants us a label fall through</span>
+        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">should_fall_through</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">label</span> <span class="op">+</span> <span class="number">1</span> <span class="op">&lt;</span> <span class="ident">module</span>.<span class="ident">labels</span>.<span class="ident">len</span>() {
+            <span class="comment">/* Follow to the next label if we&#39;re done with this one */</span>
+            <span class="ident">next_instr_ptr</span>.<span class="ident">current_instruction</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="ident">next_instr_ptr</span>.<span class="ident">current_label</span> <span class="op">=</span> (<span class="ident">label</span> <span class="op">+</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+            <span class="ident">next_instr_ptr</span>.<span class="ident">instr</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">labels</span>[<span class="ident">label</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">instructions</span>[<span class="number">0</span>].<span class="ident">clone</span>();
+        }
+        <span class="comment">// if we shouldn&#39;t fall through, lets see if we can jump back</span>
+        <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last_ptr</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">last_instr_ptr</span> {
             <span class="ident">next_instr_ptr</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">last_ptr</span>).<span class="ident">clone</span>();
-        } <span class="kw">else</span> {
+        }
+        <span class="comment">// lastly, there&#39;s nothing more to do, so we just halt</span>
+        <span class="kw">else</span> {
             <span class="ident">next_instr_ptr</span>.<span class="ident">instr</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">Halt</span>;
         }
         <span class="ident">next_instr_ptr</span>

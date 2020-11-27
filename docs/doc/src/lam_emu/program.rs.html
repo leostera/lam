@@ -132,8 +132,6 @@
 <span id="132">132</span>
 <span id="133">133</span>
 <span id="134">134</span>
-<span id="135">135</span>
-<span id="136">136</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">anyhow</span>, <span class="ident">Context</span>, <span class="ident">Error</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -232,8 +230,6 @@
 
         <span class="kw">for</span> <span class="ident">p</span> <span class="kw">in</span> <span class="ident">ps</span>.<span class="ident">iter</span>() {
             <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">m</span>) <span class="kw">in</span> <span class="ident">p</span>.<span class="ident">modules</span>.<span class="ident">iter</span>() {
-                <span class="comment">// extend modules with these ones</span>
-                <span class="comment">// return an error if there&#39;s a duplicated module name</span>
                 <span class="kw">if</span> <span class="ident">modules</span>.<span class="ident">contains_key</span>(<span class="ident">name</span>) {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;Oops! We found a duplicated module name: {:?}, any chance you&#39;re accidentally linking the same program twice?&quot;</span>, <span class="ident">name</span>));
                 };

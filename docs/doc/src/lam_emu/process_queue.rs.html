@@ -39,7 +39,6 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
-<span id="42">42</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">process</span>::<span class="kw-2">*</span>;
@@ -50,7 +49,6 @@
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProcessQueue</span> {
     <span class="ident">ready</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Pid</span><span class="op">&gt;</span>,
-    <span class="ident">asleep</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Pid</span><span class="op">&gt;</span>,
     <span class="ident">dead</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Pid</span><span class="op">&gt;</span>,
 }
 
@@ -69,7 +67,7 @@
         <span class="kw">match</span> <span class="ident">p</span>.<span class="ident">status</span>() {
             <span class="ident">Status</span>::<span class="ident">Alive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">ready</span>.<span class="ident">push_back</span>(<span class="ident">pid</span>),
             <span class="ident">Status</span>::<span class="ident">Terminated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">dead</span>.<span class="ident">push_back</span>(<span class="ident">pid</span>),
-            <span class="ident">Status</span>::<span class="ident">Suspended</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">asleep</span>.<span class="ident">push_back</span>(<span class="ident">pid</span>),
+            <span class="ident">Status</span>::<span class="ident">Suspended</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">ready</span>.<span class="ident">push_back</span>(<span class="ident">pid</span>),
         }
         <span class="self">self</span>
     }

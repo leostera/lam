@@ -333,6 +333,17 @@
 <span id="333">333</span>
 <span id="334">334</span>
 <span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -349,7 +360,7 @@
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Literal</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Value</span> {
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Literal</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">l</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">l</span>.<span class="ident">clone</span>(),
+            <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">l</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">l</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can not turn {:?} into a Literal&quot;</span>, <span class="self">self</span>),
         }
     }
@@ -559,6 +570,11 @@
         <span class="ident">words</span>: <span class="ident">u8</span>,
     },
 
+    <span class="doccomment">/// Moves the current local stack to the left by `amount`, dropping all values in its way</span>
+    <span class="ident">ShiftLocals</span> {
+        <span class="ident">amount</span>: <span class="ident">u8</span>,
+    },
+
     <span class="comment">///////////////////////////////////////////////////////////////////////////</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Flow-control operations</span>
@@ -645,8 +661,8 @@
     <span class="doccomment">/// register</span>
     <span class="ident">Spawn</span>(<span class="ident">Spawn</span>),
 
-    <span class="doccomment">/// Put a process to sleep. Will be woken up by a new message.</span>
-    <span class="ident">Sleep</span>,
+    <span class="doccomment">/// Put a process to sleep. Will be woken up by a new message and jump to Label</span>
+    <span class="ident">Sleep</span>(<span class="ident">Label</span>),
 
     <span class="ident">Kill</span>,
     <span class="ident">Monitor</span>,
@@ -668,6 +684,12 @@
 
     <span class="doccomment">/// Puts the identifier of the current process in a register</span>
     <span class="ident">PidSelf</span>(<span class="ident">Register</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Instruction</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
+        <span class="ident">Instruction</span>::<span class="ident">Halt</span>
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "lam_emu";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

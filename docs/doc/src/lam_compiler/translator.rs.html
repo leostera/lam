@@ -634,6 +634,18 @@
 <span id="634">634</span>
 <span id="635">635</span>
 <span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
 
@@ -784,7 +796,7 @@
             <span class="comment">//</span>
             <span class="comment">//  Working with the Heap</span>
             <span class="comment">//</span>
-            <span class="ident">OpCode</span>::<span class="ident">AllocateHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">TestHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Allocate</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">OpCode</span>::<span class="ident">AllocateZero</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">AllocateHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">TestHeap</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Allocate</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Allocate</span> {
                     <span class="ident">words</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
                     <span class="ident">keep_registers</span>: <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
@@ -794,6 +806,12 @@
             <span class="ident">OpCode</span>::<span class="ident">Deallocate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Deallocate</span> {
                 <span class="ident">words</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
             }),
+
+            <span class="ident">OpCode</span>::<span class="ident">Trim</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">ShiftLocals</span> {
+                <span class="ident">amount</span>: <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>(),
+            }),
+
+            <span class="ident">OpCode</span>::<span class="ident">Init</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
 
             <span class="comment">///////////////////////////////////////////////////////////////////</span>
             <span class="comment">//</span>
@@ -818,17 +836,20 @@
                 ))
             }
 
-            <span class="ident">OpCode</span>::<span class="ident">Call</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">CallOnly</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">CallLast</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">opcode</span> @ <span class="ident">OpCode</span>::<span class="ident">Call</span> <span class="op">|</span> <span class="ident">opcode</span> @ <span class="ident">OpCode</span>::<span class="ident">CallOnly</span> <span class="op">|</span> <span class="ident">opcode</span> @ <span class="ident">OpCode</span>::<span class="ident">CallLast</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">arity</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
                 <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">1</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
-                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Call</span>(
-                    <span class="ident">FnCall</span>::<span class="ident">Local</span> {
-                        <span class="ident">module</span>: <span class="ident">module</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                        <span class="ident">label</span>: <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>,
-                        <span class="ident">arity</span>,
-                    },
-                    <span class="ident">FnKind</span>::<span class="ident">User</span>,
-                ))
+                <span class="kw">let</span> <span class="ident">call</span> <span class="op">=</span> <span class="ident">FnCall</span>::<span class="ident">Local</span> {
+                    <span class="ident">module</span>: <span class="ident">module</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
+                    <span class="ident">label</span>: <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>,
+                    <span class="ident">arity</span>,
+                };
+                <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="ident">FnKind</span>::<span class="ident">User</span>;
+
+                <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">opcode</span> {
+                    <span class="ident">OpCode</span>::<span class="ident">Call</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="ident">call</span>, <span class="ident">kind</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Instruction</span>::<span class="ident">TailCall</span>(<span class="ident">call</span>, <span class="ident">kind</span>),
+                })
             }
 
             <span class="comment">/* Translate fully qualified calls */</span>
@@ -1137,7 +1158,11 @@
                 })
             }
 
-            <span class="ident">OpCode</span>::<span class="ident">Wait</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Sleep</span>),
+            <span class="ident">OpCode</span>::<span class="ident">Wait</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">label</span> <span class="op">-</span> <span class="number">1</span>;
+                <span class="prelude-val">Some</span>(<span class="ident">Instruction</span>::<span class="ident">Sleep</span>(<span class="ident">label</span>))
+            }
 
             <span class="ident">OpCode</span>::<span class="ident">LoopRecEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">args</span>[<span class="number">0</span>].<span class="ident">clone</span>().<span class="ident">into</span>();
@@ -1156,7 +1181,7 @@
             <span class="comment">//</span>
             <span class="comment">//  Other!</span>
             <span class="comment">//</span>
-            <span class="ident">OpCode</span>::<span class="ident">Trim</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">FuncInfo</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Line</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">IntCodeEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">OpCode</span>::<span class="ident">FuncInfo</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">Line</span> <span class="op">|</span> <span class="ident">OpCode</span>::<span class="ident">IntCodeEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             <span class="ident">x</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unsupported instruction: {:?}&quot;</span>, <span class="ident">x</span>),
         }
     }
@@ -1204,8 +1229,7 @@
             }
             <span class="ident">ExternalTerm</span>::<span class="ident">Atom</span>(<span class="ident">atom</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Literal</span>::<span class="ident">Atom</span>(<span class="ident">atom</span>.<span class="ident">to_string</span>()),
             <span class="ident">ExternalTerm</span>::<span class="ident">Binary</span>(<span class="ident">bin</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Literal</span>::<span class="ident">Binary</span>(
-                <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">bin</span>.<span class="ident">bytes</span>.<span class="ident">clone</span>())
-                    .<span class="ident">expect</span>(<span class="string">&quot;Binary string had invalid utf-8 characters&quot;</span>),
+                <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">bin</span>.<span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;Binary string had invalid utf-8 characters&quot;</span>),
             ),
             <span class="ident">ExternalTerm</span>::<span class="ident">FixInteger</span>(<span class="ident">external_term</span>::<span class="ident">FixInteger</span> { <span class="ident">value</span> }) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Literal</span>::<span class="ident">Integer</span>(<span class="ident">value</span>.<span class="ident">into</span>())
@@ -1229,7 +1253,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mk_reg</span>(<span class="ident">x</span>: <span class="ident">CompactTerm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Register</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">x</span>.<span class="ident">clone</span>() {
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">x</span> {
             <span class="ident">CompactTerm</span>::<span class="ident">RegisterX</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Register</span>::<span class="ident">Global</span>(<span class="ident">x</span>),
             <span class="ident">CompactTerm</span>::<span class="ident">RegisterY</span>(<span class="ident">y</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Register</span>::<span class="ident">Local</span>(<span class="ident">y</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Tried to turn {:?} into a register&quot;</span>, <span class="ident">x</span>),

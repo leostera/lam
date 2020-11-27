@@ -443,47 +443,53 @@
 <span id="443">443</span>
 <span id="444">444</span>
 <span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">bytecode</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">instr_ptr</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mailbox</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">process</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">program</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">registers</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">runtime</span>::<span class="ident">Runtime</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">scheduler</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::<span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
-
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
-
 <span class="kw">use</span> <span class="ident">num_bigint</span>::<span class="ident">BigInt</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Emulator</span> {
-    <span class="ident">registers</span>: <span class="ident">Registers</span>,
-    <span class="ident">instr_ptr</span>: <span class="ident">InstructionPointer</span>,
+    <span class="ident">registers</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Registers</span><span class="op">&gt;</span>,
+    <span class="ident">instr_ptr</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">InstructionPointer</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EmulationStatus</span> {
     <span class="ident">Continue</span>,
+    <span class="ident">Suspended</span>,
     <span class="ident">Terminated</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Emulator</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Emulator</span> {
-        <span class="ident">Emulator</span> {
-            <span class="ident">registers</span>: <span class="ident">Registers</span>::<span class="ident">new</span>(),
-            <span class="ident">instr_ptr</span>: <span class="ident">InstructionPointer</span>::<span class="ident">new</span>(),
-        }
+        <span class="ident">Emulator</span>::<span class="ident">default</span>()
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_initial_call_from_mfa</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mfa</span>: <span class="kw-2">&amp;</span><span class="ident">MFA</span>, <span class="ident">program</span>: <span class="kw-2">&amp;</span><span class="ident">Program</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Emulator</span> {
-        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">setup_mfa</span>(<span class="kw-2">&amp;</span><span class="ident">mfa</span>, <span class="kw-2">&amp;</span><span class="ident">program</span>);
+        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">borrow_mut</span>().<span class="ident">setup_mfa</span>(<span class="kw-2">&amp;</span><span class="ident">mfa</span>, <span class="kw-2">&amp;</span><span class="ident">program</span>);
         <span class="self">self</span>
     }
 
@@ -493,28 +499,32 @@
         <span class="ident">program</span>: <span class="kw-2">&amp;</span><span class="ident">Program</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Emulator</span> {
         <span class="self">self</span>.<span class="ident">registers</span>
+            .<span class="ident">borrow_mut</span>()
             .<span class="ident">fill_globals_from_offset</span>(<span class="ident">lambda</span>.<span class="ident">arity</span>, <span class="kw-2">&amp;</span><span class="ident">lambda</span>.<span class="ident">environment</span>);
-        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">setup_lambda</span>(<span class="kw-2">&amp;</span><span class="ident">lambda</span>, <span class="kw-2">&amp;</span><span class="ident">program</span>);
+        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">borrow_mut</span>().<span class="ident">setup_lambda</span>(<span class="kw-2">&amp;</span><span class="ident">lambda</span>, <span class="kw-2">&amp;</span><span class="ident">program</span>);
         <span class="self">self</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">preload</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">u32</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Emulator</span> {
-        <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">Register</span>::<span class="ident">Global</span>(<span class="ident">x</span>), <span class="ident">v</span>);
+        <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">borrow_mut</span>().<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">Register</span>::<span class="ident">Global</span>(<span class="ident">x</span>), <span class="ident">v</span>);
         <span class="self">self</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">reduction_count</span>: <span class="ident">u64</span>,
         <span class="ident">program</span>: <span class="kw-2">&amp;</span><span class="ident">Program</span>,
         <span class="ident">scheduler</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Scheduler</span>,
         <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runtime</span><span class="op">&gt;</span>,
-        <span class="ident">process_status</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Status</span>,
-        <span class="ident">mailbox</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Mailbox</span>,
+        <span class="ident">mailbox</span>: <span class="kw-2">&amp;</span><span class="ident">Mailbox</span>,
         <span class="ident">pid</span>: <span class="ident">Pid</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EmulationStatus</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reductions</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_red</span> <span class="op">=</span> <span class="number">0</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">registers</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">borrow_mut</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instr_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">borrow_mut</span>();
+
         <span class="kw">while</span> <span class="ident">reductions</span> <span class="op">&lt;</span> <span class="ident">reduction_count</span> {
             <span class="kw">if</span> <span class="ident">last_red</span> <span class="op">&lt;</span> <span class="ident">reductions</span> {
                 <span class="macro">trace</span><span class="macro">!</span>(
@@ -523,9 +533,10 @@
                 );
                 <span class="ident">last_red</span> <span class="op">=</span> <span class="ident">reductions</span>;
             }
-            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">registers</span>);
-            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">instr_ptr</span>);
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">instr</span>.<span class="ident">clone</span>() {
+            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">registers</span>);
+            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">instr_ptr</span>);
+            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">mailbox</span>);
+            <span class="kw">match</span> <span class="ident">instr_ptr</span>.<span class="ident">instr</span>.<span class="ident">clone</span>() {
                 <span class="comment">////////////////////////////////////////////////////////////////</span>
                 <span class="comment">//</span>
                 <span class="comment">// Kill switch</span>
@@ -539,27 +550,36 @@
                 <span class="ident">Instruction</span>::<span class="ident">Move</span>(<span class="ident">value</span>, <span class="ident">target</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">value</span> {
                         <span class="ident">Value</span>::<span class="ident">Register</span>(<span class="ident">reg</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">copy</span>(<span class="kw-2">&amp;</span><span class="ident">reg</span>, <span class="kw-2">&amp;</span><span class="ident">target</span>);
+                            <span class="ident">registers</span>.<span class="ident">copy</span>(<span class="kw-2">&amp;</span><span class="ident">reg</span>, <span class="kw-2">&amp;</span><span class="ident">target</span>);
                         }
                         <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">v</span>.<span class="ident">clone</span>());
+                            <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">v</span>.<span class="ident">clone</span>());
                         }
                     }
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Swap</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">swap</span>(<span class="ident">a</span>, <span class="ident">b</span>);
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">swap</span>(<span class="ident">a</span>, <span class="ident">b</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Clear</span>(<span class="ident">reg</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="ident">reg</span>);
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="ident">reg</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
-                <span class="ident">Instruction</span>::<span class="ident">Deallocate</span> { .. } <span class="op">|</span> <span class="ident">Instruction</span>::<span class="ident">Allocate</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                <span class="ident">Instruction</span>::<span class="ident">ShiftLocals</span> { <span class="ident">amount</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">registers</span>.<span class="ident">shift_locals</span>(<span class="ident">amount</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                }
+
+                <span class="ident">Instruction</span>::<span class="ident">Allocate</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                }
+
+                <span class="ident">Instruction</span>::<span class="ident">Deallocate</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="comment">////////////////////////////////////////////////////////////////</span>
@@ -578,7 +598,7 @@
                 ) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Literal</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arguments</span>
                         .<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>))
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>))
                         .<span class="ident">collect</span>();
                     <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">execute</span>(
                         <span class="kw-2">&amp;</span><span class="ident">MFA</span> {
@@ -588,8 +608,8 @@
                         },
                         <span class="kw-2">&amp;</span><span class="ident">args</span>,
                     );
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">destination</span>, <span class="ident">ret</span>.<span class="ident">into</span>());
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">destination</span>, <span class="ident">ret</span>.<span class="ident">into</span>());
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
@@ -599,12 +619,11 @@
                     },
                     <span class="kw">_</span>,
                 ) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">register</span>);
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">register</span>);
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Literal</span>::<span class="ident">Lambda</span>(<span class="ident">lambda</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">clone</span>().<span class="ident">into</span>() {
-                        <span class="self">self</span>.<span class="ident">registers</span>
-                            .<span class="ident">fill_globals_from_offset</span>(<span class="ident">arity</span>, <span class="kw-2">&amp;</span><span class="ident">lambda</span>.<span class="ident">environment</span>);
-                        <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">push_new_local</span>();
-                        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">call</span>(
+                        <span class="ident">registers</span>.<span class="ident">fill_globals_from_offset</span>(<span class="ident">arity</span>, <span class="kw-2">&amp;</span><span class="ident">lambda</span>.<span class="ident">environment</span>);
+                        <span class="ident">registers</span>.<span class="ident">push_new_local</span>();
+                        <span class="ident">instr_ptr</span>.<span class="ident">call</span>(
                             <span class="kw-2">&amp;</span><span class="ident">program</span>,
                             <span class="kw-2">&amp;</span><span class="ident">FnCall</span>::<span class="ident">Local</span> {
                                 <span class="ident">module</span>: <span class="ident">lambda</span>.<span class="ident">module</span>,
@@ -622,34 +641,35 @@
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="ident">call</span>, <span class="ident">FnKind</span>::<span class="ident">User</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">call</span>.<span class="ident">arity</span>());
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">call</span>);
+                    <span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">call</span>.<span class="ident">arity</span>());
+                    <span class="ident">registers</span>.<span class="ident">push_new_local</span>();
+                    <span class="ident">instr_ptr</span>.<span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">call</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">TailCall</span>(<span class="ident">call</span>, <span class="ident">FnKind</span>::<span class="ident">User</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">call</span>.<span class="ident">arity</span>());
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">call</span>);
+                    <span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">call</span>.<span class="ident">arity</span>());
+                    <span class="ident">instr_ptr</span>.<span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">call</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="ident">call</span>, <span class="ident">FnKind</span>::<span class="ident">Native</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">arity</span> <span class="op">=</span> <span class="ident">call</span>.<span class="ident">arity</span>();
-                    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">arity</span>);
+                    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">arity</span>);
                     <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">execute</span>(<span class="kw-2">&amp;</span><span class="ident">call</span>.<span class="ident">into</span>(), <span class="kw-2">&amp;</span><span class="ident">args</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">arity</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">ret</span>));
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">arity</span>);
+                    <span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">ret</span>));
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">TailCall</span>(<span class="ident">call</span>, <span class="ident">FnKind</span>::<span class="ident">Native</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">arity</span> <span class="op">=</span> <span class="ident">call</span>.<span class="ident">arity</span>();
-                    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">arity</span>);
+                    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">arity</span>);
                     <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">execute</span>(<span class="kw-2">&amp;</span><span class="ident">call</span>.<span class="ident">into</span>(), <span class="kw-2">&amp;</span><span class="ident">args</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">arity</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">ret</span>));
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">clear_globals</span>(<span class="ident">arity</span>);
+                    <span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">ret</span>));
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
@@ -658,22 +678,22 @@
                 <span class="comment">// Flow-control operations</span>
                 <span class="comment">//</span>
                 <span class="ident">Instruction</span>::<span class="ident">Jump</span>(<span class="ident">label</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">label</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">label</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Return</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">restore_last_local</span>();
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">return_to_last_instr</span>();
+                    <span class="ident">registers</span>.<span class="ident">restore_last_local</span>();
+                    <span class="ident">instr_ptr</span>.<span class="ident">return_to_last_instr</span>();
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Test</span>(<span class="ident">label</span>, <span class="ident">test</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">run_test</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>) {
+                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">run_test</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">registers</span>) {
                         <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Test passed! continuing...&quot;</span>);
-                        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                        <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                     } <span class="kw">else</span> {
                         <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Test failed! Jumping to: {}&quot;</span>, <span class="ident">label</span>);
-                        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">label</span>);
+                        <span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">label</span>);
                     }
                 }
 
@@ -685,9 +705,9 @@
                 <span class="comment">//  Creating Values</span>
                 <span class="comment">//</span>
                 <span class="ident">Instruction</span>::<span class="ident">ConsList</span> { <span class="ident">target</span>, <span class="ident">head</span>, <span class="ident">tail</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">head</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>));
+                    <span class="kw">let</span> <span class="ident">head</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>));
                     <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> {
-                        <span class="kw">let</span> <span class="ident">lit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>);
+                        <span class="kw">let</span> <span class="ident">lit</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>);
                         <span class="kw">match</span> <span class="ident">lit</span> {
                             <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">t</span>),
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(
@@ -696,43 +716,40 @@
                             ),
                         }
                     };
-                    <span class="self">self</span>.<span class="ident">registers</span>
-                        .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="ident">head</span>, <span class="ident">tail</span>)).<span class="ident">into</span>());
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="ident">head</span>, <span class="ident">tail</span>)).<span class="ident">into</span>());
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">SplitList</span> { <span class="ident">list</span>, <span class="ident">head</span>, <span class="ident">tail</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
+                    <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
                         <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="ident">boxed_head</span>, <span class="ident">boxed_tail</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">registers</span>
+                            <span class="ident">registers</span>
                                 .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="kw-2">*</span><span class="ident">boxed_head</span>.<span class="ident">clone</span>()))
                                 .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>, <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="kw-2">*</span><span class="ident">boxed_tail</span>.<span class="ident">clone</span>()).<span class="ident">into</span>());
                         }
                         <span class="ident">value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Attempted to split a value that is not a list: {}&quot;</span>, <span class="ident">value</span>),
                     };
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">SplitListTail</span> { <span class="ident">list</span>, <span class="ident">tail</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
+                    <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
                         <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="kw">_</span>, <span class="ident">boxed_tail</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">registers</span>
-                                .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>, <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="kw-2">*</span><span class="ident">boxed_tail</span>.<span class="ident">clone</span>()).<span class="ident">into</span>());
+                            <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">tail</span>, <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="kw-2">*</span><span class="ident">boxed_tail</span>.<span class="ident">clone</span>()).<span class="ident">into</span>());
                         }
                         <span class="ident">value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Attempted to split a value that is not a list: {}&quot;</span>, <span class="ident">value</span>),
                     };
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">SplitListHead</span> { <span class="ident">list</span>, <span class="ident">head</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
+                    <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">list</span>).<span class="ident">into</span>() {
                         <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="ident">boxed_head</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">registers</span>
-                                .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="kw-2">*</span><span class="ident">boxed_head</span>.<span class="ident">clone</span>()));
+                            <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">head</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="kw-2">*</span><span class="ident">boxed_head</span>.<span class="ident">clone</span>()));
                         }
                         <span class="ident">value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Attempted to split a value that is not a list: {}&quot;</span>, <span class="ident">value</span>),
                     };
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">GetTupleElement</span> {
@@ -740,17 +757,17 @@
                     <span class="ident">element</span>,
                     <span class="ident">target</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">tuple</span>) {
+                    <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">tuple</span>) {
                         <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">Literal</span>::<span class="ident">Tuple</span>(<span class="ident">Tuple</span> { <span class="ident">elements</span>, .. })) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">element</span> <span class="op">=</span> <span class="ident">elements</span>[<span class="ident">element</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">clone</span>();
-                            <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">element</span>));
+                            <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">element</span>));
                         }
                         <span class="ident">v</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(
                             <span class="string">&quot;Attempted to extract element from value that is not a tuple: {}&quot;</span>,
                             <span class="ident">v</span>
                         ),
                     }
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">MakeLambda</span> {
@@ -759,10 +776,9 @@
                     <span class="ident">arity</span>,
                     <span class="ident">environment_size</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">environment</span> <span class="op">=</span> <span class="self">self</span>
-                        .<span class="ident">registers</span>
-                        .<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">environment_size</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(
+                    <span class="kw">let</span> <span class="ident">environment</span> <span class="op">=</span>
+                        <span class="ident">registers</span>.<span class="ident">get_many_literals_from_global_range</span>(<span class="number">0</span>, <span class="ident">environment_size</span>);
+                    <span class="ident">registers</span>.<span class="ident">put</span>(
                         <span class="kw-2">&amp;</span><span class="ident">Register</span>::<span class="ident">Global</span>(<span class="number">0</span>),
                         <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">Literal</span>::<span class="ident">Lambda</span>(<span class="ident">Lambda</span> {
                             <span class="ident">first_label</span>,
@@ -771,7 +787,7 @@
                             <span class="ident">arity</span>,
                         })),
                     );
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="comment">////////////////////////////////////////////////////////////////</span>
@@ -781,15 +797,14 @@
                 <span class="ident">Instruction</span>::<span class="ident">Kill</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">EmulationStatus</span>::<span class="ident">Terminated</span>),
 
                 <span class="ident">Instruction</span>::<span class="ident">PidSelf</span>(<span class="ident">target</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">registers</span>
-                        .<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Literal</span>::<span class="ident">Pid</span>(<span class="ident">pid</span>.<span class="ident">clone</span>()).<span class="ident">into</span>());
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>, <span class="ident">Literal</span>::<span class="ident">Pid</span>(<span class="ident">pid</span>.<span class="ident">clone</span>()).<span class="ident">into</span>());
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Spawn</span>(<span class="ident">spawn</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">spawn</span> {
                         <span class="ident">Spawn</span>::<span class="ident">Lambda</span> { <span class="ident">register</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">register</span>);
+                            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">register</span>);
                             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Literal</span>::<span class="ident">Lambda</span>(<span class="ident">lambda</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">clone</span>().<span class="ident">into</span>() {
                                 <span class="ident">scheduler</span>.<span class="ident">spawn_from_lambda</span>(<span class="kw-2">&amp;</span><span class="ident">lambda</span>)
                             } <span class="kw">else</span> {
@@ -798,82 +813,87 @@
                         }
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;mfa spawns are not supported yet&quot;</span>),
                     };
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Literal</span>::<span class="ident">Pid</span>(<span class="ident">pid</span>).<span class="ident">into</span>());
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">restore_last_local</span>();
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Literal</span>::<span class="ident">Pid</span>(<span class="ident">pid</span>).<span class="ident">into</span>());
+                    <span class="ident">registers</span>.<span class="ident">restore_last_local</span>();
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                     <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
-                <span class="ident">Instruction</span>::<span class="ident">Sleep</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">process_status</span>.<span class="ident">suspend</span>();
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                <span class="ident">Instruction</span>::<span class="ident">Sleep</span>(<span class="ident">label</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">label</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">EmulationStatus</span>::<span class="ident">Suspended</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">PeekMessage</span> {
                     <span class="ident">on_mailbox_empty</span>,
                     <span class="ident">message</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">mailbox</span>.<span class="ident">peek_next</span>() {
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">on_mailbox_empty</span>),
-                    <span class="prelude-val">Some</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">msg</span>.<span class="ident">clone</span>().<span class="ident">into</span>());
-                        <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
-                        <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">match</span> <span class="ident">mailbox</span>.<span class="ident">peek_next</span>() {
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;No messages&quot;</span>);
+                            <span class="ident">instr_ptr</span>.<span class="ident">jump_to_label</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="ident">on_mailbox_empty</span>);
+                        }
+                        <span class="prelude-val">Some</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Peeked message: {}&quot;</span>, <span class="ident">msg</span>);
+                            <span class="ident">registers</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">msg</span>.<span class="ident">clone</span>().<span class="ident">into</span>());
+                            <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                        }
                     }
-                },
-
+                    <span class="ident">reductions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                }
                 <span class="ident">Instruction</span>::<span class="ident">RemoveMessage</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">mailbox</span>.<span class="ident">drop_current</span>();
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Send</span> { <span class="ident">message</span>, <span class="ident">process</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>);
-                    <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">process</span>) {
+                    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>);
+                    <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="kw-2">&amp;</span><span class="ident">process</span>) {
                         <span class="ident">Literal</span>::<span class="ident">Pid</span>(<span class="ident">pid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pid</span>,
                         <span class="ident">x</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can not send a message to non-pid: {}&quot;</span>, <span class="ident">x</span>),
                     };
                     <span class="ident">scheduler</span>.<span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">pid</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>);
-                    <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">message</span>));
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">registers</span>.<span class="ident">put_global</span>(<span class="number">0</span>, <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">message</span>));
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
                 <span class="ident">Instruction</span>::<span class="ident">Monitor</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
+                    <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>);
                 }
 
-                <span class="ident">Instruction</span>::<span class="ident">Label</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>),
+                <span class="ident">Instruction</span>::<span class="ident">Label</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr_ptr</span>.<span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="ident">program</span>),
             }
         }
         <span class="prelude-val">Ok</span>(<span class="ident">EmulationStatus</span>::<span class="ident">Continue</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_test</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">test</span>: <span class="kw-2">&amp;</span><span class="ident">Test</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_test</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">test</span>: <span class="kw-2">&amp;</span><span class="ident">Test</span>, <span class="ident">registers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Registers</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Running test: {:?}&quot;</span>, <span class="ident">test</span>);
         <span class="kw">match</span> <span class="ident">test</span> {
             <span class="ident">Test</span>::<span class="ident">IsGreaterOrEqualThan</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>).<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="ident">b</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">b</span>).<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">a</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>).<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">b</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">b</span>).<span class="ident">into</span>();
                 <span class="ident">a</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">b</span>
             }
 
-            <span class="ident">Test</span>::<span class="ident">IsNil</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) {
+            <span class="ident">Test</span>::<span class="ident">IsNil</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) {
                 <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Nil</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
                 <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can not check if non list value {} is an empty list&quot;</span>, <span class="ident">a</span>),
             },
 
-            <span class="ident">Test</span>::<span class="ident">IsNonEmptyList</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) {
+            <span class="ident">Test</span>::<span class="ident">IsNonEmptyList</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) {
                 <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Cons</span>(<span class="kw">_</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
                 <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Nil</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can not check if non list value {} is a non empty list&quot;</span>, <span class="ident">a</span>),
             },
 
             <span class="ident">Test</span>::<span class="ident">Equals</span>(<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">b</span>)
+                <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">b</span>)
             }
 
             <span class="ident">Test</span>::<span class="ident">IsTaggedTuple</span> { <span class="ident">value</span>, <span class="ident">atom</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">value</span>) {
+                <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get_literal_from_value</span>(<span class="ident">value</span>) {
                     <span class="ident">Literal</span>::<span class="ident">Tuple</span>(<span class="ident">Tuple</span> { <span class="ident">elements</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">elements</span>[<span class="number">0</span>].<span class="ident">clone</span>() {
                         <span class="ident">Literal</span>::<span class="ident">Atom</span>(<span class="ident">tag</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tag</span>.<span class="ident">eq</span>(<span class="ident">atom</span>),
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
@@ -882,8 +902,8 @@
                 }
             }
 
-            <span class="ident">Test</span>::<span class="ident">IsFunctionWithArity</span> { <span class="ident">fun</span>, <span class="ident">arity</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>) {
-                <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">Literal</span>::<span class="ident">Lambda</span>(<span class="ident">Lambda</span> { <span class="ident">arity</span>: <span class="ident">a2</span>, .. })) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arity</span>.<span class="ident">clone</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">a2</span>,
+            <span class="ident">Test</span>::<span class="ident">IsFunctionWithArity</span> { <span class="ident">fun</span>, <span class="ident">arity</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">registers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>) {
+                <span class="ident">Value</span>::<span class="ident">Literal</span>(<span class="ident">Literal</span>::<span class="ident">Lambda</span>(<span class="ident">Lambda</span> { <span class="ident">arity</span>: <span class="ident">a2</span>, .. })) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">arity</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a2</span>,
                 <span class="ident">x</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Cannot check arity of non-function value: {}&quot;</span>, <span class="ident">x</span>),
             },
         }
