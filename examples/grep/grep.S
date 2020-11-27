@@ -15,13 +15,15 @@
     {test,is_nonempty_list,{f,4},[{x,1}]}.
     {get_list,{x,1},{x,3},{x,1}}.
     {test,is_eq_exact,{f,3},[{x,3},{x,0}]}.
-    {allocate_heap,3,4,3}.
+    {allocate_heap,3,6,3}.
     {move,{x,1},{y,0}}.
     {move,{x,2},{y,1}}.
     {move,{x,0},{y,2}}.
-    {put_list,{x,0},nil,{x,0}}.
-    {put_list,{x,2},{x,0},{x,1}}.
-    {move,{literal,<<"~p: ~p\n">>},{x,0}}.
+    {bif,self,{f,0},[],{x,0}}.
+    {put_list,{y,2},nil,{x,1}}.
+    {put_list,{x,2},{x,1},{x,1}}.
+    {put_list,{x,0},{x,1},{x,1}}.
+    {move,{literal,<<"~p | ~p: ~p\n">>},{x,0}}.
     {line,[{location,"grep.erl",7}]}.
     {call_ext,2,{extfunc,io,format,2}}.
     {move,{y,0},{x,1}}.
@@ -47,9 +49,10 @@
 
 {function, count_all, 1, 8}.
   {label,7}.
-    {line,[{location,"grep.erl",21}]}.
+    {line,[{location,"grep.erl",22}]}.
     {func_info,{atom,grep},{atom,count_all},1}.
   {label,8}.
+    {'%',{var_info,{x,0},[{type,{t_list,any,nil}}]}}.
     {test,is_nonempty_list,{f,12},[{x,0}]}.
     {allocate,1,1}.
     {get_tl,{x,0},{y,0}}.
@@ -64,24 +67,40 @@
   {label,11}.
     {wait,{f,9}}.
   {label,12}.
-    {test,is_nil,{f,7},[{x,0}]}.
     {move,{atom,ok},{x,0}}.
     return.
 
 
 {function, main, 1, 14}.
   {label,13}.
-    {line,[{location,"grep.erl",24}]}.
+    {line,[{location,"grep.erl",25}]}.
     {func_info,{atom,grep},{atom,main},1}.
   {label,14}.
     {test,is_nonempty_list,{f,13},[{x,0}]}.
-    {allocate,1,1}.
-    {get_list,{x,0},{x,0},{y,0}}.
+    {allocate_zero,2,1}.
+    {get_list,{x,0},{x,0},{y,1}}.
     {bif,self,{f,0},[],{x,1}}.
     {make_fun2,{f,20},0,0,2}.
-    {move,{y,0},{x,1}}.
-    {line,[{location,"grep.erl",27}]}.
+    {line,[{location,"grep.erl",28}]}.
+    {gc_bif,length,{f,0},1,[{y,1}],{x,1}}.
+    {test_heap,2,2}.
+    {put_list,{x,1},nil,{x,1}}.
+    {move,{x,0},{y,0}}.
+    {move,{literal,<<"About to check ~p files\n">>},{x,0}}.
+    {line,[{location,"grep.erl",28}]}.
+    {call_ext,2,{extfunc,io,format,2}}.
+    {move,{y,1},{x,1}}.
+    {move,{y,0},{x,0}}.
+    {trim,1,1}.
+    {line,[{location,"grep.erl",29}]}.
     {call_ext,2,{extfunc,lists,foreach,2}}.
+    {line,[{location,"grep.erl",30}]}.
+    {gc_bif,length,{f,0},0,[{y,0}],{x,0}}.
+    {test_heap,2,1}.
+    {put_list,{x,0},nil,{x,1}}.
+    {move,{literal,<<"Spawned ~p processes...awaiting replies.\n">>},{x,0}}.
+    {line,[{location,"grep.erl",30}]}.
+    {call_ext,2,{extfunc,io,format,2}}.
     {move,{y,0},{x,0}}.
     {call_last,1,{f,8},1}.
 
@@ -109,12 +128,19 @@
 
 {function, '-main/1-fun-0-', 3, 20}.
   {label,19}.
-    {line,[{location,"grep.erl",26}]}.
+    {line,[{location,"grep.erl",27}]}.
     {func_info,{atom,grep},{atom,'-main/1-fun-0-'},3}.
   {label,20}.
-    {swap,{x,1},{x,2}}.
-    {swap,{x,0},{x,1}}.
-    {call_only,3,{f,6}}.
+    {allocate,2,3}.
+    {move,{x,2},{y,0}}.
+    {move,{x,0},{y,1}}.
+    {move,{x,1},{x,0}}.
+    {line,[{location,"grep.erl",27}]}.
+    {call_ext,1,{extfunc,binary,list_to_bin,1}}.
+    {move,{y,1},{x,1}}.
+    {move,{x,0},{x,2}}.
+    {move,{y,0},{x,0}}.
+    {call_last,3,{f,6},2}.
 
 
 {function, '-count/3-fun-0-', 3, 22}.
@@ -122,29 +148,37 @@
     {line,[{location,"grep.erl",14}]}.
     {func_info,{atom,grep},{atom,'-count/3-fun-0-'},3}.
   {label,22}.
-    {allocate,3,3}.
-    {move,{x,2},{y,0}}.
-    {move,{x,1},{y,1}}.
-    {move,{x,0},{y,2}}.
+    {allocate,4,3}.
+    {init,{y,0}}.
+    {move,{x,2},{y,1}}.
+    {move,{x,1},{y,2}}.
+    {move,{x,0},{y,3}}.
     {move,{x,1},{x,0}}.
     {line,[{location,"grep.erl",15}]}.
     {call_ext,1,{extfunc,file,read_file,1}}.
     {test,is_tagged_tuple,{f,23},[{x,0},2,{atom,ok}]}.
     {get_tuple_element,{x,0},1,{x,0}}.
     {move,{literal,[global]},{x,2}}.
-    {move,{literal,<<" ">>},{x,1}}.
+    {move,{literal,[<<" ">>,<<"\n">>]},{x,1}}.
     {line,[{location,"grep.erl",16}]}.
     {call_ext,3,{extfunc,binary,split,3}}.
-    {move,{x,0},{x,1}}.
-    {move,{y,1},{x,2}}.
-    {move,{y,0},{x,0}}.
-    {trim,2,1}.
+    {test_heap,4,1}.
+    {put_list,{x,0},nil,{x,1}}.
+    {put_list,{y,1},{x,1},{x,1}}.
+    {move,{x,0},{y,0}}.
+    {move,{literal,"~p ~p\n"},{x,0}}.
     {line,[{location,"grep.erl",17}]}.
+    {call_ext,2,{extfunc,io,format,2}}.
+    {move,{y,0},{x,1}}.
+    {move,{y,2},{x,2}}.
+    {move,{y,1},{x,0}}.
+    {trim,3,1}.
+    {line,[{location,"grep.erl",18}]}.
     {call,3,{f,2}}.
     {'%',{var_info,{x,0},[{type,{t_atom,[ok]}}]}}.
     {move,{atom,done},{x,1}}.
     {move,{y,0},{x,0}}.
-    {line,[{location,"grep.erl",18}]}.
+    {line,[{location,"grep.erl",19}]}.
     send.
     {deallocate,1}.
     return.
