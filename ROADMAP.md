@@ -69,7 +69,7 @@ Some things that should be possible are:
   * floats
   * binary strings :heavy_check_mark:
   * lists :heavy_check_mark:
-  * tuples
+  * tuples :hammer:
   * maps
 
 * first class functions:
@@ -84,11 +84,11 @@ other.
 
 We'll need to support:
 * spawning processes :heavy_check_mark:
-* terminating processes
+* terminating processes :hammer:
 * monitor / demonitor processes
 * link / unlink processes
-* sending messages
-* selectively receive messages
+* sending messages :heavy_check_mark:
+* selectively receive messages :heavy_check_mark:
 
 Some things that should be possible are:
 * spawn millions of processes in constant time (shouldn't get slower to spin up
