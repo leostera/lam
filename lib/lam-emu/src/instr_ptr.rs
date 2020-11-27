@@ -82,7 +82,10 @@ impl InstructionPointer {
         let next_instr = self.current_instruction + 1;
 
         let should_fall_through = match self.instr {
-            Instruction::Call(_, _) | Instruction::TailCall(_, _) => false,
+            Instruction::Return
+            | Instruction::Spawn { .. }
+            | Instruction::Call(_, _)
+            | Instruction::TailCall(_, _) => false,
             _ => true,
         };
 

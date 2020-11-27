@@ -371,21 +371,20 @@ impl Emulator {
                 Instruction::PeekMessage {
                     on_mailbox_empty,
                     message,
-                } => match mailbox.peek_next() {
-                    None => {
-                        trace!("No messages");
-                        instr_ptr.jump_to_label(&program, &on_mailbox_empty);
+                } => {
+                    match mailbox.peek_next() {
+                        None => {
+                            trace!("No messages");
+                            instr_ptr.jump_to_label(&program, &on_mailbox_empty);
+                        }
+                        Some(msg) => {
+                            trace!("Peeked message: {}", msg);
+                            registers.put(&message, msg.clone().into());
+                            instr_ptr.next(&program);
+                        }
                     }
-                    Some(msg) => {
-                        trace!("Peeked message: {}", msg);
-                        registers.put(&message, msg.clone().into());
-                        trace!("{:?}", instr_ptr);
-                        instr_ptr.next(&program);
-                        trace!("{:?}", instr_ptr);
-                        reductions += 1;
-                    }
-                },
-
+                    reductions += 1;
+                }
                 Instruction::RemoveMessage => {
                     mailbox.drop_current();
                     instr_ptr.next(&program);
