@@ -5,12 +5,18 @@ use std::fmt::{Display, Formatter};
 
 use log::*;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Registers {
     global: Vec<Value>,
     local: VecDeque<Vec<Value>>,
     current_local: Vec<Value>,
+}
+
+impl Default for Registers {
+    fn default() -> Registers {
+        Registers::new()
+    }
 }
 
 impl Registers {
@@ -33,6 +39,11 @@ impl Registers {
 
     pub fn local(&self) -> Vec<Value> {
         self.current_local.clone()
+    }
+
+    pub fn shift_locals(&mut self, amount: u8) -> &mut Registers {
+        self.current_local = self.current_local.as_slice()[amount as usize..].to_vec();
+        self
     }
 
     pub fn push_new_local(&mut self) -> &mut Registers {

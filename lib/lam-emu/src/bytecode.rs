@@ -223,6 +223,11 @@ pub enum Instruction {
         words: u8,
     },
 
+    /// Moves the current local stack to the left by `amount`, dropping all values in its way
+    ShiftLocals {
+        amount: u8,
+    },
+
     ///////////////////////////////////////////////////////////////////////////
     ///
     /// Flow-control operations
