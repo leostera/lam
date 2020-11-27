@@ -79,7 +79,7 @@ impl Emulator {
             }
             trace!("{}", registers);
             trace!("{}", instr_ptr);
-            trace!("{:#?}", mailbox);
+            trace!("{:?}", mailbox);
             match instr_ptr.instr.clone() {
                 ////////////////////////////////////////////////////////////////
                 //
@@ -113,7 +113,16 @@ impl Emulator {
                     instr_ptr.next(&program);
                 }
 
-                Instruction::Deallocate { .. } | Instruction::Allocate { .. } => {
+                Instruction::ShiftLocals { amount, .. } => {
+                    registers.shift_locals(amount);
+                    instr_ptr.next(&program);
+                }
+
+                Instruction::Allocate { .. } => {
+                    instr_ptr.next(&program);
+                }
+
+                Instruction::Deallocate { .. } => {
                     instr_ptr.next(&program);
                 }
 
