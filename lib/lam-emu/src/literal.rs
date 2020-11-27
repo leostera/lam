@@ -135,6 +135,14 @@ impl Into<BigInt> for Literal {
     }
 }
 
+impl Into<Vec<Literal>> for Literal {
+    fn into(self) -> Vec<Literal> {
+        match self {
+            Literal::List(l) => l.into(),
+            _ => panic!("Could not turn {:?} into a Vec", self),
+        }
+    }
+}
 impl Display for Literal {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
         match self {
