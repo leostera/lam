@@ -14,6 +14,24 @@ pub type Atom = String;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
+/// An opaque reference to a runtime and platform specific value that can not
+/// be inspected.
+///
+/// This value can't be sent over the wire meaningfully since it does not
+/// actually contain the data it references.
+pub struct Ref {
+    pub tag: u128,
+    pub id: u128,
+}
+
+impl Display for Ref {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "ref#{}.{}", self.tag, self.id)
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[repr(C)]
 pub struct Lambda {
     /// The first label to execute when the Lambda runs.
     pub first_label: Label,
@@ -113,6 +131,7 @@ pub enum Literal {
     List(List),
     Pid(Pid),
     Tuple(Tuple),
+    Ref(Ref),
     // Map(Map),
 }
 
@@ -121,6 +140,15 @@ impl Into<String> for Literal {
         match self {
             Literal::Binary(str) => str,
             x => format!("{}", x),
+        }
+    }
+}
+
+impl Into<Ref> for Literal {
+    fn into(self) -> Ref {
+        match self {
+            Literal::Ref(r) => r,
+            _ => panic!("Could not turn {:?} into a Ref", self),
         }
     }
 }
@@ -155,6 +183,7 @@ impl Display for Literal {
             Literal::Lambda(l) => write!(fmt, "{}", l),
             Literal::List(l) => write!(fmt, "{}", l),
             Literal::Pid(p) => write!(fmt, "{}", p),
+            Literal::Ref(r) => write!(fmt, "{}", r),
             Literal::Tuple(t) => write!(fmt, "{}", t),
         }
     }
