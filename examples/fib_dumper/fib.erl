@@ -8,8 +8,9 @@ add_entry(DomNode, Text) ->
   dom_element:append_child(DomNode, NewNode).
 
 fib(Node, N, B, A) ->
+  dom_element:set_inner_text(Node, erlang:integer_to_binary(A)),
   case erlang:'=<'(N, 0) of
-    true -> dom_element:set_inner_text(Node, erlang:integer_to_binary(A));
+    true -> ok;
     false -> fib(Node, erlang:'-'(N, 1), erlang:'+'(A, B), B)
   end.
 

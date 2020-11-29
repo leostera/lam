@@ -182,6 +182,12 @@ export function start(data, size) {
     wasm.start(data, size);
 }
 
+/**
+*/
+export function step() {
+    wasm.step();
+}
+
 function isLikeNone(x) {
     return x === undefined || x === null;
 }
@@ -198,13 +204,13 @@ function handleError(f) {
 }
 /**
 */
-export class WebRuntime {
+export class WebSchedulerManager {
 
     free() {
         const ptr = this.ptr;
         this.ptr = 0;
 
-        wasm.__wbg_webruntime_free(ptr);
+        wasm.__wbg_webschedulermanager_free(ptr);
     }
 }
 
@@ -360,5 +366,8 @@ imports.__wbindgen_placeholder__.__wbindgen_describe_closure = function() {};
 
 
 
-const boot = (args) => init(fetch("fib.wasm")).then(mod => mod.boot(args));
+const boot = (args) => init(fetch("fib.wasm")).then(mod => {
+  mod.boot(args);
+  return mod;
+});
 export default boot;
