@@ -1,14 +1,33 @@
 use anyhow::Error;
-use lam_emu::{List, Literal, Program, RunFuel, Runtime, Scheduler, Tuple, Value, MFA};
+use lam_emu::{
+    Coordinator, List, Literal, Program, RunFuel, Runtime, Scheduler, SchedulerManager, Tuple,
+    Value, MFA,
+};
 use log::*;
 use num_bigint::BigInt;
 use std::env;
 use std::str::FromStr;
 
-#[derive(Default, Debug, Clone)]
-pub struct NativeRuntime {}
+#[derive(Default, Debug)]
+/// The NativeRuntime implements support for schedulers taht should be run natively on any given
+/// platform.
+///
+pub struct NativeSchedulerManager {
+    /// The amount of reductions that any single process will run for before being put to sleep. A
+    /// higher number here means that at any point in time, any process will be allowed to run for
+    /// longer. A smaller number means more intertwined concurrency, but also more context
+    /// switches.
+    ///
+    /// Depending on your system, you may benefit from larger or smaller values here. As always,
+    /// measure first.
+    reduction_count: u64,
+}
 
-impl NativeRuntime {
+impl NativeSchedulerManager {
+    pub fn new(reduction_count: u64) -> NativeSchedulerManager {
+        NativeSchedulerManager { reduction_count }
+    }
+
     pub fn cpu_count(&self) -> usize {
         num_cpus::get()
     }
@@ -23,6 +42,61 @@ impl NativeRuntime {
                 }),
         )
         .into()
+    }
+}
+
+impl SchedulerManager for NativeSchedulerManager {
+    /// For the native runtime (whichever platform that we compile natively to), we'll spin one
+    /// thread per scheduler and set them all to run forever.
+    ///
+    /// In short, the OS will figure out how to preemptively schedule them on each core, so we're
+    /// sort of safe on that end.
+    ///
+    /// Now this also means that our _main_ scheduler must run on a separate thread, so our
+    /// coordination loop can run on our main thread.
+    fn setup(&mut self, scheduler_count: u32, program: &Program) -> Result<(), Error> {
+        let reduction_count = self.reduction_count;
+        let args = self.args();
+
+        crossbeam::thread::scope(|scope| {
+            for s in 1..=scheduler_count {
+                scope.spawn(move |_| {
+                    Scheduler::new(s, reduction_count, program.clone())
+                        .stepper(RunFuel::Infinite)
+                        .step(Box::new(NativeRuntime::new()))
+                        .unwrap();
+                });
+            }
+
+            scope.spawn(|_| {
+                Scheduler::new(0, reduction_count, program.clone())
+                    .boot(args)
+                    .clone()
+                    .stepper(RunFuel::Infinite)
+                    .step(Box::new(NativeRuntime::new()))
+                    .unwrap();
+            });
+        })
+        .unwrap();
+
+        Ok(())
+    }
+
+    /// In the native platforms, our main thread will execute this function, and we just want to
+    /// kick off the scheduler coordination loop.
+    fn run(&self, coordinator: &Coordinator) -> Result<(), Error> {
+        loop {
+            coordinator.step()?
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct NativeRuntime {}
+
+impl NativeRuntime {
+    pub fn new() -> NativeRuntime {
+        NativeRuntime::default()
     }
 }
 
@@ -91,33 +165,6 @@ impl Runtime for NativeRuntime {
             },
             (_, _, _) => panic!("How'd you get here? -- {:?} {:?}", mfa, args),
         }
-    }
-
-    fn run_schedulers(&mut self, scheduler_count: u32, program: &Program) -> Result<(), Error> {
-        // TODO(@ostera): this should be part of the self struct
-        let reduction_count = 1000;
-
-        crossbeam::thread::scope(|scope| {
-            for s in 1..=scheduler_count {
-                let runtime = Box::new(self.clone());
-                scope.spawn(move |_| {
-                    Scheduler::new(s, reduction_count, program.clone())
-                        .stepper(RunFuel::Infinite, runtime)
-                        .step()
-                        .unwrap();
-                });
-            }
-            let mut main_scheduler = Scheduler::new(0, reduction_count, program.clone());
-
-            main_scheduler
-                .boot(self.args())
-                .clone()
-                .stepper(RunFuel::Infinite, Box::new(self.clone()))
-                .step()
-                .unwrap();
-        })
-        .unwrap();
-        Ok(())
     }
 
     fn sleep(&self, delay: u64) {

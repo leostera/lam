@@ -17,9 +17,10 @@ pub unsafe extern "C" fn start(data: *const u8, size: usize) {
     env_logger::init();
     debug!("Initializing Native Runtime...");
 
-    let runtime = NativeRuntime::default();
-    let scheduler_count = runtime.cpu_count() as u32;
-    Coordinator::new(scheduler_count, program, Box::new(runtime))
+    let reduction_count = 1000;
+    let scheduler_manager = NativeSchedulerManager::new(reduction_count);
+    let scheduler_count = scheduler_manager.cpu_count() as u32;
+    Coordinator::new(scheduler_count, program, Box::new(scheduler_manager))
         .run()
         .unwrap();
 }
