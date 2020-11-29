@@ -10,6 +10,12 @@ pub enum Value {
     Nil,
 }
 
+impl Default for Value {
+    fn default() -> Value {
+        Value::Nil
+    }
+}
+
 impl Into<Literal> for Value {
     fn into(self) -> Literal {
         match self {
@@ -227,6 +233,9 @@ pub enum Instruction {
     ShiftLocals {
         amount: u8,
     },
+
+    /// Restore Local Registers
+    RestoreLocals,
 
     ///////////////////////////////////////////////////////////////////////////
     ///

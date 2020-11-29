@@ -82,7 +82,8 @@ impl InstructionPointer {
         let next_instr = self.current_instruction + 1;
 
         let should_fall_through = match self.instr {
-            Instruction::Return
+            Instruction::RestoreLocals
+            | Instruction::Return
             | Instruction::Spawn { .. }
             | Instruction::Call(_, _)
             | Instruction::TailCall(_, _) => false,
@@ -124,7 +125,7 @@ impl InstructionPointer {
     ///
     /// Will jump back right into the planned execution after the function call is over.
     ///
-    pub fn call(&mut self, program: &Program, call: &FnCall) {
+    pub fn call(&mut self, program: &Program, call: &FnCall, pop_after: bool) {
         let next_ptr = self.get_next(&program);
 
         let module_name = call
@@ -144,15 +145,40 @@ impl InstructionPointer {
                     .unwrap_or_else(|| panic!("Could not find function : {:?}", &function_key))
             }
         };
+        let last_label = module.labels.len();
+        let last_instruction = module.labels[*first_label as usize].instructions.len();
         let first_instruction = module.labels[*first_label as usize].instructions[0].clone();
 
-        *self = InstructionPointer {
-            last_instr_ptr: Some(Box::new(next_ptr)),
-            current_module: module.name.clone(),
-            current_label: *first_label,
-            current_instruction: 0,
-            instr: first_instruction,
-        }
+        let next_instr = if !pop_after {
+            InstructionPointer {
+                last_instr_ptr: Some(Box::new(next_ptr)),
+                current_module: module.name.clone(),
+                current_label: *first_label,
+                current_instruction: 0,
+                instr: first_instruction,
+            }
+        } else {
+            /* If we should pop the local stack after calling this function,
+             * then we will interject a RestoreLocals call before returning
+             * to the continuation.
+             * NOTE(@ostera): this feels hacky!
+             * */
+            InstructionPointer {
+                last_instr_ptr: Some(Box::new(InstructionPointer {
+                    last_instr_ptr: Some(Box::new(next_ptr)),
+                    current_module: module.name.clone(),
+                    current_label: (last_label as u32) - 1,
+                    current_instruction: last_instruction - 1,
+                    instr: Instruction::RestoreLocals,
+                })),
+                current_module: module.name.clone(),
+                current_label: *first_label,
+                current_instruction: 0,
+                instr: first_instruction,
+            }
+        };
+
+        *self = next_instr;
     }
 
     /// Performs a jump to a label in the same module, by looking up the label number into the
