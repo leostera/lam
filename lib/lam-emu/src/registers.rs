@@ -5,6 +5,8 @@ use std::fmt::{Display, Formatter};
 
 use log::*;
 
+const REGISTER_COUNT: usize = 8;
+
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Registers {
@@ -21,7 +23,11 @@ impl Default for Registers {
 
 impl Registers {
     fn empty_register() -> Vec<Value> {
-        [0; 4].to_vec().iter().map(|_| Value::Nil).collect()
+        [0; REGISTER_COUNT]
+            .to_vec()
+            .iter()
+            .map(|_| Value::Nil)
+            .collect()
     }
 
     pub fn new() -> Registers {
@@ -43,6 +49,7 @@ impl Registers {
 
     pub fn shift_locals(&mut self, amount: u8) -> &mut Registers {
         self.current_local = self.current_local.as_slice()[amount as usize..].to_vec();
+        self.current_local.reserve_exact(REGISTER_COUNT);
         self
     }
 
