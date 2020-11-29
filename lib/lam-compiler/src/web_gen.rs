@@ -54,13 +54,37 @@ impl Target {
         /* Write the final .wasm to disk */
         module.emit_wasm_file(self.output())?;
 
-        std::fs::write(
-            self.output().with_extension("js"),
-            JS_TEMPLATE.replace(
-                "OUTPUT_NAME",
-                self.output().file_name().unwrap().to_str().unwrap(),
-            ),
-        )?;
+        let js_file = format!(
+            "import 'regenerator-runtime/runtime'
+{}
+const boot = (args) => init(fetch(\"{}\")).then(mod => mod.boot(args));
+export default boot;",
+            JS_TEMPLATE,
+            self.output().file_name().unwrap().to_str().unwrap()
+        )
+        .replace("export default init;", "")
+        .replace(
+            "    if (typeof input === 'undefined') {
+        input = import.meta.url.replace(/\\.js$/, '_bg.wasm');
+    }",
+            "",
+        )
+        .replace("imports.wbg = {};", "")
+        .replace(
+            "const imports = {};",
+            "const imports = {};
+imports.__wbindgen_externref_xform__ = {};
+imports.__wbindgen_externref_xform__.__wbindgen_externref_table_grow = function() {};
+imports.__wbindgen_externref_xform__.__wbindgen_externref_table_set_null = function() {};
+
+imports.__wbindgen_placeholder__ = {};
+imports.__wbindgen_placeholder__.__wbindgen_describe = function() {};
+imports.__wbindgen_placeholder__.__wbindgen_describe_closure = function() {};
+",
+        )
+        .replace("imports.wbg", "imports.__wbindgen_placeholder__");
+
+        std::fs::write(self.output().with_extension("js"), js_file)?;
 
         Ok(())
     }

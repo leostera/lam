@@ -16,6 +16,7 @@ build.web:
 		--no-typescript \
 		./lib/lam-rts-web \
 		-- --package lam-rts-web
+	cp ./lib/lam-rts-web/pkg/lam_rts_web.js ./lib/lam-compiler/src/index.js
 
 .PHONY: docs
 docs:
@@ -46,6 +47,7 @@ release.web:
 		--no-typescript \
 		./lib/lam-rts-web \
 		-- --package lam-rts-web
+	cp ./lib/lam-rts-web/pkg/lam_rts_web.js ./lib/lam-compiler/src/index.js
 
 .PHONY: install
 install: release
