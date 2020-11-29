@@ -122,15 +122,17 @@ pub struct CodeTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     code_version: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    min_opcode: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     max_opcode: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    some_strange_count: u32,
-    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     pub label_count: u32,
+    #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
+    pub fun_count: u32,
     #[br(
-        count = size - 4*4,
+        count = size - 5*4,
         parse_with = CodeTable::parse_into_terms,
-        args(size - 4*4)
+        args(size - 5*4)
     )]
     instructions: Vec<Instruction>,
 }
@@ -153,7 +155,7 @@ impl CodeTable {
         let mut instructions = vec![];
 
         let data: Vec<u8> = buf.to_vec();
-        let mut cursor = Cursor::new(&data[3..]);
+        let mut cursor = Cursor::new(&data[0..]);
         let mut opcode_buf: [u8; 1] = [0; 1];
         while let Ok(()) = cursor.read_exact(&mut opcode_buf) {
             let opcode: OpCode = opcode_buf[0].into();
