@@ -11,63 +11,34 @@ use log::*;
 
 #[derive(Debug, Clone)]
 #[repr(C)]
-pub struct Scheduler<'a> {
+pub struct Scheduler {
     id: u32,
-    sleep_delay: u64,
     reduction_count: u64,
-    current_process: u32,
     process_registry: ProcessRegistry,
     process_queue: ProcessQueue,
-    program: &'a Program,
+    program: Program,
 }
 
-impl<'a> Scheduler<'a> {
-    pub fn new(id: u32, program: &'a Program) -> Scheduler<'a> {
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub enum RunFuel {
+    Bounded(u32),
+    Infinite,
+}
+
+impl Scheduler {
+    pub fn new(id: u32, reduction_count: u64, program: Program) -> Scheduler {
         Scheduler {
             id,
             program,
-            sleep_delay: 20,
-            reduction_count: 100,
-            current_process: 0,
+            reduction_count,
             process_queue: ProcessQueue::new(),
             process_registry: ProcessRegistry::new(),
         }
     }
-
-    pub fn run(mut self, mut runtime: Box<dyn Runtime>) -> Result<(), Error> {
-        debug!("Scheduler {:?} started...", self.id);
-
-        loop {
-            if let Some(pid) = self.process_queue.next_process() {
-                if let Some(process) = self.process_registry.get(&pid) {
-                    debug!("Working on process {}", &pid);
-                    if process
-                        .run(self.reduction_count, self.program, &mut self, &mut runtime)
-                        .is_ok()
-                    {
-                        self.process_queue.enqueue(&process);
-                    }
-                }
-            } else {
-                break;
-                /* NOTE(@ostera): we gotta figure out how exactly to let
-                 * schedulers idle _unless_  we know that its time to stop
-
-                if !is_asleep {
-                    debug!("Scheduler {} going to sleep...", self.id);
-                }
-                runtime.sleep(self.sleep_delay);
-                is_asleep = true;
-
-                */
-            };
-        }
-
-        Ok(())
-    }
-
-    pub fn boot(&mut self, arg: Value) -> &mut Scheduler<'a> {
-        self.spawn_from_mfa(&self.program.main, vec![arg]);
+    pub fn boot(&mut self, arg: Value) -> &mut Scheduler {
+        let main = self.program.main.clone();
+        self.spawn_from_mfa(&main, vec![arg]);
         self
     }
 
@@ -112,6 +83,15 @@ impl<'a> Scheduler<'a> {
         }
     }
 
+    pub fn stepper(self, iterations: RunFuel, runtime: Box<dyn Runtime>) -> Stepper {
+        Stepper {
+            program: self.program.clone(),
+            scheduler: RefCell::new(self),
+            iterations,
+            runtime: RefCell::new(runtime),
+        }
+    }
+
     /*
     fn kill(&mut self, pid: &Pid);
     fn link(&mut self, a: &Pid, b: &Pid);
@@ -119,4 +99,56 @@ impl<'a> Scheduler<'a> {
     fn monitor(&mut self, a: &Pid, b: &Pid);
     fn unmonitor(&mut self, a: &Pid, b: &Pid);
     */
+}
+
+use std::cell::RefCell;
+
+#[repr(C)]
+pub struct Stepper {
+    scheduler: RefCell<Scheduler>,
+    iterations: RunFuel,
+    runtime: RefCell<Box<dyn Runtime>>,
+    program: Program,
+}
+
+impl Stepper {
+    pub fn step(&self) -> Result<(), Error> {
+        debug!(
+            "Scheduler stepper {:?} started...",
+            self.scheduler.borrow().id
+        );
+
+        let mut current_iter = 0;
+        let program = self.program.clone();
+        let mut scheduler = self.scheduler.borrow_mut();
+        loop {
+            if let RunFuel::Bounded(max_iterations) = self.iterations {
+                if current_iter < max_iterations {
+                    current_iter += 1;
+                } else {
+                    break;
+                }
+            }
+            if let Some(pid) = scheduler.process_queue.next_process() {
+                if let Some(process) = scheduler.process_registry.get(&pid) {
+                    debug!("Working on process {}", &pid);
+                    if process
+                        .run(
+                            scheduler.reduction_count,
+                            &program,
+                            &mut scheduler,
+                            &mut self.runtime.borrow_mut(),
+                        )
+                        .is_ok()
+                    {
+                        scheduler.process_queue.enqueue(&process);
+                    }
+                }
+            } else {
+                break;
+            };
+        }
+
+        Ok(())
+    }
 }
