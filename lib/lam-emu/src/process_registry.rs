@@ -22,10 +22,7 @@ impl ProcessRegistry {
     }
 
     pub fn spawn(&mut self, emulator: Emulator, scheduler_id: u32) -> Pid {
-        let pid = Pid {
-            scheduler_id,
-            process_id: self.process_count,
-        };
+        let pid = Pid::new(scheduler_id, self.process_count);
         trace!("Spawned {}", &pid);
         let process = Process::new(pid.clone(), emulator);
         self.processes.insert(pid.clone(), Rc::new(process));

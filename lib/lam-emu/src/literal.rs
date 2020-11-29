@@ -57,11 +57,26 @@ impl Display for Lambda {
 pub struct Pid {
     pub scheduler_id: u32,
     pub process_id: u64,
+    is_main: bool,
 }
 
 impl Display for Pid {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
         write!(fmt, "<{:?}.{:?}.0>", self.scheduler_id, self.process_id)
+    }
+}
+
+impl Pid {
+    pub fn new(scheduler_id: u32, process_id: u64) -> Pid {
+        Pid {
+            scheduler_id,
+            process_id,
+            is_main: scheduler_id == 0 && process_id == 0,
+        }
+    }
+
+    pub fn is_main(&self) -> bool {
+        self.is_main
     }
 }
 
