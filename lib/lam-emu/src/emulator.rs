@@ -63,6 +63,7 @@ impl Emulator {
         mailbox: &Mailbox,
         pid: Pid,
     ) -> Result<EmulationStatus, Error> {
+        trace!("Emulator starting for {}", pid);
         let mut reductions = 0;
         let mut last_red = 0;
 
@@ -115,6 +116,11 @@ impl Emulator {
 
                 Instruction::ShiftLocals { amount, .. } => {
                     registers.shift_locals(amount);
+                    instr_ptr.next(&program);
+                }
+
+                Instruction::RestoreLocals => {
+                    registers.restore_last_local();
                     instr_ptr.next(&program);
                 }
 
@@ -174,6 +180,7 @@ impl Emulator {
                                 label: lambda.first_label,
                                 arity: lambda.arity,
                             },
+                            false,
                         );
                     } else {
                         panic!(
@@ -187,13 +194,13 @@ impl Emulator {
                 Instruction::Call(call, FnKind::User) => {
                     registers.clear_globals(call.arity());
                     registers.push_new_local();
-                    instr_ptr.call(&program, &call);
+                    instr_ptr.call(&program, &call, true);
                     reductions += 1;
                 }
 
                 Instruction::TailCall(call, FnKind::User) => {
                     registers.clear_globals(call.arity());
-                    instr_ptr.call(&program, &call);
+                    instr_ptr.call(&program, &call, false);
                     reductions += 1;
                 }
 
@@ -227,7 +234,6 @@ impl Emulator {
                 }
 
                 Instruction::Return => {
-                    registers.restore_last_local();
                     instr_ptr.return_to_last_instr();
                 }
 
