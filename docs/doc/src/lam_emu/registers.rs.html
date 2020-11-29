@@ -176,6 +176,13 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">bytecode</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
@@ -183,6 +190,8 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>};
 
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
+
+<span class="kw">const</span> <span class="ident">REGISTER_COUNT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
@@ -200,7 +209,11 @@
 
 <span class="kw">impl</span> <span class="ident">Registers</span> {
     <span class="kw">fn</span> <span class="ident">empty_register</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span> {
-        [<span class="number">0</span>; <span class="number">4</span>].<span class="ident">to_vec</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Value</span>::<span class="ident">Nil</span>).<span class="ident">collect</span>()
+        [<span class="number">0</span>; <span class="ident">REGISTER_COUNT</span>]
+            .<span class="ident">to_vec</span>()
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Value</span>::<span class="ident">Nil</span>)
+            .<span class="ident">collect</span>()
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Registers</span> {
@@ -222,6 +235,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shift_locals</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Registers</span> {
         <span class="self">self</span>.<span class="ident">current_local</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_local</span>.<span class="ident">as_slice</span>()[<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">usize</span>..].<span class="ident">to_vec</span>();
+        <span class="self">self</span>.<span class="ident">current_local</span>.<span class="ident">reserve_exact</span>(<span class="ident">REGISTER_COUNT</span>);
         <span class="self">self</span>
     }
 

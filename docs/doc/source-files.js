@@ -6,5 +6,5 @@ sourcesIndex["lam_compiler"] = {"name":"","files":["lib.rs","native_gen.rs","tar
 sourcesIndex["lam_emu"] = {"name":"","files":["bytecode.rs","coordinator.rs","emulator.rs","instr_ptr.rs","lib.rs","literal.rs","mailbox.rs","process.rs","process_queue.rs","process_registry.rs","program.rs","registers.rs","runtime.rs","scheduler.rs"]};
 sourcesIndex["lam_rts_native"] = {"name":"","files":["lib.rs","native_runtime.rs"]};
 sourcesIndex["lam_rts_wasm"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["lam_rts_web"] = {"name":"","files":["lib.rs","web_runtime.rs"]};
+sourcesIndex["lam_rts_web"] = {"name":"","files":["lib.rs","refs.rs","web_runtime.rs"]};
 createSourceSidebar();

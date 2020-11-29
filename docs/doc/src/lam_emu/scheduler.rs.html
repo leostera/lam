@@ -120,6 +120,38 @@
 <span id="120">120</span>
 <span id="121">121</span>
 <span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">bytecode</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">emulator</span>::<span class="kw-2">*</span>;
@@ -134,63 +166,34 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Scheduler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Scheduler</span> {
     <span class="ident">id</span>: <span class="ident">u32</span>,
-    <span class="ident">sleep_delay</span>: <span class="ident">u64</span>,
     <span class="ident">reduction_count</span>: <span class="ident">u64</span>,
-    <span class="ident">current_process</span>: <span class="ident">u32</span>,
     <span class="ident">process_registry</span>: <span class="ident">ProcessRegistry</span>,
     <span class="ident">process_queue</span>: <span class="ident">ProcessQueue</span>,
-    <span class="ident">program</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Program</span>,
+    <span class="ident">program</span>: <span class="ident">Program</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Scheduler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="ident">u32</span>, <span class="ident">program</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Program</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scheduler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RunFuel</span> {
+    <span class="ident">Bounded</span>(<span class="ident">u32</span>),
+    <span class="ident">Infinite</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Scheduler</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="ident">u32</span>, <span class="ident">reduction_count</span>: <span class="ident">u64</span>, <span class="ident">program</span>: <span class="ident">Program</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scheduler</span> {
         <span class="ident">Scheduler</span> {
             <span class="ident">id</span>,
             <span class="ident">program</span>,
-            <span class="ident">sleep_delay</span>: <span class="number">20</span>,
-            <span class="ident">reduction_count</span>: <span class="number">100</span>,
-            <span class="ident">current_process</span>: <span class="number">0</span>,
+            <span class="ident">reduction_count</span>,
             <span class="ident">process_queue</span>: <span class="ident">ProcessQueue</span>::<span class="ident">new</span>(),
             <span class="ident">process_registry</span>: <span class="ident">ProcessRegistry</span>::<span class="ident">new</span>(),
         }
     }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">runtime</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runtime</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Scheduler {:?} started...&quot;</span>, <span class="self">self</span>.<span class="ident">id</span>);
-
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pid</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">process_queue</span>.<span class="ident">next_process</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">process</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">process_registry</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">pid</span>) {
-                    <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Working on process {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pid</span>);
-                    <span class="kw">if</span> <span class="ident">process</span>
-                        .<span class="ident">run</span>(<span class="self">self</span>.<span class="ident">reduction_count</span>, <span class="self">self</span>.<span class="ident">program</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>)
-                        .<span class="ident">is_ok</span>()
-                    {
-                        <span class="self">self</span>.<span class="ident">process_queue</span>.<span class="ident">enqueue</span>(<span class="kw-2">&amp;</span><span class="ident">process</span>);
-                    }
-                }
-            } <span class="kw">else</span> {
-                <span class="kw">break</span>;
-                <span class="comment">/* NOTE(@ostera): we gotta figure out how exactly to let
-                 * schedulers idle _unless_  we know that its time to stop
-
-                if !is_asleep {
-                    debug!(&quot;Scheduler {} going to sleep...&quot;, self.id);
-                }
-                runtime.sleep(self.sleep_delay);
-                is_asleep = true;
-
-                */</span>
-            };
-        }
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">boot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Scheduler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">spawn_from_mfa</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">program</span>.<span class="ident">main</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">arg</span>]);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">boot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Scheduler</span> {
+        <span class="kw">let</span> <span class="ident">main</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">program</span>.<span class="ident">main</span>.<span class="ident">clone</span>();
+        <span class="self">self</span>.<span class="ident">spawn_from_mfa</span>(<span class="kw-2">&amp;</span><span class="ident">main</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">arg</span>]);
         <span class="self">self</span>
     }
 
@@ -235,6 +238,15 @@
         }
     }
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stepper</span>(<span class="self">self</span>, <span class="ident">iterations</span>: <span class="ident">RunFuel</span>, <span class="ident">runtime</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runtime</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Stepper</span> {
+        <span class="ident">Stepper</span> {
+            <span class="ident">program</span>: <span class="self">self</span>.<span class="ident">program</span>.<span class="ident">clone</span>(),
+            <span class="ident">scheduler</span>: <span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="self">self</span>),
+            <span class="ident">iterations</span>,
+            <span class="ident">runtime</span>: <span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="ident">runtime</span>),
+        }
+    }
+
     <span class="comment">/*
     fn kill(&amp;mut self, pid: &amp;Pid);
     fn link(&amp;mut self, a: &amp;Pid, b: &amp;Pid);
@@ -242,6 +254,58 @@
     fn monitor(&amp;mut self, a: &amp;Pid, b: &amp;Pid);
     fn unmonitor(&amp;mut self, a: &amp;Pid, b: &amp;Pid);
     */</span>
+}
+
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
+
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stepper</span> {
+    <span class="ident">scheduler</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Scheduler</span><span class="op">&gt;</span>,
+    <span class="ident">iterations</span>: <span class="ident">RunFuel</span>,
+    <span class="ident">runtime</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Runtime</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">program</span>: <span class="ident">Program</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Stepper</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">step</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="macro">debug</span><span class="macro">!</span>(
+            <span class="string">&quot;Scheduler stepper {:?} started...&quot;</span>,
+            <span class="self">self</span>.<span class="ident">scheduler</span>.<span class="ident">borrow</span>().<span class="ident">id</span>
+        );
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_iter</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">program</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scheduler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">scheduler</span>.<span class="ident">borrow_mut</span>();
+        <span class="kw">loop</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RunFuel</span>::<span class="ident">Bounded</span>(<span class="ident">max_iterations</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iterations</span> {
+                <span class="kw">if</span> <span class="ident">current_iter</span> <span class="op">&lt;</span> <span class="ident">max_iterations</span> {
+                    <span class="ident">current_iter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                } <span class="kw">else</span> {
+                    <span class="kw">break</span>;
+                }
+            }
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pid</span>) <span class="op">=</span> <span class="ident">scheduler</span>.<span class="ident">process_queue</span>.<span class="ident">next_process</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">process</span>) <span class="op">=</span> <span class="ident">scheduler</span>.<span class="ident">process_registry</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">pid</span>) {
+                    <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Working on process {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pid</span>);
+                    <span class="kw">if</span> <span class="ident">process</span>
+                        .<span class="ident">run</span>(
+                            <span class="ident">scheduler</span>.<span class="ident">reduction_count</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">program</span>,
+                            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">scheduler</span>,
+                            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">runtime</span>.<span class="ident">borrow_mut</span>(),
+                        )
+                        .<span class="ident">is_ok</span>()
+                    {
+                        <span class="ident">scheduler</span>.<span class="ident">process_queue</span>.<span class="ident">enqueue</span>(<span class="kw-2">&amp;</span><span class="ident">process</span>);
+                    }
+                }
+            } <span class="kw">else</span> {
+                <span class="kw">break</span>;
+            };
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "lam_emu";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

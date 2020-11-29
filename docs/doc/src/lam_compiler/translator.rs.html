@@ -646,6 +646,7 @@
 <span id="646">646</span>
 <span id="647">647</span>
 <span id="648">648</span>
+<span id="649">649</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
 
@@ -862,7 +863,8 @@
                     <span class="kw-2">&amp;</span><span class="ident">atom_table</span>,
                 );
                 <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">as_str</span>() {
-                    <span class="string">&quot;binary&quot;</span> <span class="op">|</span> <span class="string">&quot;file&quot;</span> <span class="op">|</span> <span class="string">&quot;io&quot;</span> <span class="op">|</span> <span class="string">&quot;erlang&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FnKind</span>::<span class="ident">Native</span>,
+                    <span class="string">&quot;date&quot;</span> <span class="op">|</span> <span class="string">&quot;dom_document&quot;</span> <span class="op">|</span> <span class="string">&quot;dom_element&quot;</span> <span class="op">|</span> <span class="string">&quot;binary&quot;</span> <span class="op">|</span> <span class="string">&quot;file&quot;</span> <span class="op">|</span> <span class="string">&quot;io&quot;</span>
+                    <span class="op">|</span> <span class="string">&quot;erlang&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FnKind</span>::<span class="ident">Native</span>,
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FnKind</span>::<span class="ident">User</span>,
                 };
                 <span class="prelude-val">Some</span>(<span class="kw">match</span> (<span class="ident">module</span>.<span class="ident">as_str</span>(), <span class="ident">function</span>.<span class="ident">as_str</span>(), <span class="ident">arity</span>) {

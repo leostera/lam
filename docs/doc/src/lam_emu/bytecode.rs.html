@@ -344,6 +344,15 @@
 <span id="344">344</span>
 <span id="345">345</span>
 <span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">literal</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -355,6 +364,12 @@
     <span class="ident">Register</span>(<span class="ident">Register</span>),
     <span class="ident">Literal</span>(<span class="ident">Literal</span>),
     <span class="ident">Nil</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Value</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
+        <span class="ident">Value</span>::<span class="ident">Nil</span>
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Literal</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Value</span> {
@@ -574,6 +589,9 @@
     <span class="ident">ShiftLocals</span> {
         <span class="ident">amount</span>: <span class="ident">u8</span>,
     },
+
+    <span class="doccomment">/// Restore Local Registers</span>
+    <span class="ident">RestoreLocals</span>,
 
     <span class="comment">///////////////////////////////////////////////////////////////////////////</span>
     <span class="doccomment">///</span>

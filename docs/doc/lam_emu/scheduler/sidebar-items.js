@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Scheduler",""]]});
+initSidebarItems({"enum":[["RunFuel",""]],"struct":[["Scheduler",""],["Stepper",""]]});

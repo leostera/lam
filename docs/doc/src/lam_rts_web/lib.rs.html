@@ -18,18 +18,34 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">log</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">wasm_bindgen</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
+<span class="kw">mod</span> <span class="ident">refs</span>;
 <span class="kw">mod</span> <span class="ident">web_runtime</span>;
 <span class="kw">use</span> <span class="ident">web_runtime</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">lam_emu</span>::{<span class="ident">Coordinator</span>, <span class="ident">Program</span>};
+<span class="kw">use</span> <span class="ident">lam_emu</span>::{<span class="ident">Coordinator</span>, <span class="ident">List</span>, <span class="ident">Literal</span>, <span class="ident">Program</span>};
 
 <span class="attribute">#[<span class="ident">wasm_bindgen</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start</span>(<span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">size</span>: <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="ident">program</span>(<span class="ident">data</span>, <span class="ident">size</span>);
-    <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">WebRuntime</span>::<span class="ident">default</span>();
+
+    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="ident">Literal</span>::<span class="ident">List</span>(<span class="ident">List</span>::<span class="ident">Nil</span>).<span class="ident">into</span>();
+    <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">WebRuntime</span>::<span class="ident">new</span>(<span class="ident">args</span>);
+
+    <span class="ident">console_log</span>::<span class="ident">init_with_level</span>(<span class="ident">log</span>::<span class="ident">Level</span>::<span class="ident">Info</span>).<span class="ident">unwrap</span>();
+    <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Initializing Web Runtime...&quot;</span>);
+
     <span class="ident">Coordinator</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="ident">program</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">runtime</span>))
         .<span class="ident">run</span>()
         .<span class="ident">unwrap</span>();
