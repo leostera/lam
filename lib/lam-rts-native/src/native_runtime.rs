@@ -1,5 +1,5 @@
 use anyhow::Error;
-use lam_emu::{List, Literal, Program, Runtime, Scheduler, Tuple, Value, MFA};
+use lam_emu::{List, Literal, Program, RunFuel, Runtime, Scheduler, Tuple, Value, MFA};
 use log::*;
 use num_bigint::BigInt;
 use std::env;
@@ -94,19 +94,26 @@ impl Runtime for NativeRuntime {
     }
 
     fn run_schedulers(&mut self, scheduler_count: u32, program: &Program) -> Result<(), Error> {
+        // TODO(@ostera): this should be part of the self struct
+        let reduction_count = 1000;
+
         crossbeam::thread::scope(|scope| {
             for s in 1..=scheduler_count {
                 let runtime = Box::new(self.clone());
                 scope.spawn(move |_| {
-                    Scheduler::new(s, &program).run(runtime).unwrap();
+                    Scheduler::new(s, reduction_count, program.clone())
+                        .stepper(RunFuel::Infinite, runtime)
+                        .step()
+                        .unwrap();
                 });
             }
-            let mut main_scheduler = Scheduler::new(0, program);
+            let mut main_scheduler = Scheduler::new(0, reduction_count, program.clone());
 
             main_scheduler
                 .boot(self.args())
                 .clone()
-                .run(Box::new(self.clone()))
+                .stepper(RunFuel::Infinite, Box::new(self.clone()))
+                .step()
                 .unwrap();
         })
         .unwrap();
