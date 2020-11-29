@@ -36,6 +36,7 @@ impl Scheduler {
             process_registry: ProcessRegistry::new(),
         }
     }
+
     pub fn boot(&mut self, arg: Value) -> &mut Scheduler {
         let main = self.program.main.clone();
         self.spawn_from_mfa(&main, vec![arg]);
@@ -83,12 +84,11 @@ impl Scheduler {
         }
     }
 
-    pub fn stepper(self, iterations: RunFuel, runtime: Box<dyn Runtime>) -> Stepper {
+    pub fn stepper(self, iterations: RunFuel) -> Stepper {
         Stepper {
             program: self.program.clone(),
             scheduler: RefCell::new(self),
             iterations,
-            runtime: RefCell::new(runtime),
         }
     }
 
@@ -103,16 +103,16 @@ impl Scheduler {
 
 use std::cell::RefCell;
 
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct Stepper {
     scheduler: RefCell<Scheduler>,
     iterations: RunFuel,
-    runtime: RefCell<Box<dyn Runtime>>,
     program: Program,
 }
 
 impl Stepper {
-    pub fn step(&self) -> Result<(), Error> {
+    pub fn step(&self, mut runtime: Box<dyn Runtime>) -> Result<(), Error> {
         debug!(
             "Scheduler stepper {:?} started...",
             self.scheduler.borrow().id
@@ -123,6 +123,7 @@ impl Stepper {
         let mut scheduler = self.scheduler.borrow_mut();
         loop {
             if let RunFuel::Bounded(max_iterations) = self.iterations {
+                trace!("Steps: {}/{}", current_iter, max_iterations);
                 if current_iter < max_iterations {
                     current_iter += 1;
                 } else {
@@ -137,7 +138,7 @@ impl Stepper {
                             scheduler.reduction_count,
                             &program,
                             &mut scheduler,
-                            &mut self.runtime.borrow_mut(),
+                            &mut runtime,
                         )
                         .is_ok()
                     {
