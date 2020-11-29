@@ -8,7 +8,7 @@ use anyhow::Error;
 use log::*;
 use std::cell::RefCell;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(C)]
 pub enum Status {
     Alive,
@@ -37,6 +37,14 @@ impl Process {
 
     pub fn send_message(&self, m: Message) {
         self.mailbox.deliver(m);
+    }
+
+    pub fn is_suspended(&self) -> bool {
+        self.status.borrow().eq(&Status::Suspended)
+    }
+
+    pub fn is_terminated(&self) -> bool {
+        self.status.borrow().eq(&Status::Terminated)
     }
 
     pub fn suspend(&self) {
