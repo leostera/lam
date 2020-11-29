@@ -142,7 +142,7 @@ impl<R: io::Read> Decoder<R> {
             /* The 4th bit indicates if the _value_ is extended */
 
             let is_small_value = 0b0000_0000 == (byte & 0b0000_1000);
-            let is_large_value = 0b0000_1000 == (byte & 0b0000_1000);
+            let is_large_value = 0b0000_1000 == (byte & 0b0001_1000);
 
             let value = if is_small_value {
                 trace!("Is small value: {:?}", byte);
