@@ -57,7 +57,10 @@ impl Target {
         let js_file = format!(
             "import 'regenerator-runtime/runtime'
 {}
-const boot = (args) => init(fetch(\"{}\")).then(mod => mod.boot(args));
+const boot = (args) => init(fetch(\"{}\")).then(mod => {{
+  mod.boot(args);
+  return mod;
+}});
 export default boot;",
             JS_TEMPLATE,
             self.output().file_name().unwrap().to_str().unwrap()
