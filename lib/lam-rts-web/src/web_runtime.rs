@@ -1,6 +1,9 @@
 use super::refs::*;
 use anyhow::Error;
-use lam_emu::{List, Literal, Program, Ref, RunFuel, Runtime, Scheduler, Stepper, Value, MFA};
+use lam_emu::{
+    Coordinator, List, Literal, Program, Ref, RunFuel, Runtime, Scheduler, SchedulerManager,
+    Stepper, Value, MFA,
+};
 use log::*;
 use num_bigint::BigInt;
 use std::cell::RefCell;
@@ -10,28 +13,54 @@ use web_sys::*;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
+pub struct WebSchedulerManager {
+    initial_args: Value,
+    stepper: Stepper,
+}
+
+impl WebSchedulerManager {
+    pub fn new(
+        initial_args: Value,
+        reduction_count: u64,
+        step_count: u32,
+        program: &Program,
+    ) -> WebSchedulerManager {
+        let stepper = Scheduler::new(0, reduction_count, program.clone())
+            .boot(initial_args.clone())
+            .clone()
+            .stepper(RunFuel::Bounded(step_count));
+        WebSchedulerManager {
+            initial_args,
+            stepper,
+        }
+    }
+}
+
+impl SchedulerManager for WebSchedulerManager {
+    fn setup(&mut self, _scheduler_count: u32, _program: &Program) -> Result<(), Error> {
+        info!("Booting up scheduler...");
+        Ok(())
+    }
+
+    fn run(&self, _coordinator: &Coordinator) -> Result<(), Error> {
+        debug!("Stepping scheduler...");
+        let runtime = Box::new(WebRuntime::new());
+        self.stepper.step(runtime)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct WebRuntime {
     window: web_sys::Window,
     document: web_sys::Document,
-    initial_args: Value,
 }
 
 impl WebRuntime {
-    pub fn new(initial_args: Value) -> WebRuntime {
+    pub fn new() -> WebRuntime {
         let window = web_sys::window().expect("Could not get window");
         let document = window.document().expect("Could not get document");
-        WebRuntime {
-            window,
-            document,
-            initial_args,
-        }
-    }
-
-    pub fn stepper(self, program: &Program) -> Stepper {
-        Scheduler::new(0, 1000, program.clone())
-            .boot(self.initial_args.clone())
-            .clone()
-            .stepper(RunFuel::Infinite, Box::new(self.clone()))
+        WebRuntime { window, document }
     }
 }
 
@@ -110,12 +139,6 @@ impl Runtime for WebRuntime {
             }
             (_, _, _) => panic!("MFA unimplemented!"),
         }
-    }
-
-    fn run_schedulers(&mut self, _scheduler_count: u32, program: &Program) -> Result<(), Error> {
-        info!("Booting up scheduler...");
-
-        Ok(())
     }
 
     fn sleep(&self, _delay: u64) {}
