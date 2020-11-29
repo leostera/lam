@@ -20,3 +20,5 @@ dist
 
 debug
 docs/.rustc_info.json
+# ignore so tools relying on .gitignore will not show these paths, eg: fzf
+docs/doc/
