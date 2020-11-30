@@ -71,7 +71,7 @@ Hello, Mike!
 
 ## How does it work?
 
-LAM compiles your .beam files ahed of time into a representation that's
+LAM compiles your .beam files ahead of time into a representation that's
 optimized for running them.
 
 Then it bundles that with the appropriate target runtime into some binary
