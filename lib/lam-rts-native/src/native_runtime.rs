@@ -1,7 +1,7 @@
 use anyhow::Error;
 use lam_emu::{
-    Coordinator, List, Literal, Program, RunFuel, Runtime, Scheduler, SchedulerManager, Tuple,
-    Value, MFA,
+    Coordinator, CoordinatorAction, List, Literal, Program, RunFuel, Runtime, Scheduler,
+    SchedulerManager, Tuple, Value, MFA,
 };
 use log::*;
 use num_bigint::BigInt;
@@ -21,11 +21,16 @@ pub struct NativeSchedulerManager {
     /// Depending on your system, you may benefit from larger or smaller values here. As always,
     /// measure first.
     reduction_count: u64,
+
+    coordinator_channel: Option<crossbeam::channel::Receiver<CoordinatorAction>>,
 }
 
 impl NativeSchedulerManager {
     pub fn new(reduction_count: u64) -> NativeSchedulerManager {
-        NativeSchedulerManager { reduction_count }
+        NativeSchedulerManager {
+            reduction_count,
+            coordinator_channel: None,
+        }
     }
 
     pub fn cpu_count(&self) -> usize {
@@ -43,6 +48,53 @@ impl NativeSchedulerManager {
         )
         .into()
     }
+
+    pub fn spawn_one(
+        id: u32,
+        program: Program,
+        reduction_count: u64,
+        sx: crossbeam::channel::Sender<CoordinatorAction>,
+        boot: Option<Value>,
+    ) {
+        std::thread::spawn(move || {
+            let sx = sx.clone();
+            let program = program.clone();
+            let mut scheduler = Scheduler::new(id, reduction_count, program);
+
+            if let Some(args) = boot {
+                scheduler.boot(args);
+            }
+
+            scheduler
+                .stepper(RunFuel::Infinite)
+                .step(Box::new(NativeRuntime::new(sx)))
+                .unwrap();
+        });
+    }
+
+    /// Spawn N schedulers by spawning a separate thread that does the spawn work.
+    ///
+    /// This is so that spawning N schedulers has the cost of spawning 1 for the main thread.
+    /// NOTE(@ostera): consider that the children threads may need "reparenting"?
+    pub fn spawn_many(
+        scheduler_count: u32,
+        program: Program,
+        reduction_count: u64,
+        sx: crossbeam::channel::Sender<CoordinatorAction>,
+        boot: Option<Value>,
+    ) {
+        std::thread::spawn(move || {
+            for id in 1..=scheduler_count {
+                NativeSchedulerManager::spawn_one(
+                    id,
+                    program.clone(),
+                    reduction_count,
+                    sx.clone(),
+                    boot.clone(),
+                );
+            }
+        });
+    }
 }
 
 impl SchedulerManager for NativeSchedulerManager {
@@ -58,26 +110,28 @@ impl SchedulerManager for NativeSchedulerManager {
         let reduction_count = self.reduction_count;
         let args = self.args();
 
-        crossbeam::thread::scope(|scope| {
-            for s in 1..=scheduler_count {
-                scope.spawn(move |_| {
-                    Scheduler::new(s, reduction_count, program.clone())
-                        .stepper(RunFuel::Infinite)
-                        .step(Box::new(NativeRuntime::new()))
-                        .unwrap();
-                });
-            }
+        let (sx, rx) = crossbeam::channel::unbounded();
+        self.coordinator_channel = Some(rx);
 
-            scope.spawn(|_| {
-                Scheduler::new(0, reduction_count, program.clone())
-                    .boot(args)
-                    .clone()
-                    .stepper(RunFuel::Infinite)
-                    .step(Box::new(NativeRuntime::new()))
-                    .unwrap();
-            });
-        })
-        .unwrap();
+        // First we'll spawn our main scheduler, to start doing work ASAP
+        NativeSchedulerManager::spawn_one(
+            0,
+            program.clone(),
+            reduction_count,
+            sx.clone(),
+            Some(args),
+        );
+
+        // Then we'll start the rest of the schedulers on a separate thread
+        NativeSchedulerManager::spawn_many(
+            scheduler_count,
+            program.clone(),
+            reduction_count,
+            sx.clone(),
+            None,
+        );
+
+        debug!("Spawned {} schedulers threads", scheduler_count);
 
         Ok(())
     }
@@ -85,18 +139,31 @@ impl SchedulerManager for NativeSchedulerManager {
     /// In the native platforms, our main thread will execute this function, and we just want to
     /// kick off the scheduler coordination loop.
     fn run(&self, coordinator: &Coordinator) -> Result<(), Error> {
+        let rx = self.coordinator_channel.clone().unwrap();
         loop {
-            coordinator.step()?
+            trace!("Attempting receive...");
+            match rx.recv()? {
+                CoordinatorAction::Halt => {
+                    debug!("Received Halt action...");
+                    return coordinator.halt();
+                }
+            }
         }
     }
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct NativeRuntime {}
+#[derive(Debug, Clone)]
+pub struct NativeRuntime {
+    coordinator_channel: crossbeam::channel::Sender<CoordinatorAction>,
+}
 
 impl NativeRuntime {
-    pub fn new() -> NativeRuntime {
-        NativeRuntime::default()
+    pub fn new(
+        coordinator_channel: crossbeam::channel::Sender<CoordinatorAction>,
+    ) -> NativeRuntime {
+        NativeRuntime {
+            coordinator_channel,
+        }
     }
 }
 
@@ -171,7 +238,14 @@ impl Runtime for NativeRuntime {
         std::thread::sleep(std::time::Duration::from_millis(delay));
     }
 
-    fn halt(&self) -> ! {
-        std::process::exit(0)
+    fn halt(&self) {
+        trace!("Sending Halt signal to coordinator");
+        self.coordinator_channel
+            .send(CoordinatorAction::Halt)
+            .unwrap();
+    }
+
+    fn r#yield(&self) {
+        std::thread::sleep(std::time::Duration::from_micros(10));
     }
 }

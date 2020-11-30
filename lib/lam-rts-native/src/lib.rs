@@ -20,7 +20,9 @@ pub unsafe extern "C" fn start(data: *const u8, size: usize) {
     let reduction_count = 1000;
     let scheduler_manager = NativeSchedulerManager::new(reduction_count);
     let scheduler_count = scheduler_manager.cpu_count() as u32;
-    Coordinator::new(scheduler_count, program, Box::new(scheduler_manager))
-        .run()
-        .unwrap();
+
+    let mut coordinator = Coordinator::new(scheduler_count, program, Box::new(scheduler_manager));
+
+    coordinator.setup().unwrap();
+    coordinator.run().unwrap();
 }
