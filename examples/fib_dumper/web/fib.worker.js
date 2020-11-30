@@ -4,8 +4,8 @@ self.addEventListener("message", msg => {
   let i;
   let fib = []; // Initialize array!
 
-  fib[0] = 0;
-  fib[1] = 1;
+  fib[0] = BigInt(0);
+  fib[1] = BigInt(1);
   postMessage({ finished: false, n: fib[0] })
   postMessage({ finished: false, n: fib[1] })
   for (i = 2; i <= n; i++) {
@@ -15,4 +15,3 @@ self.addEventListener("message", msg => {
 
   postMessage({ finished: true, n: fib[i - 1] })
 });
-

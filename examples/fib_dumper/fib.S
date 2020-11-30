@@ -98,7 +98,7 @@
     {line,[{location,"fib.erl",27}]}.
     {call_ext,2,{extfunc,dom_element,append_child,2}}.
     {move,{integer,1},{x,2}}.
-    {move,{integer,10000},{x,1}}.
+    {move,{integer,1000},{x,1}}.
     {move,{integer,0},{x,3}}.
     {move,{y,0},{x,0}}.
     {trim,1,2}.

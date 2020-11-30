@@ -22,7 +22,7 @@ const run = (n) => {
     });
   };
 
-  const fib_n = (n, then) => fib(n, 1, 0, then);
+  const fib_n = (n, then) => fib(n, BigInt(1), BigInt(0), then);
 
   return new Promise( (res, _) => {
     fib_n(n, (n) => {
