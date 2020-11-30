@@ -33,10 +33,11 @@ pub fn start(data: *const u8, size: usize) {
 #[wasm_bindgen]
 pub fn step() -> Result<(), JsValue> {
     COORDINATOR.with(|c| match c.borrow_mut().iter_mut().next() {
-        Some(coordinator) => coordinator.run(),
+        Some(coordinator) => {
+            coordinator.run().unwrap();
+        }
         None => {
             error!("Did you forget to call boot first? How did we get here");
-            Ok(())
         }
     });
     Ok(())

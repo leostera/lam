@@ -141,9 +141,7 @@ impl Runtime for WebRuntime {
         }
     }
 
-    fn sleep(&self, _delay: u64) {}
-
-    fn halt(&self) -> ! {
-        std::process::exit(0)
+    fn r#yield(&self) {
+        ();
     }
 }
