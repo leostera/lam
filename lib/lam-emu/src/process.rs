@@ -80,9 +80,9 @@ impl Process {
             &self.mailbox,
             pid,
         )? {
-            EmulationStatus::Suspended => self.suspend(),
             EmulationStatus::Terminated => self.terminate(),
-            EmulationStatus::Continue => (),
+            // NOTE(@ostera): these 2 statuses should be handled differently
+            EmulationStatus::Continue | EmulationStatus::Suspended => self.suspend(),
         };
         Ok(())
     }

@@ -15,7 +15,9 @@ pub trait SchedulerManager {
 pub trait Runtime {
     fn execute(&mut self, call: &MFA, args: &[Literal]) -> Literal;
 
-    fn sleep(&self, duration: u64);
+    fn sleep(&self, _duration: u64) {}
 
-    fn halt(&self) -> !;
+    fn halt(&self) {}
+
+    fn r#yield(&self);
 }

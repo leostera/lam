@@ -122,6 +122,7 @@ impl Stepper {
         let program = self.program.clone();
         let mut scheduler = self.scheduler.borrow_mut();
         loop {
+            runtime.r#yield();
             if let RunFuel::Bounded(max_iterations) = self.iterations {
                 trace!("Steps: {}/{}", current_iter, max_iterations);
                 if current_iter < max_iterations {
@@ -133,20 +134,21 @@ impl Stepper {
             if let Some(pid) = scheduler.process_queue.next_process() {
                 if let Some(process) = scheduler.process_registry.get(&pid) {
                     debug!("Working on process {}", &pid);
-                    if process
-                        .run(
-                            scheduler.reduction_count,
-                            &program,
-                            &mut scheduler,
-                            &mut runtime,
-                        )
-                        .is_ok()
-                    {
-                        scheduler.process_queue.enqueue(&process);
+                    process.run(
+                        scheduler.reduction_count,
+                        &program,
+                        &mut scheduler,
+                        &mut runtime,
+                    )?;
+
+                    if pid.is_main() && process.is_terminated() {
+                        debug!("Main process terminated, exiting scheduler");
+                        runtime.halt();
+                        break;
                     }
+
+                    scheduler.process_queue.enqueue(&process);
                 }
-            } else {
-                break;
             };
         }
 

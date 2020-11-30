@@ -1,12 +1,18 @@
 use super::program::*;
 use super::runtime::*;
 use anyhow::Error;
+use log::*;
 
 #[repr(C)]
 pub struct Coordinator {
     program: Program,
     scheduler_manager: Box<dyn SchedulerManager>,
     scheduler_count: u32,
+}
+
+#[repr(C)]
+pub enum CoordinatorAction {
+    Halt,
 }
 
 impl Coordinator {
@@ -29,7 +35,15 @@ impl Coordinator {
     /// channels are up and running between them.
     pub fn setup(&mut self) -> Result<(), Error> {
         self.scheduler_manager
-            .setup(self.scheduler_count, &self.program)
+            .setup(self.scheduler_count, &self.program)?;
+        info!("All {} Schedulers started.", self.scheduler_count);
+        Ok(())
+    }
+
+    /// Tear down schedulers in an orderly fashion.
+    pub fn halt(&self) -> Result<(), Error> {
+        info!("halting!");
+        Ok(())
     }
 
     /// The main coordination loop.
@@ -39,7 +53,8 @@ impl Coordinator {
     /// it may return as soon as the scheduler steppers are done, which means we can call it again
     /// to continue doing work.
     pub fn run(&mut self) -> Result<(), Error> {
-        self.scheduler_manager.run(&self)
+        self.scheduler_manager.run(&self)?;
+        Ok(())
     }
 
     /// Step the coordination loop.
