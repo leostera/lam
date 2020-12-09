@@ -71,6 +71,7 @@ impl Into<ExtendedTag> for u8 {
 pub enum Value {
     Small(u32),
     Large(BigInt),
+    Tuple(Vec<CompactTerm>),
 }
 
 #[derive(Debug, Clone)]
@@ -95,6 +96,7 @@ impl Into<CompactTerm> for TagKind {
             TagKind::Extended(ExtendedTag::ExtendedLiteral, value) => {
                 CompactTerm::ExtendedLiteral(value)
             }
+            TagKind::Extended(ExtendedTag::List, Value::Tuple(parts)) => CompactTerm::List(parts),
             _ => panic!("Unsupported TagKind: {:?}", self),
         }
     }
@@ -111,7 +113,7 @@ pub enum CompactTerm {
     RegisterY(u32),
     Label(u32),
     Character(u32),
-    List,
+    List(Vec<CompactTerm>),
     RegisterFloat,
     ListAllocation,
     ExtendedLiteral(Value),
@@ -132,7 +134,7 @@ impl<R: io::Read> Decoder<R> {
         Decoder { reader }
     }
 
-    pub fn decode(mut self) -> Result<CompactTerm, Error> {
+    pub fn decode(&mut self) -> Result<CompactTerm, Error> {
         let byte: u8 = self.reader.read_u8()?;
 
         /* First 3 bits indicate the tag of this value */
@@ -208,6 +210,22 @@ impl<R: io::Read> Decoder<R> {
                     };
                     TagKind::Extended(tag, value)
                 }
+                tag @ ExtendedTag::List => {
+                    let byte = self.reader.read_u8()?;
+                    let size = match byte & 0b000_0111 {
+                        0b0000_0000 => (byte >> 4),
+                        x => panic!("Expected ExtendedTag::List to have a size that was a literal, found instead: {:?}", x)
+                    };
+                    trace!("Reading list compact term of size: {:?}", size);
+                    let mut parts = vec![];
+
+                    for _ in 0..size {
+                        let value = self.decode()?;
+                        parts.push(value.clone());
+                    }
+                    TagKind::Extended(tag, Value::Tuple(parts))
+                }
+
                 x => panic!("We don't know how handle {:?}", x),
             }
         };
