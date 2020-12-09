@@ -2,8 +2,8 @@ use log::*;
 
 use lam_beam::external_term;
 use lam_beam::{
-    AtomTable, Chunk, CodeTable, CompactTerm, ExportTable, ExternalTerm, ImportTable, LiteralTable,
-    LocalFunctionTable, OpCode, BEAM,
+    AtomTable, Chunk, CodeTable, CompactTerm, ExportTable, ExternalTerm, ImportTable, LambdaTable,
+    LiteralTable, OpCode, BEAM,
 };
 use lam_emu::{
     FnCall, FnKind, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register,
@@ -13,7 +13,7 @@ use lam_emu::{
 #[derive(Debug, Clone, Default)]
 #[repr(C)]
 pub struct ModuleTranslator {
-    beam_local_fun_table: LocalFunctionTable,
+    beam_lambda_table: LambdaTable,
     beam_export_table: ExportTable,
     beam_import_table: ImportTable,
     beam_atom_table: AtomTable,
@@ -40,7 +40,7 @@ impl ModuleTranslator {
                 Chunk::LitT(chunk_data) => self.beam_literal_table = chunk_data.data.clone(),
                 Chunk::ExpT(chunk_data) => self.beam_export_table = chunk_data.data.clone(),
                 Chunk::ImpT(chunk_data) => self.beam_import_table = chunk_data.data.clone(),
-                Chunk::LocT(chunk_data) => self.beam_local_fun_table = chunk_data.data.clone(),
+                Chunk::FunT(chunk_data) => self.beam_lambda_table = chunk_data.data.clone(),
                 _ => (),
             }
         }
@@ -75,6 +75,17 @@ impl ModuleTranslator {
             module.functions.insert(key, fn_first_label);
         }
 
+        for lambda in self.beam_lambda_table.functions.iter() {
+            let atom_idx = lambda.atom_index - 1;
+
+            let fn_name = &self.beam_atom_table.atoms[atom_idx as usize].name;
+            let fn_arity = lambda.arity;
+            let fn_first_label = lambda.label - 1;
+
+            let key = (fn_name.to_string(), fn_arity);
+            module.lambdas.insert(key, fn_first_label);
+        }
+
         /* We'll go over every instruction, batching them by the current label id */
         for (opcode, _arity, args) in self.beam_code_table.instructions() {
             match opcode {
@@ -94,7 +105,7 @@ impl ModuleTranslator {
                         &module,
                         &opcode,
                         &args,
-                        &self.beam_local_fun_table,
+                        &self.beam_lambda_table,
                         &self.beam_atom_table,
                         &self.beam_literal_table,
                         &self.beam_import_table,
@@ -115,7 +126,7 @@ impl ModuleTranslator {
         module: &lam_emu::Module,
         opcode: &lam_beam::OpCode,
         args: &[lam_beam::CompactTerm],
-        local_fun_table: &lam_beam::LocalFunctionTable,
+        lambda_table: &lam_beam::LambdaTable,
         atom_table: &lam_beam::AtomTable,
         literal_table: &lam_beam::LiteralTable,
         import_table: &lam_beam::ImportTable,
@@ -148,10 +159,10 @@ impl ModuleTranslator {
             //  Working with the Heap
             //
             OpCode::AllocateZero | OpCode::AllocateHeap | OpCode::TestHeap | OpCode::Allocate => {
-                Some(Instruction::Allocate {
-                    words: args[0].clone().into(),
-                    keep_registers: args[1].clone().into(),
-                })
+                None /* Some(Instruction::Allocate {
+                         words: args[0].clone().into(),
+                         keep_registers: args[1].clone().into(),
+                     }) */
             }
 
             OpCode::Deallocate => Some(Instruction::Deallocate {
@@ -426,6 +437,26 @@ impl ModuleTranslator {
                 ))
             }
 
+            opcode @ OpCode::TestArity | opcode @ OpCode::IsTuple => {
+                // {test,is_tuple,{f,1},[{x,0}]}.
+                let label: u32 = args[0].clone().into();
+
+                let register = ModuleTranslator::mk_reg(args[1].clone());
+
+                let size = match opcode {
+                    OpCode::TestArity => {
+                        let size: u32 = args[2].clone().into();
+                        Some(size)
+                    }
+                    _ => None,
+                };
+
+                Some(Instruction::Test(
+                    label - 1,
+                    Test::IsTuple { register, size },
+                ))
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Creating Values
@@ -466,6 +497,27 @@ impl ModuleTranslator {
                 Some(Instruction::SplitListHead { list, head })
             }
 
+            OpCode::PutTuple2 => {
+                let target = ModuleTranslator::mk_reg(args[0].clone());
+                let mut elements = vec![];
+
+                match args[1].clone() {
+                    CompactTerm::List(parts) => {
+                        for e in parts {
+                            let value = ModuleTranslator::mk_value_of_compact_term(
+                                e,
+                                &atom_table,
+                                &literal_table,
+                            );
+                            elements.push(value);
+                        }
+                    }
+                    x => panic!("Expected PutTuple2 to have a List but found: {:?}", x),
+                }
+
+                Some(Instruction::MakeTuple { target, elements })
+            }
+
             OpCode::GetTupleElement => {
                 // {get_tuple_element,{x,0},1,{x,0}}.
                 let tuple = ModuleTranslator::mk_reg(args[0].clone());
@@ -483,14 +535,14 @@ impl ModuleTranslator {
                 // {make_fun2,{f,16},0,0,2}.
                 let local_fun = {
                     let lf_idx: u32 = args[0].clone().into();
-                    local_fun_table.data[lf_idx as usize].clone()
+                    lambda_table.functions[lf_idx as usize].clone()
                 };
                 trace!("MakeFun2: {:?}", local_fun);
                 Some(Instruction::MakeLambda {
                     module: module.name.clone(),
                     first_label: local_fun.label - 1,
-                    arity: 0,
-                    environment_size: local_fun.arity,
+                    arity: local_fun.arity - local_fun.nfree,
+                    environment_size: local_fun.nfree,
                 })
             }
 
@@ -599,6 +651,7 @@ impl ModuleTranslator {
         let res = match x.clone() {
             lam_beam::Value::Small(y) => Value::Literal(Literal::Integer(y.into())),
             lam_beam::Value::Large(z) => Value::Literal(Literal::Integer(z)),
+            y => panic!("Can't turn {:?} into int value", y),
         };
         trace!("mk_int({:?}) -> {:?}", x, res);
         res
