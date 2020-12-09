@@ -87,7 +87,7 @@ pub enum Chunk {
     ExpT(ChunkData<ExportTable>),
 
     #[br(magic = b"FunT")]
-    FunT(ChunkData<FunTable>),
+    FunT(ChunkData<LambdaTable>),
 
     #[br(magic = b"ImpT")]
     ImpT(ChunkData<ImportTable>),
@@ -175,27 +175,27 @@ impl CodeTable {
 
 #[derive(Default, Debug, Clone, BinRead)]
 #[br(import(size : u32))]
-pub struct FunTable {
+pub struct LambdaTable {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
     count: u32,
     #[br(count = count)]
-    functions: Vec<Function>,
+    pub functions: Vec<Lambda>,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
-pub struct Function {
+pub struct Lambda {
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    atom_index: u32,
+    pub atom_index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    arity: u32,
+    pub arity: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    offset: u32,
+    pub label: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    index: u32,
+    pub index: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    nfree: u32,
+    pub nfree: u32,
     #[br(map = |val: [u8;4]| u32::from_be_bytes(val))]
-    ouniq: u32,
+    pub ouniq: u32,
 }
 
 #[derive(Default, Debug, Clone, BinRead)]
