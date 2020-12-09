@@ -48,7 +48,13 @@ pub struct Lambda {
 
 impl Display for Lambda {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
-        write!(fmt, "fun {}/{}", self.first_label, self.arity)
+        write!(
+            fmt,
+            "fun {}/{}+{}",
+            self.first_label,
+            self.arity,
+            self.environment.len()
+        )
     }
 }
 
