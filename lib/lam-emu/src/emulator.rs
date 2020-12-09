@@ -180,7 +180,7 @@ impl Emulator {
                                 label: lambda.first_label,
                                 arity: lambda.arity,
                             },
-                            false,
+                            true,
                         );
                     } else {
                         panic!(
@@ -234,7 +234,7 @@ impl Emulator {
                 }
 
                 Instruction::Return => {
-                    instr_ptr.return_to_last_instr();
+                    instr_ptr.next(&program);
                 }
 
                 Instruction::Test(label, test) => {
