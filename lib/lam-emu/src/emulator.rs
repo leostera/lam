@@ -302,6 +302,19 @@ impl Emulator {
                     instr_ptr.next(&program);
                 }
 
+                Instruction::MakeTuple { target, elements } => {
+                    let mut parts: Vec<Literal> = vec![];
+                    for e in elements {
+                        parts.push(registers.get_literal_from_value(&e).into());
+                    }
+                    let tuple = Literal::Tuple(Tuple {
+                        size: parts.len() as u32,
+                        elements: parts,
+                    });
+                    registers.put(&target, tuple.into());
+                    instr_ptr.next(&program);
+                }
+
                 Instruction::GetTupleElement {
                     tuple,
                     element,
@@ -455,6 +468,17 @@ impl Emulator {
             Test::IsFunctionWithArity { fun, arity, .. } => match registers.get(&fun) {
                 Value::Literal(Literal::Lambda(Lambda { arity: a2, .. })) => *arity == a2,
                 x => panic!("Cannot check arity of non-function value: {}", x),
+            },
+
+            Test::IsTuple { register, size, .. } => match registers.get(&register) {
+                Value::Literal(Literal::Tuple(Tuple { size: s2, .. })) => {
+                    if let Some(s1) = size {
+                        *s1 == s2
+                    } else {
+                        true
+                    }
+                }
+                _ => false,
             },
         }
     }
