@@ -51,6 +51,7 @@ impl FunctionLabel {
 #[repr(C)]
 pub struct Module {
     pub name: String,
+    pub lambdas: HashMap<(String, Arity), Label>,
     pub functions: HashMap<(String, Arity), Label>,
     pub labels: Vec<FunctionLabel>,
 }
@@ -60,6 +61,7 @@ impl Default for Module {
         Module {
             name: "".to_string(),
             functions: HashMap::default(),
+            lambdas: HashMap::default(),
             labels: vec![],
         }
     }
