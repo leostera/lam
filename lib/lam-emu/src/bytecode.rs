@@ -162,11 +162,22 @@ pub enum FnKind {
 #[repr(C)]
 pub enum Test {
     Equals(Value, Value),
-    IsFunctionWithArity { fun: Register, arity: Arity },
+    IsFunctionWithArity {
+        fun: Register,
+        arity: Arity,
+    },
     IsGreaterOrEqualThan(Value, Value),
     IsNil(Value),
     IsNonEmptyList(Value),
-    IsTaggedTuple { value: Value, size: u32, atom: Atom },
+    IsTaggedTuple {
+        value: Value,
+        size: u32,
+        atom: Atom,
+    },
+    IsTuple {
+        register: Register,
+        size: Option<u32>,
+    },
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -305,6 +316,12 @@ pub enum Instruction {
     SplitListHead {
         list: Register,
         head: Register,
+    },
+
+    /// Build a tuple and place it on the register `target`
+    MakeTuple {
+        target: Register,
+        elements: Vec<Value>,
     },
 
     /// Copy a tuple element onto a specific registry
