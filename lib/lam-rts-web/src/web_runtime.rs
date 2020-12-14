@@ -98,7 +98,7 @@ impl Runtime for WebRuntime {
                 let a: BigInt = args[0].clone().into();
                 Literal::Binary(a.to_string())
             }
-            ("date", "now", 0) => Literal::Float(js_sys::Date::now()),
+            ("date", "now", 0) => Literal::Float(js_sys::Date::now().into()),
             ("dom_document", "create_element", 1) => {
                 let tag: String = args[0].clone().into();
                 let element = self.document.create_element(tag.as_str()).unwrap();
