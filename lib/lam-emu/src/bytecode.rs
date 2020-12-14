@@ -334,6 +334,23 @@ pub enum Instruction {
         target: Register,
     },
 
+    /// Copy elements from a map into specific registers, jump to `label` if
+    /// any of the map elements was missing
+    GetMapElements {
+        label: Label,
+        map: Register,
+
+        /// A vector of pattern matches to happen. It normally looks like:
+        ///
+        /// ```erlang
+        /// [ {hello, {x,0} }]
+        /// ```
+        ///
+        /// To match on the `hello` key, and put its value on the global register 0.
+        ///
+        elements: Vec<(Literal, Register)>,
+    },
+
     ///////////////////////////////////////////////////////////////////////////
     ///
     /// Processes

@@ -118,6 +118,12 @@ impl Hash for Map {
     }
 }
 
+impl Map {
+    pub fn get(&self, key: &Literal) -> Option<&Literal> {
+        self.elements.get(key)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 pub struct Tuple {

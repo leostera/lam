@@ -333,6 +333,30 @@ impl Emulator {
                     instr_ptr.next(&program);
                 }
 
+                Instruction::GetMapElements {
+                    label,
+                    map,
+                    elements,
+                } => {
+                    match registers.get(&map) {
+                        Value::Literal(Literal::Map(m)) => {
+                            for (k, r) in elements {
+                                match m.get(&k) {
+                                    Some(v) => {
+                                        registers.put(&r, Value::Literal(v.clone()));
+                                    }
+                                    None => {
+                                        instr_ptr.jump_to_label(&program, &label);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        v => panic!("Expected a map but found: {}", v),
+                    }
+                    instr_ptr.next(&program);
+                }
+
                 Instruction::MakeLambda {
                     module,
                     first_label,
