@@ -5,14 +5,17 @@
 ///
 use num_bigint::BigInt;
 use num_traits::cast::FromPrimitive;
+use num_traits::float::FloatCore;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
+use std::hash::Hash;
 
 pub type Label = u32;
 pub type Arity = u32;
 pub type Atom = String;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 /// An opaque reference to a runtime and platform specific value that can not
 /// be inspected.
@@ -30,7 +33,7 @@ impl Display for Ref {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 pub struct Lambda {
     /// The first label to execute when the Lambda runs.
@@ -86,7 +89,36 @@ impl Pid {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+#[repr(C)]
+pub struct Map {
+    pub size: u32,
+    pub elements: HashMap<Literal, Literal>,
+}
+
+impl Display for Map {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "#{{")?;
+        for (k, v) in self.clone().elements {
+            write!(fmt, "{} => {}, ", k, v)?;
+        }
+        write!(fmt, "}}")
+    }
+}
+
+impl Hash for Map {
+    fn hash<H>(&self, h: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
+        for (k, v) in &self.elements {
+            k.hash(h);
+            v.hash(h);
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 pub struct Tuple {
     pub size: u32,
@@ -103,7 +135,7 @@ impl Display for Tuple {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 /// NOTE(@ostera): consider reusing an existing implementation of cons lists
 pub enum List {
@@ -137,6 +169,37 @@ impl Display for List {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[repr(C)]
+pub struct Float(f64);
+
+impl Into<Float> for f64 {
+    fn into(self) -> Float {
+        Float(self)
+    }
+}
+
+impl Into<f64> for Float {
+    fn into(self) -> f64 {
+        self.0
+    }
+}
+
+impl Eq for Float {}
+
+impl Hash for Float {
+    fn hash<H>(&self, h: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
+        let (mantissa, exp, sign) = self.0.integer_decode();
+        h.write_u32((mantissa >> 32) as u32);
+        h.write_u32(mantissa as u32);
+        h.write_i16(exp);
+        h.write_i8(sign);
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
+#[repr(C)]
 pub enum Literal {
     /// NOTE(@ostera): consider interning atoms so this becomes Atom(u32) instead
     Atom(Atom),
@@ -146,14 +209,14 @@ pub enum Literal {
     Binary(String),
     Bool(bool),
     Character(u8),
-    Float(f64),
+    Float(Float),
     Integer(BigInt),
     Lambda(Lambda),
     List(List),
     Pid(Pid),
     Tuple(Tuple),
     Ref(Ref),
-    // Map(Map),
+    Map(Map),
 }
 
 impl Into<String> for Literal {
@@ -178,7 +241,7 @@ impl Into<BigInt> for Literal {
     fn into(self) -> BigInt {
         match self {
             Literal::Integer(bi) => bi,
-            Literal::Float(f) => BigInt::from_f64(f).unwrap(),
+            Literal::Float(f) => BigInt::from_f64(f.into()).unwrap(),
             _ => panic!("Could not turn {:?} into a BigInt", self),
         }
     }
@@ -199,10 +262,11 @@ impl Display for Literal {
             Literal::Binary(bin) => write!(fmt, "<<{:?}>>", bin),
             Literal::Bool(b) => write!(fmt, "{}", b),
             Literal::Character(char) => write!(fmt, "'{}'", char),
-            Literal::Float(f) => write!(fmt, "{}", f),
+            Literal::Float(f) => write!(fmt, "{}", f.0),
             Literal::Integer(i) => write!(fmt, "{}", i.to_string()),
             Literal::Lambda(l) => write!(fmt, "{}", l),
             Literal::List(l) => write!(fmt, "{}", l),
+            Literal::Map(m) => write!(fmt, "{}", m),
             Literal::Pid(p) => write!(fmt, "{}", p),
             Literal::Ref(r) => write!(fmt, "{}", r),
             Literal::Tuple(t) => write!(fmt, "{}", t),

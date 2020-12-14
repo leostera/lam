@@ -178,6 +178,9 @@ pub enum Test {
         register: Register,
         size: Option<u32>,
     },
+    IsMap {
+        register: Register,
+    },
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

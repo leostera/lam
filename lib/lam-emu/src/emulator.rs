@@ -480,6 +480,11 @@ impl Emulator {
                 }
                 _ => false,
             },
+
+            Test::IsMap { register } => match registers.get(&register) {
+                Value::Literal(Literal::Map(_)) => true,
+                _ => false,
+            },
         }
     }
 }
