@@ -7,7 +7,7 @@ use lam_beam::{
 };
 use lam_emu::{
     FnCall, FnKind, FunctionLabel, Instruction, Label, List, Literal, Module, Program, Register,
-    Spawn, Test, Value,
+    Spawn, Test, Tuple, Value,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -343,6 +343,34 @@ impl ModuleTranslator {
                     }
                     _ => None,
                 }
+            }
+
+            OpCode::Bif2 => {
+                // {bif,'=:=',{f,0},[{x,2},{y,2}],{x,1}}.
+                let (module, function, arity) = ModuleTranslator::mk_mfa_from_imports(
+                    args[1].clone().into(),
+                    &import_table,
+                    &atom_table,
+                );
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[3].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let dest = ModuleTranslator::mk_reg(args[4].clone());
+                let bif = FnCall::BuiltIn {
+                    module,
+                    function,
+                    arity,
+                    arguments: vec![a, b],
+                    destination: dest,
+                };
+                Some(Instruction::Call(bif, FnKind::Native))
             }
 
             ///////////////////////////////////////////////////////////////////
@@ -722,6 +750,16 @@ impl ModuleTranslator {
             ),
             ExternalTerm::FixInteger(external_term::FixInteger { value }) => {
                 Literal::Integer(value.into())
+            }
+            ExternalTerm::Tuple(external_term::Tuple { elements }) => {
+                let elements: Vec<Literal> = elements
+                    .iter()
+                    .map(|e| ModuleTranslator::mk_literal_of_external_term(e))
+                    .collect();
+                Literal::Tuple(Tuple {
+                    size: elements.len() as u32,
+                    elements,
+                })
             }
             _ => panic!(
                 "Don't know how to turn ExternalTerm {:?} into a lam_emu::Value",
