@@ -457,6 +457,14 @@ impl ModuleTranslator {
                 ))
             }
 
+            _opcode @ OpCode::IsMap => {
+                // {test,is_map,{f,1},[{x,0}]}.
+                let label: u32 = args[0].clone().into();
+                let register = ModuleTranslator::mk_reg(args[1].clone());
+
+                Some(Instruction::Test(label - 1, Test::IsMap { register }))
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Creating Values
@@ -546,6 +554,33 @@ impl ModuleTranslator {
                 })
             }
 
+            OpCode::GetMapElements => {
+                // {get_tuple_element,{x,0},1,{x,0}}.
+                // {get_map_elements,
+                //      % label to jump to if fail
+                //      {f,1},
+                //      % register
+                //      {x,0},
+                //      % list of elements to get
+                //      {list,[
+                //          % put key `min` on register {x,4}
+                //          {atom,min}, {x,4},
+                //          {atom,max}, {x,3},
+                //          {atom,letter}, {x,2}]}}
+                let label: u32 = args[0].clone().into();
+                let map = ModuleTranslator::mk_reg(args[1].clone());
+                let elements = ModuleTranslator::mk_match_list_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::GetMapElements {
+                    label,
+                    map,
+                    elements,
+                })
+            }
+
             ///////////////////////////////////////////////////////////////////
             //
             //  Message Passing and Processes
@@ -617,6 +652,56 @@ impl ModuleTranslator {
             ),
         };
         trace!("mk_value_of_compact({:?}) -> {:?}", x, res);
+        res
+    }
+
+    pub fn mk_match_list_of_compact_term(
+        x: CompactTerm,
+        atom_table: &lam_beam::AtomTable,
+        literal_table: &lam_beam::LiteralTable,
+    ) -> Vec<(Literal, Register)> {
+        let res = match x.clone() {
+            CompactTerm::List(parts) => {
+                let (values, registers): (Vec<(usize, CompactTerm)>, Vec<(usize, CompactTerm)>) =
+                    parts
+                        .iter()
+                        .cloned()
+                        .enumerate()
+                        .partition(|(idx, _)| idx % 2 == 0);
+                let zipped: Vec<((usize, CompactTerm), (usize, CompactTerm))> =
+                    values.iter().cloned().zip(registers).collect();
+
+                zipped
+                    .iter()
+                    .map(|((_, v), (_, r))| {
+                        let v = match ModuleTranslator::mk_value_of_compact_term(
+                            v.clone(),
+                            &atom_table,
+                            &literal_table,
+                        ) {
+                            Value::Literal(l) => l,
+                            _ => panic!("Expect match pattern to be a literal but found: {:?}", v),
+                        };
+                        let r = match ModuleTranslator::mk_value_of_compact_term(
+                            r.clone(),
+                            &atom_table,
+                            &literal_table,
+                        ) {
+                            Value::Register(r) => r,
+                            _ => {
+                                panic!("Expect match register to be a register but found: {:?}", v)
+                            }
+                        };
+                        (v, r)
+                    })
+                    .collect()
+            }
+            _ => panic!(
+                "Don't know how to turn CompactTerm {:?} into a match list",
+                x
+            ),
+        };
+        trace!("mk_match_list_of_compact({:?}) -> {:?}", x, res);
         res
     }
 
