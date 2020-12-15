@@ -414,6 +414,22 @@ impl ModuleTranslator {
                 Some(Instruction::Test(label - 1, Test::Equals(a, b)))
             }
 
+            OpCode::IsNeExact => {
+                // {test,is_ne_exact,{f,7},[{x,0},{integer,0}]}.
+                let label: u32 = args[0].clone().into();
+                let a = ModuleTranslator::mk_value_of_compact_term(
+                    args[1].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                let b = ModuleTranslator::mk_value_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::Test(label - 1, Test::NotEquals(a, b)))
+            }
+
             OpCode::IsNil => {
                 let label: u32 = args[0].clone().into();
                 let a = ModuleTranslator::mk_value_of_compact_term(
@@ -586,7 +602,6 @@ impl ModuleTranslator {
             }
 
             OpCode::GetMapElements => {
-                // {get_tuple_element,{x,0},1,{x,0}}.
                 // {get_map_elements,
                 //      % label to jump to if fail
                 //      {f,1},
@@ -599,6 +614,7 @@ impl ModuleTranslator {
                 //          {atom,max}, {x,3},
                 //          {atom,letter}, {x,2}]}}
                 let label: u32 = args[0].clone().into();
+                let label = label - 1;
                 let map = ModuleTranslator::mk_reg(args[1].clone());
                 let elements = ModuleTranslator::mk_match_list_of_compact_term(
                     args[2].clone(),
