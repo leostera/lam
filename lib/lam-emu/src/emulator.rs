@@ -233,6 +233,28 @@ impl Emulator {
                     reductions += 1;
                 }
 
+                Instruction::ConditionalJump {
+                    register,
+                    table,
+                    error,
+                } => {
+                    let value: Literal = registers.get(&register).into();
+
+                    let mut jumped = false;
+                    for (expected, label) in table.iter() {
+                        if *expected == value {
+                            jumped = true;
+                            instr_ptr.jump_to_label(&program, &label);
+                            break;
+                        }
+                    }
+                    if !jumped {
+                        instr_ptr.jump_to_label(&program, &error);
+                    }
+
+                    reductions += 1;
+                }
+
                 Instruction::Return => {
                     instr_ptr.next(&program);
                 }
