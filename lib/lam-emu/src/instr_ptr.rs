@@ -197,15 +197,28 @@ impl InstructionPointer {
             .unwrap_or_else(|| panic!("Could not find module: {:?}", &module_name));
         trace!("Found module: {:?}", module_name);
 
-        let first_instruction = module.labels[*label as usize].instructions[0].clone();
-        trace!("First instruction: {:?}", first_instruction);
+        let l = *label as usize;
+        if l > 0 && l < module.labels.len() {
+            let first_instruction = module.labels[l].instructions[0].clone();
+            trace!("First instruction: {:?}", first_instruction);
 
-        *self = InstructionPointer {
-            current_module: module_name,
-            current_label: *label,
-            current_instruction: 0,
-            instr: first_instruction,
-            last_instr_ptr: self.last_instr_ptr.clone(),
+            *self = InstructionPointer {
+                current_module: module_name,
+                current_label: *label,
+                current_instruction: 0,
+                instr: first_instruction,
+                last_instr_ptr: self.last_instr_ptr.clone(),
+            }
+        } else {
+            error!("We attempted to jump to a label that was out of the scope of this module.");
+            error!("{:#?}", self);
+            *self = InstructionPointer {
+                current_module: module_name,
+                current_label: *label,
+                current_instruction: 0,
+                instr: Instruction::Halt,
+                last_instr_ptr: None,
+            }
         }
     }
 

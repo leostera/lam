@@ -747,7 +747,7 @@ impl ModuleTranslator {
                             _ => panic!("Expect jump table to have a literal but found: {:?}", v),
                         };
                         let r = if let CompactTerm::Label(l) = r {
-                            l.clone()
+                            l.clone() - 1
                         } else {
                             panic!("Expected jump table to have a label but found: {:?}", r)
                         };
