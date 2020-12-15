@@ -124,6 +124,17 @@ impl Map {
     }
 }
 
+impl Into<Map> for Vec<(Literal, Literal)> {
+    fn into(self) -> Map {
+        let elements: HashMap<Literal, Literal> = self.iter().cloned().collect();
+
+        Map {
+            size: elements.len() as u32,
+            elements,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone)]
 #[repr(C)]
 pub struct Tuple {
