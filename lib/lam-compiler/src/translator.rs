@@ -1,4 +1,5 @@
 use log::*;
+use std::collections::HashMap;
 
 use lam_beam::external_term;
 use lam_beam::{
@@ -185,6 +186,22 @@ impl ModuleTranslator {
             OpCode::CaseEnd => Some(Instruction::Badmatch),
 
             OpCode::Badmatch => Some(Instruction::Badmatch),
+
+            OpCode::SelectVal => {
+                let register = ModuleTranslator::mk_reg(args[0].clone());
+                let error: u32 = args[1].clone().into();
+                let error = error - 1;
+                let table = ModuleTranslator::mk_jump_table_of_compact_term(
+                    args[2].clone(),
+                    &atom_table,
+                    &literal_table,
+                );
+                Some(Instruction::ConditionalJump {
+                    register,
+                    error,
+                    table,
+                })
+            }
 
             ///////////////////////////////////////////////////////////////////
             //
@@ -699,6 +716,51 @@ impl ModuleTranslator {
             ),
         };
         trace!("mk_value_of_compact({:?}) -> {:?}", x, res);
+        res
+    }
+
+    pub fn mk_jump_table_of_compact_term(
+        x: CompactTerm,
+        atom_table: &lam_beam::AtomTable,
+        literal_table: &lam_beam::LiteralTable,
+    ) -> HashMap<Literal, Label> {
+        let res = match x.clone() {
+            CompactTerm::List(parts) => {
+                let (values, registers): (Vec<(usize, CompactTerm)>, Vec<(usize, CompactTerm)>) =
+                    parts
+                        .iter()
+                        .cloned()
+                        .enumerate()
+                        .partition(|(idx, _)| idx % 2 == 0);
+                let zipped: Vec<((usize, CompactTerm), (usize, CompactTerm))> =
+                    values.iter().cloned().zip(registers).collect();
+
+                zipped
+                    .iter()
+                    .map(|((_, v), (_, r))| {
+                        let v = match ModuleTranslator::mk_value_of_compact_term(
+                            v.clone(),
+                            &atom_table,
+                            &literal_table,
+                        ) {
+                            Value::Literal(l) => l,
+                            _ => panic!("Expect jump table to have a literal but found: {:?}", v),
+                        };
+                        let r = if let CompactTerm::Label(l) = r {
+                            l.clone()
+                        } else {
+                            panic!("Expected jump table to have a label but found: {:?}", r)
+                        };
+                        (v, r)
+                    })
+                    .collect()
+            }
+            _ => panic!(
+                "Don't know how to turn CompactTerm {:?} into a jump table",
+                x
+            ),
+        };
+        trace!("mk_jump_table_of_compact_term({:?}) -> {:?}", x, res);
         res
     }
 
