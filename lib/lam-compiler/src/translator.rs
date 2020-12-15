@@ -842,6 +842,18 @@ impl ModuleTranslator {
                     elements,
                 })
             }
+            ExternalTerm::Map(external_term::Map { entries }) => {
+                let elements: Vec<(Literal, Literal)> = entries
+                    .iter()
+                    .map(|(k, v)| {
+                        (
+                            ModuleTranslator::mk_literal_of_external_term(k),
+                            ModuleTranslator::mk_literal_of_external_term(v),
+                        )
+                    })
+                    .collect();
+                Literal::Map(elements.into())
+            }
             _ => panic!(
                 "Don't know how to turn ExternalTerm {:?} into a lam_emu::Value",
                 x
