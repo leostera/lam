@@ -1,5 +1,6 @@
 use super::literal::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -162,6 +163,7 @@ pub enum FnKind {
 #[repr(C)]
 pub enum Test {
     Equals(Value, Value),
+    NotEquals(Value, Value),
     IsFunctionWithArity {
         fun: Register,
         arity: Arity,
@@ -256,17 +258,31 @@ pub enum Instruction {
     /// Flow-control operations
     ///
 
-    /** Define a new label.  */
+    /// Define a new label.
     Label(Label),
 
-    /** Jump to a label.  */
+    /// Jump to a label.
     Jump(Label),
 
-    /** Returns control to the last Continuation Pointer.  */
+    /// Returns control to the last Continuation Pointer.
     Return,
 
-    /** Perform a test and jump to label if it fails. */
+    /// Perform a test and jump to label if it fails.
     Test(Label, Test),
+
+    /// Conditionally jump to a label by means of pattern matching on a jump table.
+    ///
+    /// This can be used as an optimized way of branching, it follows this procedure:
+    ///
+    ///   * Check if the literal in `register` is a key in the `table` map.
+    ///   * If it is, jump to the associated Label
+    ///   * Else, jump to the `error` Label
+    ///
+    ConditionalJump {
+        register: Register,
+        error: Label,
+        table: HashMap<Literal, Label>,
+    },
 
     /// Could not match a value to a pattern
     Badmatch,
