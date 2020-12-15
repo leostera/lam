@@ -49,3 +49,5 @@ end, none, Entries).
 
 -spec run() -> list(option:t(integer())).
 run() -> [find_entry_pair(2020, [0 | [0 | [0 | []]]]) | [find_entry_triplet(2020, [0 | [0 | [0 | []]]]) | []]].
+
+

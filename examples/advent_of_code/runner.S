@@ -4,7 +4,7 @@
 
 {attributes, []}.
 
-{labels, 15}.
+{labels, 17}.
 
 
 {function, run_one, 1, 2}.
@@ -39,7 +39,7 @@
   {label,4}.
     {allocate,1,1}.
     {move,{x,0},{y,0}}.
-    {make_fun2,{f,14},0,0,0}.
+    {make_fun2,{f,16},0,0,0}.
     {move,{y,0},{x,1}}.
     {line,[{location,"runner.erl",14}]}.
     {call_ext_last,2,{extfunc,lists,foreach,2},1}.
@@ -50,20 +50,25 @@
     {line,[{location,"runner.erl",19}]}.
     {func_info,{atom,runner},{atom,main},1}.
   {label,6}.
-    {allocate,0,0}.
+    {allocate_zero,1,0}.
     {move,nil,{x,1}}.
     {move,{literal,<<"==# Advent Of Code 2020! #==\n\n">>},{x,0}}.
     {line,[{location,"runner.erl",20}]}.
     {call_ext,2,{extfunc,io,format,2}}.
+    {make_fun2,{f,14},0,0,0}.
+    {move,{x,0},{y,0}}.
     {make_fun2,{f,12},0,0,0}.
-    {test_heap,5,1}.
-    {put_tuple2,{x,0},{list,[{integer,1},{x,0}]}}.
+    {test_heap,10,1}.
+    {put_tuple2,{x,0},{list,[{integer,2},{x,0}]}}.
     {put_list,{x,0},nil,{x,0}}.
-    {line,[{location,"runner.erl",24}]}.
+    {put_tuple2,{x,1},{list,[{integer,1},{y,0}]}}.
+    {put_list,{x,1},{x,0},{x,0}}.
+    {trim,1,0}.
+    {line,[{location,"runner.erl",26}]}.
     {call,1,{f,4}}.
     {move,nil,{x,1}}.
     {move,{literal,<<"\n\n">>},{x,0}}.
-    {line,[{location,"runner.erl",25}]}.
+    {line,[{location,"runner.erl",27}]}.
     {call_ext_last,2,{extfunc,io,format,2},0}.
 
 
@@ -88,18 +93,27 @@
     {call_ext_only,2,{extfunc,erlang,get_module_info,2}}.
 
 
-{function, '-main/1-fun-0-', 0, 12}.
+{function, '-main/1-fun-1-', 0, 12}.
   {label,11}.
+    {line,[{location,"runner.erl",23}]}.
+    {func_info,{atom,runner},{atom,'-main/1-fun-1-'},0}.
+  {label,12}.
+    {line,[{location,"runner.erl",24}]}.
+    {call_ext_only,0,{extfunc,day_2,run,0}}.
+
+
+{function, '-main/1-fun-0-', 0, 14}.
+  {label,13}.
     {line,[{location,"runner.erl",21}]}.
     {func_info,{atom,runner},{atom,'-main/1-fun-0-'},0}.
-  {label,12}.
+  {label,14}.
     {line,[{location,"runner.erl",22}]}.
     {call_ext_only,0,{extfunc,day_1,run,0}}.
 
 
-{function, '-run_days/1-fun-0-', 1, 14}.
-  {label,13}.
+{function, '-run_days/1-fun-0-', 1, 16}.
+  {label,15}.
     {line,[{location,"runner.erl",14}]}.
     {func_info,{atom,runner},{atom,'-run_days/1-fun-0-'},1}.
-  {label,14}.
+  {label,16}.
     {call_only,1,{f,2}}.

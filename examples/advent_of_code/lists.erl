@@ -19,8 +19,19 @@
 %%
 -module(lists).
 
--export([foldl/3, foreach/2]).
+-export([foldl/3, foreach/2, map/2]).
 -export([main/1]).
+
+-spec map(Fun, List1) -> List2 when
+      Fun :: fun((A) -> B),
+      List1 :: [A],
+      List2 :: [B],
+      A :: term(),
+      B :: term().
+
+map(F, [H|T]) ->
+    [F(H)|map(F, T)];
+map(F, []) when is_function(F, 1) -> [].
 
 -spec foreach(Fun, List) -> ok when
       Fun :: fun((Elem :: T) -> term()),
@@ -50,3 +61,5 @@ main(C) ->
                       A + B
                   end, 0, [1,2,3]),
   io:format(<<"~p\n">>, [X]).
+
+
