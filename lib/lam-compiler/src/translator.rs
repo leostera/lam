@@ -181,6 +181,9 @@ impl ModuleTranslator {
             //
             OpCode::Return => Some(Instruction::Return),
 
+            // NOTE(@ostera): this isn't really a bad match, but it sort of is!
+            OpCode::CaseEnd => Some(Instruction::Badmatch),
+
             OpCode::Badmatch => Some(Instruction::Badmatch),
 
             ///////////////////////////////////////////////////////////////////
