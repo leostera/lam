@@ -360,6 +360,7 @@ impl Emulator {
                     map,
                     elements,
                 } => {
+                    let mut failed = false;
                     match registers.get(&map) {
                         Value::Literal(Literal::Map(m)) => {
                             for (k, r) in elements {
@@ -368,15 +369,18 @@ impl Emulator {
                                         registers.put(&r, Value::Literal(v.clone()));
                                     }
                                     None => {
-                                        instr_ptr.jump_to_label(&program, &label);
-                                        break;
+                                        failed = true;
                                     }
                                 }
                             }
                         }
                         v => panic!("Expected a map but found: {}", v),
                     }
-                    instr_ptr.next(&program);
+                    if failed {
+                        instr_ptr.jump_to_label(&program, &label);
+                    } else {
+                        instr_ptr.next(&program);
+                    }
                 }
 
                 Instruction::MakeLambda {
