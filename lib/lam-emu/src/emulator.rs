@@ -497,6 +497,10 @@ impl Emulator {
                 _ => panic!("Can not check if non list value {} is a non empty list", a),
             },
 
+            Test::NotEquals(a, b) => {
+                registers.get_literal_from_value(a) != registers.get_literal_from_value(b)
+            }
+
             Test::Equals(a, b) => {
                 registers.get_literal_from_value(a) == registers.get_literal_from_value(b)
             }
