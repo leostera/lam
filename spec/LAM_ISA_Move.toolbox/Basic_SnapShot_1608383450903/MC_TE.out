@@ -1,0 +1,300 @@
+@!@!@STARTMSG 2262:0 @!@!@
+TLC2 Version 2.15 of Day Month 20?? (rev: 8f0e040b)
+@!@!@ENDMSG 2262 @!@!@
+@!@!@STARTMSG 2187:0 @!@!@
+Running breadth-first search Model-Checking with fp 37 and seed -4779897621869878906 with 45 workers on 64 cores with 15259MB heap and 34317MB offheap memory [pid: 1113749] (Linux 5.4.0-56-generic amd64, AdoptOpenJDK 14.0.1 x86_64, OffHeapDiskFPSet, DiskStateQueue).
+@!@!@ENDMSG 2187 @!@!@
+@!@!@STARTMSG 2220:0 @!@!@
+Starting SANY...
+@!@!@ENDMSG 2220 @!@!@
+Parsing file /home/ostera/repos/github.com/AbstractMachinesLab/lam/spec/LAM_ISA_Move.toolbox/Basic/MC.tla
+Parsing file /home/ostera/repos/github.com/AbstractMachinesLab/lam/spec/LAM_ISA_Move.toolbox/Basic/LAM_ISA_Move.tla
+Parsing file /home/ostera/repos/github.com/tlaplus/tlaplus/toolbox/plugins/org.lamport.tlatools_1.0.0.202012190712/tla2sany/StandardModules/TLC.tla
+Parsing file /home/ostera/repos/github.com/tlaplus/tlaplus/toolbox/plugins/org.lamport.tlatools_1.0.0.202012190712/tla2sany/StandardModules/Naturals.tla
+Parsing file /home/ostera/repos/github.com/tlaplus/tlaplus/toolbox/plugins/org.lamport.tlatools_1.0.0.202012190712/tla2sany/StandardModules/Sequences.tla
+Parsing file /home/ostera/repos/github.com/tlaplus/tlaplus/toolbox/plugins/org.lamport.tlatools_1.0.0.202012190712/tla2sany/StandardModules/FiniteSets.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module LAM_ISA_Move
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module MC
+@!@!@STARTMSG 2219:0 @!@!@
+SANY finished.
+@!@!@ENDMSG 2219 @!@!@
+@!@!@STARTMSG 2185:0 @!@!@
+Starting... (2020-12-19 14:10:45)
+@!@!@ENDMSG 2185 @!@!@
+@!@!@STARTMSG 2189:0 @!@!@
+Computing initial states...
+@!@!@ENDMSG 2189 @!@!@
+@!@!@STARTMSG 2190:0 @!@!@
+Finished computing initial states: 1 distinct state generated at 2020-12-19 14:10:47.
+@!@!@ENDMSG 2190 @!@!@
+@!@!@STARTMSG 2110:1 @!@!@
+Invariant TypeInvariant is violated.
+@!@!@ENDMSG 2110 @!@!@
+@!@!@STARTMSG 2121:1 @!@!@
+The behavior up to this point is:
+@!@!@ENDMSG 2121 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+1: <Initial predicate>
+/\ current_move = Nil
+/\ stack = <<>>
+/\ move = defaultInitValue
+/\ global_registers = ( 0 :> Nil @@
+  1 :> Nil @@
+  2 :> Nil @@
+  3 :> Nil @@
+  4 :> Nil @@
+  5 :> Nil @@
+  6 :> Nil @@
+  7 :> Nil @@
+  8 :> Nil )
+/\ pc = "Run"
+/\ local_registers = ( 0 :> Nil @@
+  1 :> Nil @@
+  2 :> Nil @@
+  3 :> Nil @@
+  4 :> Nil @@
+  5 :> Nil @@
+  6 :> Nil @@
+  7 :> Nil @@
+  8 :> Nil )
+/\ current_count = 10
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2217:4 @!@!@
+2: <Run line 130, col 8 to line 148, col 59 of module LAM_ISA_Move>
+/\ current_move = [dst |-> <<"local", 0>>, src |-> <<"literal", a>>]
+/\ stack = <<[pc |-> "Run", move |-> defaultInitValue, procedure |-> "perform_move"]>>
+/\ move = [dst |-> <<"local", 0>>, src |-> <<"literal", a>>]
+/\ global_registers = ( 0 :> Nil @@
+  1 :> Nil @@
+  2 :> Nil @@
+  3 :> Nil @@
+  4 :> Nil @@
+  5 :> Nil @@
+  6 :> Nil @@
+  7 :> Nil @@
+  8 :> Nil )
+/\ pc = "PerformMove"
+/\ local_registers = ( 0 :> Nil @@
+  1 :> Nil @@
+  2 :> Nil @@
+  3 :> Nil @@
+  4 :> Nil @@
+  5 :> Nil @@
+  6 :> Nil @@
+  7 :> Nil @@
+  8 :> Nil )
+/\ current_count = 9
+
+@!@!@ENDMSG 2217 @!@!@
+@!@!@STARTMSG 2201:0 @!@!@
+The coverage statistics at 2020-12-19 14:10:48
+@!@!@ENDMSG 2201 @!@!@
+@!@!@STARTMSG 2773:0 @!@!@
+<Init line 92, col 1 to line 92, col 4 of module LAM_ISA_Move>: 1:1
+@!@!@ENDMSG 2773 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 93, col 9 to line 100, col 21 of module LAM_ISA_Move: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<PerformMove line 102, col 1 to line 102, col 11 of module LAM_ISA_Move>: 10:10
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 102, col 19 to line 102, col 36 of module LAM_ISA_Move: 33
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 102, col 19 to line 102, col 20 of module LAM_ISA_Move: 23
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 103, col 22 to line 103, col 70 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 104, col 30 to line 104, col 103 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 105, col 30 to line 105, col 54 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 106, col 33 to line 106, col 80 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 107, col 41 to line 107, col 112 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 108, col 41 to line 108, col 66 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 109, col 44 to line 109, col 91 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 110, col 52 to line 110, col 143 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 111, col 52 to line 111, col 76 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 112, col 55 to line 112, col 100 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 113, col 63 to line 113, col 151 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 114, col 63 to line 114, col 88 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 116, col 74 to line 116, col 164 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 117, col 74 to line 117, col 98 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 119, col 85 to line 119, col 174 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 121, col 85 to line 121, col 109 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 122, col 74 to line 122, col 99 of module LAM_ISA_Move: 0
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 123, col 19 to line 123, col 38 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 124, col 19 to line 124, col 42 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 125, col 19 to line 125, col 38 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 126, col 19 to line 126, col 61 of module LAM_ISA_Move: 10
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Run line 130, col 1 to line 130, col 3 of module LAM_ISA_Move>: 21:2643
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 130, col 11 to line 130, col 20 of module LAM_ISA_Move: 25
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 130, col 11 to line 130, col 12 of module LAM_ISA_Move: 23
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 131, col 14 to line 131, col 30 of module LAM_ISA_Move: 12
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 132, col 22 to line 132, col 55 of module LAM_ISA_Move: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 132, col 39 to line 132, col 55 of module LAM_ISA_Move: 11
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 137, col 36 to line 137, col 42 of module LAM_ISA_Move: 2642
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 138, col 44 to line 138, col 103 of module LAM_ISA_Move: 1296
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 138, col 60 to line 138, col 103 of module LAM_ISA_Move: 1306
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 139, col 41 to line 139, col 88 of module LAM_ISA_Move: 1336
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 140, col 36 to line 140, col 56 of module LAM_ISA_Move: 2632
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 140, col 44 to line 140, col 56 of module LAM_ISA_Move: 2642
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 141, col 36 to line 144, col 53 of module LAM_ISA_Move: 2632
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 141, col 45 to line 144, col 53 of module LAM_ISA_Move: 2642
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 145, col 33 to line 145, col 51 of module LAM_ISA_Move: 2632
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 136, col 39 to line 136, col 46 of module LAM_ISA_Move: 668
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  line 135, col 41 to line 135, col 53 of module LAM_ISA_Move: 334:1002
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 134, col 35 to line 134, col 43 of module LAM_ISA_Move: 28
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 133, col 33 to line 133, col 41 of module LAM_ISA_Move: 11
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 146, col 22 to line 146, col 33 of module LAM_ISA_Move: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 147, col 22 to line 147, col 77 of module LAM_ISA_Move: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 148, col 11 to line 148, col 59 of module LAM_ISA_Move: 2633
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Terminating line 151, col 1 to line 151, col 11 of module LAM_ISA_Move>: 0:1
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 151, col 16 to line 151, col 26 of module LAM_ISA_Move: 13
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 151, col 16 to line 151, col 17 of module LAM_ISA_Move: 12
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 151, col 31 to line 151, col 44 of module LAM_ISA_Move: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2774:0 @!@!@
+<TypeInvariant line 84, col 1 to line 84, col 13 of module LAM_ISA_Move>
+@!@!@ENDMSG 2774 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 84, col 18 to line 85, col 40 of module LAM_ISA_Move: 32
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 84, col 21 to line 84, col 41 of module LAM_ISA_Move: 32
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 85, col 21 to line 85, col 40 of module LAM_ISA_Move: 32
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 78, col 25 to line 82, col 65 of module LAM_ISA_Move: 32
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 78, col 28 to line 78, col 45 of module LAM_ISA_Move: 32
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 79, col 28 to line 82, col 65 of module LAM_ISA_Move: 31
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 79, col 31 to line 79, col 67 of module LAM_ISA_Move: 31
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 80, col 31 to line 80, col 67 of module LAM_ISA_Move: 31
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 81, col 31 to line 81, col 65 of module LAM_ISA_Move: 21
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 82, col 31 to line 82, col 65 of module LAM_ISA_Move: 21
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2202:0 @!@!@
+End of statistics.
+@!@!@ENDMSG 2202 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(22) at 2020-12-19 14:10:48: 63 states generated (1,206 s/min), 32 distinct states found (613 ds/min), 0 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2199:0 @!@!@
+63 states generated, 32 distinct states found, 0 states left on queue.
+@!@!@ENDMSG 2199 @!@!@
+@!@!@STARTMSG 2194:0 @!@!@
+The depth of the complete state graph search is 22.
+@!@!@ENDMSG 2194 @!@!@
+@!@!@STARTMSG 2186:0 @!@!@
+Finished in 3138ms at (2020-12-19 14:10:48)
+@!@!@ENDMSG 2186 @!@!@
