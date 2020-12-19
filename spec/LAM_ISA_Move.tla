@@ -74,10 +74,9 @@ begin
       end with;
     end while;
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "63cf1f" /\ chksum(tla) = "8d3d4b41")
+\* BEGIN TRANSLATION (chksum(pcal) = "abda9f12" /\ chksum(tla) = "99d227dd")
 CONSTANT defaultInitValue
-VARIABLES global_registers, local_registers, current_count, current_move, pc, 
-          stack
+VARIABLES registers, current_count, current_move, pc, stack
 
 (* define statement *)
 AllRegistersAreValid == \/ current_move = Nil
@@ -93,12 +92,10 @@ TypeInvariant == /\ current_count \in Nat
 
 VARIABLE move
 
-vars == << global_registers, local_registers, current_count, current_move, pc, 
-           stack, move >>
+vars == << registers, current_count, current_move, pc, stack, move >>
 
 Init == (* Global variables *)
-        /\ global_registers = [ id \in RegisterIdx |-> Nil ]
-        /\ local_registers = [ id \in RegisterIdx |-> Nil ]
+        /\ registers = [ r \in Registers |-> Nil ]
         /\ current_count = InstrCount
         /\ current_move = Nil
         (* Procedure perform_move *)
@@ -107,26 +104,9 @@ Init == (* Global variables *)
         /\ pc = "Run"
 
 PerformMove == /\ pc = "PerformMove"
-               /\ IF move.dst[1] = "global" /\ move.src[1] = "literal"
-                     THEN /\ global_registers' = [global_registers EXCEPT ![move.dst[2]] = move.src[2]]
-                          /\ UNCHANGED local_registers
-                     ELSE /\ IF move.dst[1] = "local" /\ move.src[1] = "literal"
-                                THEN /\ local_registers' = [local_registers EXCEPT ![move.dst[2]] = move.src[2]]
-                                     /\ UNCHANGED global_registers
-                                ELSE /\ IF move.dst[1] = "global" /\ move.src[1] = "global"
-                                           THEN /\ global_registers' = [global_registers EXCEPT ![move.dst[2]] = global_registers[move.src[2]]]
-                                                /\ UNCHANGED local_registers
-                                           ELSE /\ IF move.dst[1] = "local" /\ move.src[1] = "local"
-                                                      THEN /\ local_registers' = [local_registers EXCEPT ![move.dst[2]] = local_registers[move.src[2]]]
-                                                           /\ UNCHANGED global_registers
-                                                      ELSE /\ IF move.dst[1] = "global" /\ move.src[1] = "local"
-                                                                 THEN /\ global_registers' = [global_registers EXCEPT ![move.dst[2]] = local_registers[move.src[2]]]
-                                                                      /\ UNCHANGED local_registers
-                                                                 ELSE /\ IF move.dst[1] = "local" /\ move.src[1] = "global"
-                                                                            THEN /\ local_registers' = [local_registers EXCEPT ![move.dst[2]] = global_registers[move.src[2]]]
-                                                                            ELSE /\ TRUE
-                                                                                 /\ UNCHANGED local_registers
-                                                                      /\ UNCHANGED global_registers
+               /\ IF move.src[1] = "literal"
+                     THEN /\ registers' = [registers EXCEPT ![move.dst] = move.src[2]]
+                     ELSE /\ registers' = [registers EXCEPT ![move.dst] = registers[move.src]]
                /\ pc' = Head(stack).pc
                /\ move' = Head(stack).move
                /\ stack' = Tail(stack)
@@ -143,26 +123,11 @@ Run == /\ pc = "Run"
                            \E lit \in Literals:
                              /\ Assert((
                                        \/ current_move = Nil
-                                       \/ /\ current_move.dst[1] = "global"
-                                          /\ current_move.src[1] = "literal"
-                                          /\ global_registers[current_move.dst[2]] = current_move.src[2]
-                                       \/ /\ current_move.dst[1] = "local"
-                                          /\ current_move.src[1] = "literal"
-                                          /\ local_registers[current_move.dst[2]] = current_move.src[2]
-                                       \/ /\ current_move.dst[1] = "global"
-                                          /\ current_move.src[1] = "local"
-                                          /\ global_registers[current_move.dst[2]] = local_registers[current_move.src[2]]
-                                       \/ /\ current_move.dst[1] = "local"
-                                          /\ current_move.src[1] = "local"
-                                          /\ local_registers[current_move.dst[2]] = local_registers[current_move.src[2]]
-                                       \/ /\ current_move.dst[1] = "global"
-                                          /\ current_move.src[1] = "global"
-                                          /\ global_registers[current_move.dst[2]] = global_registers[current_move.src[2]]
-                                       \/ /\ current_move.dst[1] = "local"
-                                          /\ current_move.src[1] = "global"
-                                          /\ local_registers[current_move.dst[2]] = global_registers[current_move.src[2]]
-                                          ) = TRUE, 
-                                       "Failure of assertion at line 66, column 9.")
+                                       \/ /\ current_move.src[1] = "literal"
+                                          /\ registers[current_move.dst] = current_move.src[2]
+                                       \/ registers[current_move.dst] = registers[current_move.src]
+                                       ) = TRUE, 
+                                       "Failure of assertion at line 62, column 9.")
                              /\ IF use_lit
                                    THEN /\ current_move' = [ src |-> <<"literal", lit>>,  dst |-> dst ]
                                    ELSE /\ current_move' = [ src |-> src,  dst |-> dst ]
@@ -174,7 +139,7 @@ Run == /\ pc = "Run"
                              /\ pc' = "PerformMove"
              ELSE /\ pc' = "Done"
                   /\ UNCHANGED << current_count, current_move, stack, move >>
-       /\ UNCHANGED << global_registers, local_registers >>
+       /\ UNCHANGED registers
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == pc = "Done" /\ UNCHANGED vars
@@ -191,5 +156,5 @@ Termination == <>(pc = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Sat Dec 19 14:27:42 CET 2020 by ostera
+\* Last modified Sat Dec 19 14:51:37 CET 2020 by ostera
 \* Created Sat Dec 19 11:40:24 CET 2020 by ostera

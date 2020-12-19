@@ -22,3 +22,14 @@ debug
 docs/.rustc_info.json
 # ignore so tools relying on .gitignore will not show these paths, eg: fzf
 docs/doc/
+
+spec/*.toolbox/*aux
+spec/*.toolbox/*.log
+spec/*.toolbox/*.pdf
+spec/*.toolbox/*.tex
+spec/*.toolbox/*___model_SnapShot*.launch
+spec/*.toolbox/**/*.tla
+spec/*.toolbox/**/*.out
+spec/*.toolbox/**/MC.cfg
+spec/*.pdf
+spec/*.old
