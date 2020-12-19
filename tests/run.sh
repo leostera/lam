@@ -3,7 +3,7 @@
 echo "> Compiling LAM..."
 cargo run -- --version
 
-echo "> Compiling test suite..."
+echo "> Compiling Erlang test suite..."
 erlc *.erl
 erlc -S *.erl
 

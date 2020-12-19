@@ -2,12 +2,7 @@
 
 -export([main/1]).
 
-main(_) ->
-  A = 2112,
-  A2 = 7,
-  B = true,
-  B2 = false,
-  C = [a_list],
+run(A, A2, B, B2, C) ->
   io:format("~p\n", [[
    {<<"Unary ops">>,
     +A,
@@ -71,3 +66,5 @@ main(_) ->
     B xor B2
    }
   ]]).
+
+main(_) -> run(2112, 7, true, false, [a_list]).
