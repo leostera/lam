@@ -17,7 +17,7 @@ for erl in $(find ./ -name "*.erl"); do
   module_name=$(echo $erl | sed 's|./||g' | sed 's/.erl//g')
   echo -n "  * ${module_name}..."
   bin_name="./${module_name}.exe"
-  cargo run -- build \
+  ../target/debug/lam build \
     "${module_name}.beam" \
     --output $bin_name \
     --target native \
