@@ -938,298 +938,408 @@
 
 \begin{document}
 \tlatex
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ The Move instruction operates on the Register Machine, and
+ \ensuremath{\_copies\_} data from
+ one register into the other.
+\end{cpar}%
+\vshade{5.0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+Moves can be from one register to another, or we can move a literal value into
+ a register.
+\end{cpar}%
+\vshade{5.0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ The representation of literal values isn\mbox{'}t important, so an
+ implementation may
+ copy the actual value or just a heap pointer.
+\end{cpar}%
+\end{lcom}%
 \setboolean{shading}{true}
- \@x{\makebox[0pt][r]{\scriptsize 1\hspace{1em}}}\moduleLeftDash\@xx{
+ \@x{\makebox[0pt][r]{\scriptsize 10\hspace{1em}}}\moduleLeftDash\@xx{
  {\MODULE} LAM\_ISA\_Move}\moduleRightDash\@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 2\hspace{1em}} {\EXTENDS} Naturals ,\,
- Sequences}%
+ \@x{\makebox[0pt][r]{\scriptsize 11\hspace{1em}} {\EXTENDS} Naturals ,\,
+ Sequences ,\, TLC}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 4\hspace{1em}} {\CONSTANTS} InstrCount ,\,
- RegisterCount ,\, Nil}%
+ \@x{\makebox[0pt][r]{\scriptsize 13\hspace{1em}} {\CONSTANTS} InstrCount ,\,
+ RegisterCount ,\, Nil ,\, Literals}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 6\hspace{1em}} RegisterKinds \.{\defeq}
+ \@x{\makebox[0pt][r]{\scriptsize 15\hspace{1em}} RegisterKinds \.{\defeq}
  \{\@w{local} ,\,\@w{global} \}}%
+ \@x{\makebox[0pt][r]{\scriptsize 16\hspace{1em}} RegisterIdx \.{\defeq} ( 0
+ \.{\dotdot} RegisterCount )}%
+ \@x{\makebox[0pt][r]{\scriptsize 17\hspace{1em}} ValueKinds \.{\defeq}
+ RegisterKinds \.{\cup} \{\@w{literal} \}}%
+ \@x{\makebox[0pt][r]{\scriptsize 18\hspace{1em}} Values \.{\defeq}
+ RegisterIdx \.{\cup} Literals}%
+\@pvspace{8.0pt}%
+ \@x{\makebox[0pt][r]{\scriptsize 20\hspace{1em}} Registers \.{\defeq}
+ RegisterKinds \.{\times} RegisterIdx}%
 \@pvspace{8.0pt}%
 \pcalsymbolstrue
 \pcalshadingtrue
 \csyntaxfalse
- \@x{\makebox[0pt][r]{\scriptsize 8\hspace{1em}}\@s{12.29} {\p@mmalgorithm}
+ \@x{\makebox[0pt][r]{\scriptsize 22\hspace{1em}}\@s{12.29} {\p@mmalgorithm}
  LAM\_ISA\_Move}%
-\@x{\makebox[0pt][r]{\scriptsize 9\hspace{1em}} {\p@variables}}%
- \@x{\makebox[0pt][r]{\scriptsize 10\hspace{1em}}\@s{8.2} global\_registers
- \.{=} ( 0 \.{\dotdot} RegisterCount ) \.{\times} \{ Nil \} ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 11\hspace{1em}}\@s{8.2} local\_registers
- \.{=} ( 0 \.{\dotdot} RegisterCount ) \.{\times} \{ Nil \} ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 12\hspace{1em}}\@s{8.2} current\_count \.{=}
+\@x{\makebox[0pt][r]{\scriptsize 23\hspace{1em}} {\p@variables}}%
+ \@x{\makebox[0pt][r]{\scriptsize 24\hspace{1em}}\@s{8.2} registers \.{=} [ r
+ \.{\in} Registers \.{\mapsto} Nil ] ,\,}%
+ \@x{\makebox[0pt][r]{\scriptsize 25\hspace{1em}}\@s{8.2} current\_count \.{=}
  InstrCount ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 13\hspace{1em}}\@s{8.2} current\_move \.{=}
+ \@x{\makebox[0pt][r]{\scriptsize 26\hspace{1em}}\@s{8.2} current\_move \.{=}
  Nil}%
-\@x{\makebox[0pt][r]{\scriptsize 14\hspace{1em}}\@s{8.2} {\p@semicolon}}%
+\@x{\makebox[0pt][r]{\scriptsize 27\hspace{1em}}\@s{8.2} {\p@semicolon}}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 16\hspace{1em}} {\p@define}}%
+\@x{\makebox[0pt][r]{\scriptsize 29\hspace{1em}} {\p@define}}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 18\hspace{1em}}\@s{8.2} AllRegistersAreValid
+ \@x{\makebox[0pt][r]{\scriptsize 31\hspace{1em}}\@s{8.2} AllRegistersAreValid
  \.{\defeq} \.{\lor} current\_move \.{=} Nil}%
- \@x{\makebox[0pt][r]{\scriptsize 19\hspace{1em}}\@s{117.77} \.{\lor}
+ \@x{\makebox[0pt][r]{\scriptsize 32\hspace{1em}}\@s{117.77} \.{\lor}
  \.{\land} current\_move . dst [ 1 ] \.{\in} RegisterKinds}%
- \@x{\makebox[0pt][r]{\scriptsize 20\hspace{1em}}\@s{128.88} \.{\land}
- current\_move . src [ 1 ]\@s{0.51} \.{\in} RegisterKinds}%
- \@x{\makebox[0pt][r]{\scriptsize 21\hspace{1em}}\@s{128.88} \.{\land}
- current\_move . dst [ 2 ] \.{\in} ( 0 \.{\dotdot} RegisterCount )}%
- \@x{\makebox[0pt][r]{\scriptsize 22\hspace{1em}}\@s{128.88} \.{\land}
- current\_move . src [ 2 ]\@s{0.51} \.{\in} ( 0 \.{\dotdot} RegisterCount )}%
+ \@x{\makebox[0pt][r]{\scriptsize 33\hspace{1em}}\@s{128.88} \.{\land}
+ current\_move . dst [ 2 ] \.{\in} RegisterIdx}%
+ \@x{\makebox[0pt][r]{\scriptsize 34\hspace{1em}}\@s{128.88} \.{\land}
+ \.{\lor} \.{\land} current\_move . src [ 1 ] \.{\in} RegisterKinds}%
+ \@x{\makebox[0pt][r]{\scriptsize 35\hspace{1em}}\@s{151.10} \.{\land}
+ current\_move . src [ 2 ] \.{\in} RegisterIdx}%
+ \@x{\makebox[0pt][r]{\scriptsize 36\hspace{1em}}\@s{139.99} \.{\lor}
+ \.{\land} current\_move . src [ 1 ] \.{\in} \{\@w{literal} \}}%
+ \@x{\makebox[0pt][r]{\scriptsize 37\hspace{1em}}\@s{151.10} \.{\land}
+ current\_move . src [ 2 ] \.{\in} Literals}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 24\hspace{1em}} {\p@end} {\p@define}
+ \@x{\makebox[0pt][r]{\scriptsize 39\hspace{1em}}\@s{8.2} TypeInvariant
+ \.{\defeq} \.{\land} current\_count \.{\in} Nat}%
+ \@x{\makebox[0pt][r]{\scriptsize 40\hspace{1em}}\@s{89.00} \.{\land}
+ AllRegistersAreValid}%
+\@pvspace{16.0pt}%
+ \@x{\makebox[0pt][r]{\scriptsize 43\hspace{1em}} {\p@end} {\p@define}
  {\p@semicolon}}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 26\hspace{1em}} {\p@procedure} perform\_move
+ \@x{\makebox[0pt][r]{\scriptsize 45\hspace{1em}} {\p@procedure} perform\_move
  ( move ) {\p@begin}}%
-\@x{\makebox[0pt][r]{\scriptsize 27\hspace{1em}} Move\@s{.5}\textrm{:}\@s{3}}%
- \@x{\makebox[0pt][r]{\scriptsize 28\hspace{1em}}\@s{8.2} {\p@if} move . dst [
- 1 ] \.{=}\@w{global} \.{\land} move . src [ 1 ] \.{=}\@w{global} {\p@then}}%
- \@x{\makebox[0pt][r]{\scriptsize 29\hspace{1em}}\@s{16.4} global\_registers [
- move . dst [ 2 ] ] \.{:=} global\_registers [ move . src [ 2 ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 30\hspace{1em}}\@s{8.2} {\p@elsif} move .
- dst [ 1 ] \.{=}\@w{local} \.{\land} move . src [ 1 ] \.{=}\@w{local}
- {\p@then}}%
- \@x{\makebox[0pt][r]{\scriptsize 31\hspace{1em}}\@s{16.4} local\_registers [
- move . dst [ 2 ] ] \.{:=} local\_registers [ move . src [ 2 ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 32\hspace{1em}}\@s{8.2} {\p@elsif} move .
- dst [ 1 ] \.{=}\@w{global} \.{\land} move . src [ 1 ] \.{=}\@w{local}
- {\p@then}}%
- \@x{\makebox[0pt][r]{\scriptsize 33\hspace{1em}}\@s{16.4} global\_registers [
- move . dst [ 2 ] ] \.{:=} local\_registers [ move . src [ 2 ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 34\hspace{1em}}\@s{8.2} {\p@elsif} move .
- dst [ 1 ] \.{=}\@w{local} \.{\land} move . src [ 1 ] \.{=}\@w{global}
- {\p@then}}%
- \@x{\makebox[0pt][r]{\scriptsize 35\hspace{1em}}\@s{16.4} local\_registers [
- move . dst [ 2 ] ] \.{:=} global\_registers [ move . src [ 2 ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 36\hspace{1em}}\@s{8.2} {\p@end} {\p@if}
+ \@x{\makebox[0pt][r]{\scriptsize 46\hspace{1em}}
+ PerformMove\@s{.5}\textrm{:}\@s{3}}%
+ \@x{\makebox[0pt][r]{\scriptsize 47\hspace{1em}}\@s{8.2} {\p@if} move . src [
+ 1 ] \.{=}\@w{literal} {\p@then} registers [ move . dst ] \.{:=} move . src [
+ 2 ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 48\hspace{1em}}\@s{8.2} {\p@else} registers
+ [ move . dst ] \.{:=} registers [ move . src ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 49\hspace{1em}}\@s{8.2} {\p@end} {\p@if}
  {\p@semicolon}}%
- \@x{\makebox[0pt][r]{\scriptsize 37\hspace{1em}}\@s{8.2} {\p@return}\@s{0.43}
+ \@x{\makebox[0pt][r]{\scriptsize 50\hspace{1em}}\@s{8.2} {\p@return}\@s{0.43}
  {\p@semicolon}}%
- \@x{\makebox[0pt][r]{\scriptsize 38\hspace{1em}} {\p@end} {\p@procedure}
+ \@x{\makebox[0pt][r]{\scriptsize 51\hspace{1em}} {\p@end} {\p@procedure}
  {\p@semicolon}}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 40\hspace{1em}} {\p@begin}}%
- \@x{\makebox[0pt][r]{\scriptsize 41\hspace{1em}}\@s{8.2}
+\@x{\makebox[0pt][r]{\scriptsize 53\hspace{1em}} {\p@begin}}%
+ \@x{\makebox[0pt][r]{\scriptsize 54\hspace{1em}}\@s{8.2}
  Run\@s{.5}\textrm{:}\@s{3}}%
- \@x{\makebox[0pt][r]{\scriptsize 42\hspace{1em}}\@s{16.4} {\p@while}
+ \@x{\makebox[0pt][r]{\scriptsize 55\hspace{1em}}\@s{16.4} {\p@while}
  current\_count \.{>} 0 {\p@do}}%
- \@x{\makebox[0pt][r]{\scriptsize 43\hspace{1em}}\@s{24.59}
- MakeMove\@s{.5}\textrm{:}\@s{3}}%
- \@x{\makebox[0pt][r]{\scriptsize 44\hspace{1em}}\@s{32.8} current\_move
- \.{:=} [}%
-\@x{\makebox[0pt][r]{\scriptsize 45\hspace{1em}}\@s{49.19} src \.{\mapsto}}%
- \@x{\makebox[0pt][r]{\scriptsize 46\hspace{1em}}\@s{57.39} {\CHOOSE}
- k\@s{0.71} \.{\in} RegisterKinds \.{:}}%
- \@x{\makebox[0pt][r]{\scriptsize 47\hspace{1em}}\@s{57.39} {\CHOOSE} n
- \.{\in} ( 0 \.{\dotdot} RegisterCount ) \.{:} {\langle} k ,\, n {\rangle}
- ,\,}%
-\@x{\makebox[0pt][r]{\scriptsize 48\hspace{1em}}\@s{49.19} dst \.{\mapsto}}%
- \@x{\makebox[0pt][r]{\scriptsize 49\hspace{1em}}\@s{57.39} {\CHOOSE}
- k\@s{0.71} \.{\in} RegisterKinds \.{:}}%
- \@x{\makebox[0pt][r]{\scriptsize 50\hspace{1em}}\@s{57.39} {\CHOOSE} n
- \.{\in} ( 0 \.{\dotdot} RegisterCount ) \.{:} {\langle} k ,\, n {\rangle}}%
-\@x{\makebox[0pt][r]{\scriptsize 51\hspace{1em}}\@s{32.8} ] {\p@semicolon}}%
- \@x{\makebox[0pt][r]{\scriptsize 52\hspace{1em}}\@s{32.8} current\_count
+ \@x{\makebox[0pt][r]{\scriptsize 56\hspace{1em}}\@s{24.59} current\_count
  \.{:=} current\_count \.{-} 1 {\p@semicolon}}%
- \@x{\makebox[0pt][r]{\scriptsize 53\hspace{1em}}\@s{24.59} {\p@call}
- perform\_move ( current\_move ) {\p@semicolon}}%
- \@x{\makebox[0pt][r]{\scriptsize 54\hspace{1em}}\@s{16.4} {\p@end} {\p@while}
+ \@x{\makebox[0pt][r]{\scriptsize 57\hspace{1em}}\@s{24.59} {\p@with}
+ src\@s{0.51} \.{\in} Registers ,\,}%
+ \@x{\makebox[0pt][r]{\scriptsize 58\hspace{1em}}\@s{50.79} dst \.{\in}
+ Registers ,\,}%
+ \@x{\makebox[0pt][r]{\scriptsize 59\hspace{1em}}\@s{50.79} use\_lit \.{\in}
+ \{ {\TRUE} ,\, {\FALSE} \} ,\,}%
+ \@x{\makebox[0pt][r]{\scriptsize 60\hspace{1em}}\@s{50.79} lit \.{\in}
+ Literals {\p@do}}%
+\@x{\makebox[0pt][r]{\scriptsize 61\hspace{1em}}\@s{32.8}}%
+\@y{\@s{0}%
+ Lets assert that the last move we did was actually carried out!
+}%
+\@xx{}%
+\@x{\makebox[0pt][r]{\scriptsize 62\hspace{1em}}\@s{32.8} {\p@assert} (}%
+ \@x{\makebox[0pt][r]{\scriptsize 63\hspace{1em}}\@s{65.77} \.{\lor}
+ current\_move \.{=} Nil}%
+ \@x{\makebox[0pt][r]{\scriptsize 64\hspace{1em}}\@s{65.77} \.{\lor} \.{\land}
+ current\_move . src [ 1 ] \.{=}\@w{literal}}%
+ \@x{\makebox[0pt][r]{\scriptsize 65\hspace{1em}}\@s{76.88} \.{\land}
+ registers [ current\_move . dst ] \.{=} current\_move . src [ 2 ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 66\hspace{1em}}\@s{65.77} \.{\lor} registers
+ [ current\_move . dst ] \.{=} registers [ current\_move . src ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 67\hspace{1em}}\@s{65.77} ) \.{=} {\TRUE}
  {\p@semicolon}}%
-\@x{\makebox[0pt][r]{\scriptsize 55\hspace{1em}} {\p@end} {\p@algorithm}}%
+ \@x{\makebox[0pt][r]{\scriptsize 68\hspace{1em}}\@s{32.8} {\p@if} use\_lit
+ {\p@then}}%
+ \@x{\makebox[0pt][r]{\scriptsize 69\hspace{1em}}\@s{41.0} current\_move
+ \.{:=} [ src \.{\mapsto} {\langle}\@w{literal} ,\, lit {\rangle} ,\,\@s{4.1}
+ dst \.{\mapsto} dst ] {\p@semicolon}}%
+\@x{\makebox[0pt][r]{\scriptsize 70\hspace{1em}}\@s{32.8} {\p@else}}%
+ \@x{\makebox[0pt][r]{\scriptsize 71\hspace{1em}}\@s{41.0} current\_move
+ \.{:=} [ src \.{\mapsto} src ,\,\@s{4.1} dst \.{\mapsto} dst ]
+ {\p@semicolon}}%
+ \@x{\makebox[0pt][r]{\scriptsize 72\hspace{1em}}\@s{32.8} {\p@end} {\p@if}
+ {\p@semicolon}}%
+ \@x{\makebox[0pt][r]{\scriptsize 73\hspace{1em}}\@s{32.8} {\p@call}
+ perform\_move ( current\_move ) {\p@semicolon}}%
+ \@x{\makebox[0pt][r]{\scriptsize 74\hspace{1em}}\@s{24.59} {\p@end} {\p@with}
+ {\p@semicolon}}%
+ \@x{\makebox[0pt][r]{\scriptsize 75\hspace{1em}}\@s{16.4} {\p@end} {\p@while}
+ {\p@semicolon}}%
+\@x{\makebox[0pt][r]{\scriptsize 76\hspace{1em}} {\p@end} {\p@algorithm}}%
 \@y{%
  ;
 }%
 \@xx{}%
 \pcalshadingfalse \pcalsymbolsfalse
-\@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 57\hspace{1em}}}%
+\@x{\makebox[0pt][r]{\scriptsize 77\hspace{1em}}}%
 \@y{\@s{0}%
- BEGIN TRANSLATION (\ensuremath{chksum(pcal) \.{=}} ``\ensuremath{c6cc4c7}''
- \ensuremath{\.{\land} chksum(tla) \.{=}} ``\ensuremath{c697ae07}'')
+ BEGIN TRANSLATION (\ensuremath{chksum(pcal) \.{=}} ``\ensuremath{63cf1f}''
+ \ensuremath{\.{\land} chksum(tla) \.{=}} ``\ensuremath{8d3d4b41}'')
 }%
 \@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 58\hspace{1em}} {\CONSTANT}
+ \@x{\makebox[0pt][r]{\scriptsize 78\hspace{1em}} {\CONSTANT}
  defaultInitValue}%
- \@x{\makebox[0pt][r]{\scriptsize 59\hspace{1em}} {\VARIABLES}
+ \@x{\makebox[0pt][r]{\scriptsize 79\hspace{1em}} {\VARIABLES}
  global\_registers ,\, local\_registers ,\, current\_count ,\, current\_move
  ,\, pc ,\,}%
-\@x{\makebox[0pt][r]{\scriptsize 60\hspace{1em}}\@s{51.42} stack}%
+\@x{\makebox[0pt][r]{\scriptsize 80\hspace{1em}}\@s{51.42} stack}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 62\hspace{1em}}}%
+\@x{\makebox[0pt][r]{\scriptsize 82\hspace{1em}}}%
 \@y{\@s{0}%
  define statement
 }%
 \@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 63\hspace{1em}} AllRegistersAreValid
+ \@x{\makebox[0pt][r]{\scriptsize 83\hspace{1em}} AllRegistersAreValid
  \.{\defeq} \.{\lor} current\_move \.{=} Nil}%
- \@x{\makebox[0pt][r]{\scriptsize 64\hspace{1em}}\@s{109.57} \.{\lor}
+ \@x{\makebox[0pt][r]{\scriptsize 84\hspace{1em}}\@s{109.57} \.{\lor}
  \.{\land} current\_move . dst [ 1 ] \.{\in} RegisterKinds}%
- \@x{\makebox[0pt][r]{\scriptsize 65\hspace{1em}}\@s{120.68} \.{\land}
- current\_move . src [ 1 ]\@s{0.51} \.{\in} RegisterKinds}%
- \@x{\makebox[0pt][r]{\scriptsize 66\hspace{1em}}\@s{120.68} \.{\land}
- current\_move . dst [ 2 ] \.{\in} ( 0 \.{\dotdot} RegisterCount )}%
- \@x{\makebox[0pt][r]{\scriptsize 67\hspace{1em}}\@s{120.68} \.{\land}
- current\_move . src [ 2 ]\@s{0.51} \.{\in} ( 0 \.{\dotdot} RegisterCount )}%
+ \@x{\makebox[0pt][r]{\scriptsize 85\hspace{1em}}\@s{120.68} \.{\land}
+ current\_move . dst [ 2 ] \.{\in} RegisterIdx}%
+ \@x{\makebox[0pt][r]{\scriptsize 86\hspace{1em}}\@s{120.68} \.{\land}
+ \.{\lor} \.{\land} current\_move . src [ 1 ] \.{\in} RegisterKinds}%
+ \@x{\makebox[0pt][r]{\scriptsize 87\hspace{1em}}\@s{142.90} \.{\land}
+ current\_move . src [ 2 ] \.{\in} RegisterIdx}%
+ \@x{\makebox[0pt][r]{\scriptsize 88\hspace{1em}}\@s{131.79} \.{\lor}
+ \.{\land} current\_move . src [ 1 ] \.{\in} \{\@w{literal} \}}%
+ \@x{\makebox[0pt][r]{\scriptsize 89\hspace{1em}}\@s{142.90} \.{\land}
+ current\_move . src [ 2 ] \.{\in} Literals}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 69\hspace{1em}} {\VARIABLE} move}%
+ \@x{\makebox[0pt][r]{\scriptsize 91\hspace{1em}} TypeInvariant \.{\defeq}
+ \.{\land} current\_count \.{\in} Nat}%
+ \@x{\makebox[0pt][r]{\scriptsize 92\hspace{1em}}\@s{80.80} \.{\land}
+ AllRegistersAreValid}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 71\hspace{1em}} vars\@s{5.19} \.{\defeq}
- {\langle} global\_registers ,\, local\_registers ,\, current\_count ,\,
- current\_move ,\, pc ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 72\hspace{1em}}\@s{46.80} stack ,\, move
+\@x{\makebox[0pt][r]{\scriptsize 94\hspace{1em}} {\VARIABLE} move}%
+\@pvspace{8.0pt}%
+ \@x{\makebox[0pt][r]{\scriptsize 96\hspace{1em}} vars \.{\defeq} {\langle}
+ global\_registers ,\, local\_registers ,\, current\_count ,\, current\_move
+ ,\, pc ,\,}%
+ \@x{\makebox[0pt][r]{\scriptsize 97\hspace{1em}}\@s{41.61} stack ,\, move
  {\rangle}}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 74\hspace{1em}} Init\@s{7.21} \.{\defeq}}%
+\@x{\makebox[0pt][r]{\scriptsize 99\hspace{1em}} Init\@s{2.02} \.{\defeq}}%
 \@y{\@s{0}%
  Global variables
 }%
 \@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 75\hspace{1em}}\@s{42.91} \.{\land}
- global\_registers \.{=} ( 0 \.{\dotdot} RegisterCount ) \.{\times} \{ Nil
- \}}%
- \@x{\makebox[0pt][r]{\scriptsize 76\hspace{1em}}\@s{42.91} \.{\land}
- local\_registers \.{=} ( 0 \.{\dotdot} RegisterCount ) \.{\times} \{ Nil \}}%
- \@x{\makebox[0pt][r]{\scriptsize 77\hspace{1em}}\@s{42.91} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 100\hspace{1em}}\@s{37.72} \.{\land}
+ global\_registers \.{=} [ id \.{\in} RegisterIdx \.{\mapsto} Nil ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 101\hspace{1em}}\@s{37.72} \.{\land}
+ local\_registers \.{=} [ id \.{\in} RegisterIdx \.{\mapsto} Nil ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 102\hspace{1em}}\@s{37.72} \.{\land}
  current\_count \.{=} InstrCount}%
- \@x{\makebox[0pt][r]{\scriptsize 78\hspace{1em}}\@s{42.91} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 103\hspace{1em}}\@s{37.72} \.{\land}
  current\_move \.{=} Nil}%
-\@x{\makebox[0pt][r]{\scriptsize 79\hspace{1em}}\@s{42.91}}%
+\@x{\makebox[0pt][r]{\scriptsize 104\hspace{1em}}\@s{37.72}}%
 \@y{\@s{0}%
  Procedure \ensuremath{perform\_move
 }}%
 \@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 80\hspace{1em}}\@s{42.91} \.{\land} move
+ \@x{\makebox[0pt][r]{\scriptsize 105\hspace{1em}}\@s{37.72} \.{\land} move
  \.{=} defaultInitValue}%
- \@x{\makebox[0pt][r]{\scriptsize 81\hspace{1em}}\@s{42.91} \.{\land} stack
+ \@x{\makebox[0pt][r]{\scriptsize 106\hspace{1em}}\@s{37.72} \.{\land} stack
  \.{=} {\langle} {\rangle}}%
- \@x{\makebox[0pt][r]{\scriptsize 82\hspace{1em}}\@s{42.91} \.{\land} pc
+ \@x{\makebox[0pt][r]{\scriptsize 107\hspace{1em}}\@s{37.72} \.{\land} pc
  \.{=}\@w{Run}}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 84\hspace{1em}} Move \.{\defeq} \.{\land} pc
- \.{=}\@w{Move}}%
- \@x{\makebox[0pt][r]{\scriptsize 85\hspace{1em}}\@s{42.91} \.{\land} {\IF}
+ \@x{\makebox[0pt][r]{\scriptsize 109\hspace{1em}} PerformMove \.{\defeq}
+ \.{\land} pc \.{=}\@w{PerformMove}}%
+ \@x{\makebox[0pt][r]{\scriptsize 110\hspace{1em}}\@s{79.08} \.{\land} {\IF}
  move . dst [ 1 ] \.{=}\@w{global} \.{\land} move . src [ 1 ]
+ \.{=}\@w{literal}}%
+ \@x{\makebox[0pt][r]{\scriptsize 111\hspace{1em}}\@s{102.35} \.{\THEN}
+ \.{\land} global\_registers \.{'} \.{=} [ global\_registers {\EXCEPT}
+ {\bang} [ move . dst [ 2 ] ] \.{=} move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 112\hspace{1em}}\@s{133.66} \.{\land}
+ {\UNCHANGED} local\_registers}%
+ \@x{\makebox[0pt][r]{\scriptsize 113\hspace{1em}}\@s{102.35} \.{\ELSE}
+ \.{\land} {\IF} move . dst [ 1 ] \.{=}\@w{local} \.{\land} move . src [ 1 ]
+ \.{=}\@w{literal}}%
+ \@x{\makebox[0pt][r]{\scriptsize 114\hspace{1em}}\@s{156.93} \.{\THEN}
+ \.{\land} local\_registers \.{'} \.{=} [ local\_registers {\EXCEPT} {\bang}
+ [ move . dst [ 2 ] ] \.{=} move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 115\hspace{1em}}\@s{188.24} \.{\land}
+ {\UNCHANGED} global\_registers}%
+ \@x{\makebox[0pt][r]{\scriptsize 116\hspace{1em}}\@s{156.93} \.{\ELSE}
+ \.{\land} {\IF} move . dst [ 1 ] \.{=}\@w{global} \.{\land} move . src [ 1 ]
  \.{=}\@w{global}}%
- \@x{\makebox[0pt][r]{\scriptsize 86\hspace{1em}}\@s{66.18} \.{\THEN}
+ \@x{\makebox[0pt][r]{\scriptsize 117\hspace{1em}}\@s{211.51} \.{\THEN}
  \.{\land} global\_registers \.{'} \.{=} [ global\_registers {\EXCEPT}
  {\bang} [ move . dst [ 2 ] ] \.{=} global\_registers [ move . src [ 2 ] ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 87\hspace{1em}}\@s{97.49} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 118\hspace{1em}}\@s{242.82} \.{\land}
  {\UNCHANGED} local\_registers}%
- \@x{\makebox[0pt][r]{\scriptsize 88\hspace{1em}}\@s{66.18} \.{\ELSE}
+ \@x{\makebox[0pt][r]{\scriptsize 119\hspace{1em}}\@s{211.51} \.{\ELSE}
  \.{\land} {\IF} move . dst [ 1 ] \.{=}\@w{local} \.{\land} move . src [ 1 ]
  \.{=}\@w{local}}%
- \@x{\makebox[0pt][r]{\scriptsize 89\hspace{1em}}\@s{120.76} \.{\THEN}
+ \@x{\makebox[0pt][r]{\scriptsize 120\hspace{1em}}\@s{266.08} \.{\THEN}
  \.{\land} local\_registers \.{'} \.{=} [ local\_registers {\EXCEPT} {\bang}
  [ move . dst [ 2 ] ] \.{=} local\_registers [ move . src [ 2 ] ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 90\hspace{1em}}\@s{152.07} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 121\hspace{1em}}\@s{297.39} \.{\land}
  {\UNCHANGED} global\_registers}%
- \@x{\makebox[0pt][r]{\scriptsize 91\hspace{1em}}\@s{120.76} \.{\ELSE}
+ \@x{\makebox[0pt][r]{\scriptsize 122\hspace{1em}}\@s{266.08} \.{\ELSE}
  \.{\land} {\IF} move . dst [ 1 ] \.{=}\@w{global} \.{\land} move . src [ 1 ]
  \.{=}\@w{local}}%
- \@x{\makebox[0pt][r]{\scriptsize 92\hspace{1em}}\@s{175.33} \.{\THEN}
+ \@x{\makebox[0pt][r]{\scriptsize 123\hspace{1em}}\@s{320.66} \.{\THEN}
  \.{\land} global\_registers \.{'} \.{=} [ global\_registers {\EXCEPT}
  {\bang} [ move . dst [ 2 ] ] \.{=} local\_registers [ move . src [ 2 ] ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 93\hspace{1em}}\@s{206.64} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 124\hspace{1em}}\@s{351.97} \.{\land}
  {\UNCHANGED} local\_registers}%
- \@x{\makebox[0pt][r]{\scriptsize 94\hspace{1em}}\@s{175.33} \.{\ELSE}
+ \@x{\makebox[0pt][r]{\scriptsize 125\hspace{1em}}\@s{320.66} \.{\ELSE}
  \.{\land} {\IF} move . dst [ 1 ] \.{=}\@w{local} \.{\land} move . src [ 1 ]
  \.{=}\@w{global}}%
- \@x{\makebox[0pt][r]{\scriptsize 95\hspace{1em}}\@s{229.91} \.{\THEN}
+ \@x{\makebox[0pt][r]{\scriptsize 126\hspace{1em}}\@s{375.24} \.{\THEN}
  \.{\land} local\_registers \.{'} \.{=} [ local\_registers {\EXCEPT} {\bang}
  [ move . dst [ 2 ] ] \.{=} global\_registers [ move . src [ 2 ] ] ]}%
- \@x{\makebox[0pt][r]{\scriptsize 96\hspace{1em}}\@s{229.91} \.{\ELSE}
+ \@x{\makebox[0pt][r]{\scriptsize 127\hspace{1em}}\@s{375.24} \.{\ELSE}
  \.{\land} {\TRUE}}%
- \@x{\makebox[0pt][r]{\scriptsize 97\hspace{1em}}\@s{261.22} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 128\hspace{1em}}\@s{406.55} \.{\land}
  {\UNCHANGED} local\_registers}%
- \@x{\makebox[0pt][r]{\scriptsize 98\hspace{1em}}\@s{206.64} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 129\hspace{1em}}\@s{351.97} \.{\land}
  {\UNCHANGED} global\_registers}%
- \@x{\makebox[0pt][r]{\scriptsize 99\hspace{1em}}\@s{42.91} \.{\land} pc \.{'}
- \.{=} Head ( stack ) . pc}%
- \@x{\makebox[0pt][r]{\scriptsize 100\hspace{1em}}\@s{42.91} \.{\land} move
+ \@x{\makebox[0pt][r]{\scriptsize 130\hspace{1em}}\@s{79.08} \.{\land} pc
+ \.{'} \.{=} Head ( stack ) . pc}%
+ \@x{\makebox[0pt][r]{\scriptsize 131\hspace{1em}}\@s{79.08} \.{\land} move
  \.{'} \.{=} Head ( stack ) . move}%
- \@x{\makebox[0pt][r]{\scriptsize 101\hspace{1em}}\@s{42.91} \.{\land} stack
+ \@x{\makebox[0pt][r]{\scriptsize 132\hspace{1em}}\@s{79.08} \.{\land} stack
  \.{'} \.{=} Tail ( stack )}%
- \@x{\makebox[0pt][r]{\scriptsize 102\hspace{1em}}\@s{42.91} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 133\hspace{1em}}\@s{79.08} \.{\land}
  {\UNCHANGED} {\langle} current\_count ,\, current\_move {\rangle}}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 104\hspace{1em}} perform\_move \.{\defeq}
- Move}%
+ \@x{\makebox[0pt][r]{\scriptsize 135\hspace{1em}} perform\_move \.{\defeq}
+ PerformMove}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 106\hspace{1em}} Run \.{\defeq} \.{\land} pc
+ \@x{\makebox[0pt][r]{\scriptsize 137\hspace{1em}} Run \.{\defeq} \.{\land} pc
  \.{=}\@w{Run}}%
- \@x{\makebox[0pt][r]{\scriptsize 107\hspace{1em}}\@s{37.68} \.{\land} {\IF}
+ \@x{\makebox[0pt][r]{\scriptsize 138\hspace{1em}}\@s{37.68} \.{\land} {\IF}
  current\_count \.{>} 0}%
- \@x{\makebox[0pt][r]{\scriptsize 108\hspace{1em}}\@s{60.94} \.{\THEN}
- \.{\land} pc \.{'} \.{=}\@w{MakeMove}}%
- \@x{\makebox[0pt][r]{\scriptsize 109\hspace{1em}}\@s{60.94} \.{\ELSE}
- \.{\land} pc \.{'} \.{=}\@w{Done}}%
- \@x{\makebox[0pt][r]{\scriptsize 110\hspace{1em}}\@s{37.68} \.{\land}
- {\UNCHANGED} {\langle} global\_registers ,\, local\_registers ,\,
- current\_count ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 111\hspace{1em}}\@s{111.27} current\_move
- ,\, stack ,\, move {\rangle}}%
-\@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 113\hspace{1em}} MakeMove \.{\defeq}
- \.{\land} pc \.{=}\@w{MakeMove}}%
- \@x{\makebox[0pt][r]{\scriptsize 114\hspace{1em}}\@s{66.19} \.{\land}
- current\_move \.{'} \.{=}\@s{65.6} [}%
-\@x{\makebox[0pt][r]{\scriptsize 115\hspace{1em}}\@s{164.83} src \.{\mapsto}}%
- \@x{\makebox[0pt][r]{\scriptsize 116\hspace{1em}}\@s{173.03} {\CHOOSE}
- k\@s{0.71} \.{\in} RegisterKinds \.{:}}%
- \@x{\makebox[0pt][r]{\scriptsize 117\hspace{1em}}\@s{173.03} {\CHOOSE} n
- \.{\in} ( 0 \.{\dotdot} RegisterCount ) \.{:} {\langle} k ,\, n {\rangle}
+ \@x{\makebox[0pt][r]{\scriptsize 139\hspace{1em}}\@s{60.94} \.{\THEN}
+ \.{\land} current\_count \.{'} \.{=} current\_count \.{-} 1}%
+ \@x{\makebox[0pt][r]{\scriptsize 140\hspace{1em}}\@s{92.26} \.{\land} \E\,
+ src \.{\in} Registers \.{:}}%
+ \@x{\makebox[0pt][r]{\scriptsize 141\hspace{1em}}\@s{111.57} \E\, dst \.{\in}
+ Registers \.{:}}%
+ \@x{\makebox[0pt][r]{\scriptsize 142\hspace{1em}}\@s{119.77} \E\, use\_lit
+ \.{\in} \{ {\TRUE} ,\, {\FALSE} \} \.{:}}%
+ \@x{\makebox[0pt][r]{\scriptsize 143\hspace{1em}}\@s{127.97} \E\, lit \.{\in}
+ Literals \.{:}}%
+ \@x{\makebox[0pt][r]{\scriptsize 144\hspace{1em}}\@s{136.17} \.{\land} Assert
+ ( (}%
+ \@x{\makebox[0pt][r]{\scriptsize 145\hspace{1em}}\@s{179.87} \.{\lor}
+ current\_move \.{=} Nil}%
+ \@x{\makebox[0pt][r]{\scriptsize 146\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{global}}%
+ \@x{\makebox[0pt][r]{\scriptsize 147\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{literal}}%
+ \@x{\makebox[0pt][r]{\scriptsize 148\hspace{1em}}\@s{190.98} \.{\land}
+ global\_registers [ current\_move . dst [ 2 ] ] \.{=} current\_move . src [
+ 2 ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 149\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{local}}%
+ \@x{\makebox[0pt][r]{\scriptsize 150\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{literal}}%
+ \@x{\makebox[0pt][r]{\scriptsize 151\hspace{1em}}\@s{190.98} \.{\land}
+ local\_registers [ current\_move . dst [ 2 ] ] \.{=} current\_move . src [ 2
+ ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 152\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{global}}%
+ \@x{\makebox[0pt][r]{\scriptsize 153\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{local}}%
+ \@x{\makebox[0pt][r]{\scriptsize 154\hspace{1em}}\@s{190.98} \.{\land}
+ global\_registers [ current\_move . dst [ 2 ] ] \.{=} local\_registers [
+ current\_move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 155\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{local}}%
+ \@x{\makebox[0pt][r]{\scriptsize 156\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{local}}%
+ \@x{\makebox[0pt][r]{\scriptsize 157\hspace{1em}}\@s{190.98} \.{\land}
+ local\_registers [ current\_move . dst [ 2 ] ] \.{=} local\_registers [
+ current\_move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 158\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{global}}%
+ \@x{\makebox[0pt][r]{\scriptsize 159\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{global}}%
+ \@x{\makebox[0pt][r]{\scriptsize 160\hspace{1em}}\@s{190.98} \.{\land}
+ global\_registers [ current\_move . dst [ 2 ] ] \.{=} global\_registers [
+ current\_move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 161\hspace{1em}}\@s{179.87} \.{\lor}
+ \.{\land} current\_move . dst [ 1 ] \.{=}\@w{local}}%
+ \@x{\makebox[0pt][r]{\scriptsize 162\hspace{1em}}\@s{190.98} \.{\land}
+ current\_move . src [ 1 ]\@s{0.51} \.{=}\@w{global}}%
+ \@x{\makebox[0pt][r]{\scriptsize 163\hspace{1em}}\@s{190.98} \.{\land}
+ local\_registers [ current\_move . dst [ 2 ] ] \.{=} global\_registers [
+ current\_move . src [ 2 ] ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 164\hspace{1em}}\@s{190.98} ) \.{=} {\TRUE}
  ,\,}%
-\@x{\makebox[0pt][r]{\scriptsize 118\hspace{1em}}\@s{164.83} dst \.{\mapsto}}%
- \@x{\makebox[0pt][r]{\scriptsize 119\hspace{1em}}\@s{173.03} {\CHOOSE}
- k\@s{0.71} \.{\in} RegisterKinds \.{:}}%
- \@x{\makebox[0pt][r]{\scriptsize 120\hspace{1em}}\@s{173.03} {\CHOOSE} n
- \.{\in} ( 0 \.{\dotdot} RegisterCount ) \.{:} {\langle} k ,\, n {\rangle}}%
-\@x{\makebox[0pt][r]{\scriptsize 121\hspace{1em}}\@s{148.43} ]}%
- \@x{\makebox[0pt][r]{\scriptsize 122\hspace{1em}}\@s{66.19} \.{\land}
- current\_count \.{'} \.{=} current\_count \.{-} 1}%
- \@x{\makebox[0pt][r]{\scriptsize 123\hspace{1em}}\@s{66.19} \.{\land}
+ \@x{\makebox[0pt][r]{\scriptsize 165\hspace{1em}}\@s{179.87}\@w{Failure\ of\
+ assertion\ at\ line\ 66,\ column\ 9.} )}%
+ \@x{\makebox[0pt][r]{\scriptsize 166\hspace{1em}}\@s{136.17} \.{\land} {\IF}
+ use\_lit}%
+ \@x{\makebox[0pt][r]{\scriptsize 167\hspace{1em}}\@s{159.43} \.{\THEN}
+ \.{\land} current\_move \.{'} \.{=} [ src \.{\mapsto} {\langle}\@w{literal}
+ ,\, lit {\rangle} ,\,\@s{4.1} dst \.{\mapsto} dst ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 168\hspace{1em}}\@s{159.43} \.{\ELSE}
+ \.{\land} current\_move \.{'} \.{=} [ src \.{\mapsto} src ,\,\@s{4.1} dst
+ \.{\mapsto} dst ]}%
+ \@x{\makebox[0pt][r]{\scriptsize 169\hspace{1em}}\@s{136.17} \.{\land}
  \.{\land} move \.{'} \.{=} current\_move \.{'}}%
- \@x{\makebox[0pt][r]{\scriptsize 124\hspace{1em}}\@s{77.30} \.{\land} stack
+ \@x{\makebox[0pt][r]{\scriptsize 170\hspace{1em}}\@s{147.28} \.{\land} stack
  \.{'} \.{=} {\langle} [ procedure \.{\mapsto}\@s{4.1}\@w{perform\_move} ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 125\hspace{1em}}\@s{134.02} pc\@s{33.97}
+ \@x{\makebox[0pt][r]{\scriptsize 171\hspace{1em}}\@s{203.99} pc\@s{33.97}
  \.{\mapsto}\@s{1.48}\@w{Run} ,\,}%
- \@x{\makebox[0pt][r]{\scriptsize 126\hspace{1em}}\@s{134.02} move\@s{17.88}
+ \@x{\makebox[0pt][r]{\scriptsize 172\hspace{1em}}\@s{203.99} move\@s{17.88}
  \.{\mapsto}\@s{4.1} move ] {\rangle}}%
-\@x{\makebox[0pt][r]{\scriptsize 127\hspace{1em}}\@s{131.45} \.{\circ} stack}%
- \@x{\makebox[0pt][r]{\scriptsize 128\hspace{1em}}\@s{66.19} \.{\land} pc
- \.{'} \.{=}\@w{Move}}%
- \@x{\makebox[0pt][r]{\scriptsize 129\hspace{1em}}\@s{66.19} \.{\land}
+\@x{\makebox[0pt][r]{\scriptsize 173\hspace{1em}}\@s{201.43} \.{\circ} stack}%
+ \@x{\makebox[0pt][r]{\scriptsize 174\hspace{1em}}\@s{136.17} \.{\land} pc
+ \.{'} \.{=}\@w{PerformMove}}%
+ \@x{\makebox[0pt][r]{\scriptsize 175\hspace{1em}}\@s{60.94} \.{\ELSE}
+ \.{\land} pc \.{'} \.{=}\@w{Done}}%
+ \@x{\makebox[0pt][r]{\scriptsize 176\hspace{1em}}\@s{92.26} \.{\land}
+ {\UNCHANGED} {\langle} current\_count ,\, current\_move ,\, stack ,\, move
+ {\rangle}}%
+ \@x{\makebox[0pt][r]{\scriptsize 177\hspace{1em}}\@s{37.68} \.{\land}
  {\UNCHANGED} {\langle} global\_registers ,\, local\_registers {\rangle}}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 131\hspace{1em}}}%
+\@x{\makebox[0pt][r]{\scriptsize 179\hspace{1em}}}%
 \@y{\@s{0}%
  Allow infinite stuttering to prevent deadlock on termination.
 }%
 \@xx{}%
- \@x{\makebox[0pt][r]{\scriptsize 132\hspace{1em}} Terminating \.{\defeq} pc
+ \@x{\makebox[0pt][r]{\scriptsize 180\hspace{1em}} Terminating \.{\defeq} pc
  \.{=}\@w{Done} \.{\land} {\UNCHANGED} vars}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 134\hspace{1em}} Next \.{\defeq}
- perform\_move \.{\lor} Run \.{\lor} MakeMove}%
- \@x{\makebox[0pt][r]{\scriptsize 135\hspace{1em}}\@s{52.13} \.{\lor}
+ \@x{\makebox[0pt][r]{\scriptsize 182\hspace{1em}} Next \.{\defeq}
+ perform\_move \.{\lor} Run}%
+ \@x{\makebox[0pt][r]{\scriptsize 183\hspace{1em}}\@s{52.13} \.{\lor}
  Terminating}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 137\hspace{1em}} Spec\@s{1.46} \.{\defeq}
+ \@x{\makebox[0pt][r]{\scriptsize 185\hspace{1em}} Spec\@s{1.46} \.{\defeq}
  Init \.{\land} {\Box} [ Next ]_{ vars}}%
 \@pvspace{8.0pt}%
- \@x{\makebox[0pt][r]{\scriptsize 139\hspace{1em}} Termination \.{\defeq}
+ \@x{\makebox[0pt][r]{\scriptsize 187\hspace{1em}} Termination \.{\defeq}
  {\Diamond} ( pc \.{=}\@w{Done} )}%
 \@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 141\hspace{1em}}}%
+\@x{\makebox[0pt][r]{\scriptsize 189\hspace{1em}}}%
 \@y{\@s{0}%
  END TRANSLATION
 }%
 \@xx{}%
-\@pvspace{8.0pt}%
-\@x{\makebox[0pt][r]{\scriptsize 143\hspace{1em}}}\bottombar\@xx{}%
+\@pvspace{16.0pt}%
+\@x{\makebox[0pt][r]{\scriptsize 192\hspace{1em}}}\bottombar\@xx{}%
 \setboolean{shading}{false}
 \begin{lcom}{0}%
 \begin{cpar}{0}{F}{F}{0}{0}{}%
@@ -1237,7 +1347,7 @@
 \end{cpar}%
 \begin{cpar}{0}{F}{F}{0}{0}{}%
  \ensuremath{\.{\,\backslash\,}}* Last modified Sat \ensuremath{Dec} 19
- 13:11:55 \ensuremath{CET} 2020 by \ensuremath{ostera
+ 14:27:42 \ensuremath{CET} 2020 by \ensuremath{ostera
 }%
 \end{cpar}%
 \begin{cpar}{0}{F}{F}{0}{0}{}%

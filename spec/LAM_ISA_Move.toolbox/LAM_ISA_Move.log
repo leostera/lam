@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.6.18)  19 DEC 2020 13:19
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.6.18)  19 DEC 2020 14:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -106,64 +106,154 @@ LaTeX Font Info:    ... okay on input line 939.
 \everyMPtoPDFconversion=\toks17
 )
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 942.
+(Font)              <8> on input line 944.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 942.
+(Font)              <6> on input line 944.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 944.
 LaTeX Font Info:    Trying to load font information for U+lasy on input line 94
-2.
+4.
 (/usr/share/texlive/texmf-dist/tex/latex/base/ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
-) [1
-
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+)
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 1052.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 1052.
+(Font)              <7> on input line 960.
+[1
 
-Overfull \hbox (139.37032pt too wide) in paragraph at lines 1118--1120
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
+Overfull \hbox (103.83112pt too wide) in paragraph at lines 1167--1169
 [][] 
  []
 
 
-Overfull \hbox (178.61707pt too wide) in paragraph at lines 1126--1128
+Overfull \hbox (148.18893pt too wide) in paragraph at lines 1175--1177
 [][] 
  []
 
 
-Overfull \hbox (16.74796pt too wide) in paragraph at lines 1131--1134
+Overfull \hbox (58.36241pt too wide) in paragraph at lines 1180--1183
 [][] 
  []
 
 
-Overfull \hbox (243.40924pt too wide) in paragraph at lines 1134--1136
+Overfull \hbox (284.70032pt too wide) in paragraph at lines 1183--1185
 [][] 
  []
 
 
-Overfull \hbox (71.31796pt too wide) in paragraph at lines 1139--1142
+Overfull \hbox (13.56223pt too wide) in paragraph at lines 1185--1188
 [][] 
  []
 
 
-Overfull \hbox (292.87816pt too wide) in paragraph at lines 1142--1144
+Overfull \hbox (102.0535pt too wide) in paragraph at lines 1188--1191
 [][] 
  []
 
-[2]
-Overfull \hbox (31.96222pt too wide) in paragraph at lines 1146--1148
+
+Overfull \hbox (323.93707pt too wide) in paragraph at lines 1191--1193
 [][] 
  []
 
-[3] [4] (./LAM_ISA_Move.aux) ) 
+
+Overfull \hbox (73.2433pt too wide) in paragraph at lines 1193--1196
+[][] 
+ []
+
+
+Overfull \hbox (162.06796pt too wide) in paragraph at lines 1196--1199
+[][] 
+ []
+
+
+Overfull \hbox (388.73924pt too wide) in paragraph at lines 1199--1201
+[][] 
+ []
+
+
+Overfull \hbox (122.71222pt too wide) in paragraph at lines 1201--1204
+[][] 
+ []
+
+
+Overfull \hbox (216.64796pt too wide) in paragraph at lines 1204--1207
+[][] 
+ []
+
+
+Overfull \hbox (438.20816pt too wide) in paragraph at lines 1207--1209
+[][] 
+ []
+
+
+Overfull \hbox (81.08406pt too wide) in paragraph at lines 1209--1211
+[][] 
+ []
+
+
+Overfull \hbox (177.29222pt too wide) in paragraph at lines 1211--1213
+[][] 
+ []
+
+
+Overfull \hbox (127.8233pt too wide) in paragraph at lines 1213--1215
+[][] 
+ []
+
+[3]
+Overfull \hbox (100.47412pt too wide) in paragraph at lines 1250--1252
+[][] 
+ []
+
+
+Overfull \hbox (95.36304pt too wide) in paragraph at lines 1257--1259
+[][] 
+ []
+
+
+Overfull \hbox (167.07225pt too wide) in paragraph at lines 1264--1266
+[][] 
+ []
+
+
+Overfull \hbox (161.96117pt too wide) in paragraph at lines 1271--1273
+[][] 
+ []
+
+
+Overfull \hbox (172.18333pt too wide) in paragraph at lines 1278--1280
+[][] 
+ []
+
+
+Overfull \hbox (167.07225pt too wide) in paragraph at lines 1285--1287
+[][] 
+ []
+
+
+Overfull \hbox (3.14803pt too wide) in paragraph at lines 1289--1291
+[][] 
+ []
+
+
+Overfull \hbox (62.11743pt too wide) in paragraph at lines 1294--1297
+[][] 
+ []
+
+
+Overfull \hbox (17.85071pt too wide) in paragraph at lines 1297--1299
+[][] 
+ []
+
+[4] [5] (./LAM_ISA_Move.aux) ) 
 Here is how much of TeX's memory you used:
  1242 strings out of 481239
  16711 string characters out of 5920377
- 265503 words of memory out of 5000000
+ 264503 words of memory out of 5000000
  16545 multiletter control sequences out of 15000+600000
  537816 words of font info for 45 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 25i,10n,25p,226b,267s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 25i,10n,25p,191b,263s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public
 /amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
 nts/cm/cmcsc10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
@@ -180,10 +270,10 @@ sfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmti7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 i8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/latxfont/lasy
 10.pfb>
-Output written on LAM_ISA_Move.pdf (4 pages, 167746 bytes).
+Output written on LAM_ISA_Move.pdf (5 pages, 174237 bytes).
 PDF statistics:
- 81 PDF objects out of 1000 (max. 8388607)
- 58 compressed objects within 1 object stream
+ 84 PDF objects out of 1000 (max. 8388607)
+ 60 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
