@@ -28,6 +28,13 @@ It will be useful for building:
 * fast command line tools
 * native GUI applications
 
+### Progress Status
+
+We keep a few tracking issues here:
+
+* [BEAM Compatibility Status](https://github.com/AbstractMachinesLab/lam/issues/4)
+* [LAM Specification Status](https://github.com/AbstractMachinesLab/lam/issues/5)
+
 ## Getting Started
 
 You can download the latest binary from the [releases
