@@ -28,9 +28,10 @@ It will be useful for building:
 * fast command line tools
 * native GUI applications
 
-### Progress Status
+## Great! Can I use it now?
 
-We keep a few tracking issues here:
+Not yet! There's plenty of work to be done for it to be fully usable, but we
+keep a few tracking issues here so its easier for you to see the progress:
 
 * [BEAM Compatibility Status](https://github.com/AbstractMachinesLab/lam/issues/4)
 * [LAM Specification Status](https://github.com/AbstractMachinesLab/lam/issues/5)
