@@ -145,8 +145,12 @@ pub struct Tuple {
 impl Display for Tuple {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
         write!(fmt, "{{")?;
-        for e in self.clone().elements {
-            write!(fmt, "{}, ", e)?;
+        if self.size > 0 {
+            let elements = self.clone().elements;
+            write!(fmt, "{}", elements[0])?;
+            for e in &elements[1..] {
+                write!(fmt, ", {}", e)?;
+            }
         }
         write!(fmt, "}}")
     }
@@ -177,8 +181,11 @@ impl Display for List {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
         write!(fmt, "[")?;
         let elements: Vec<Literal> = self.clone().into();
-        for e in elements {
-            write!(fmt, "{}, ", e)?;
+        if elements.len() > 0 {
+            write!(fmt, "{}", elements[0])?;
+            for e in &elements[1..] {
+                write!(fmt, ", {}", e)?;
+            }
         }
         write!(fmt, "]")
     }
