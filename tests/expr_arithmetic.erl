@@ -34,9 +34,9 @@ run(A, A2, B, B2, C) ->
    },
    {
     <<"Operator precedence">>,
-    1 - - - 2,
-    1 - - - 2,
-    1 + - + 2
+    A - - - 2,
+    A - - - 2,
+    A + - + 2
    },
    {
     <<"Binary operations">>,

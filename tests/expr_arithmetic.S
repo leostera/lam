@@ -32,7 +32,7 @@
     {put_tuple2,{x,0},
                 {list,[{literal,<<"Right associativity">>},{y,0},{x,0}]}}.
     {put_list,{x,0},
-              {literal,[{<<"Operator precedence">>,-1,-1,-1},
+              {literal,[{<<"Operator precedence">>,2110,2110,2110},
                         {<<"Binary operations">>,2105,2119,14784,
                          [2112,7],
                          [2112],
