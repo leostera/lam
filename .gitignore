@@ -27,7 +27,8 @@ spec/*.toolbox/*aux
 spec/*.toolbox/*.log
 spec/*.toolbox/*.pdf
 spec/*.toolbox/*.tex
-spec/*.toolbox/*___model_SnapShot*.launch
+spec/*.toolbox/*_SnapShot*.launch
+spec/*.toolbox/**/*-*-*-*-*-*
 spec/*.toolbox/**/*.tla
 spec/*.toolbox/**/*.out
 spec/*.toolbox/**/MC.cfg
