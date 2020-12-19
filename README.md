@@ -34,6 +34,7 @@ We keep a few tracking issues here:
 
 * [BEAM Compatibility Status](https://github.com/AbstractMachinesLab/lam/issues/4)
 * [LAM Specification Status](https://github.com/AbstractMachinesLab/lam/issues/5)
+* [Erlang BIF Support across Runtimes](https://github.com/AbstractMachinesLab/lam/issues/6)
 
 ## Getting Started
 
