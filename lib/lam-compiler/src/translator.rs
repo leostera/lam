@@ -854,6 +854,7 @@ impl ModuleTranslator {
                     .collect();
                 Literal::Map(elements.into())
             }
+            ExternalTerm::Float(external_term::Float { value }) => Literal::Float(value.into()),
             _ => panic!(
                 "Don't know how to turn ExternalTerm {:?} into a lam_emu::Value",
                 x
