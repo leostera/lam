@@ -1,0 +1,10 @@
+[{<<"Unary ops">>,2112,-2112,-2113,false},
+ {<<"Left associativity">>,4224,1056.0,false,true,false,0,1056,0,2115,2109,
+  2115,16896,264,2115},
+ {<<"Right associativity">>,[2112,true,a_list],[2112]},
+ {<<"Operator precedence">>,-1,-1,-1},
+ {<<"Binary operations">>,2105,2119,14784,
+  [2112,7],
+  [2112],
+  301.7142857142857,true,false,true,false,false,false,true,true,false,0,2119,
+  270336,16,2119,301,true,5,true}]
