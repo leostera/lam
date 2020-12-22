@@ -1,11 +1,14 @@
-The Move instruction operates on the Register Machine, and _copies_ data from
-one register into the other.
+The Move instruction operates on the Register Machine, and _copies_ values to
+a local or global register.
 
-Moves can be from one register to another, or we can move a literal value into
-a register.
+Values can be literals, which are copied directly, or other registers. When the
+value being moved is a register, we look up the literal inside it and copy that
+instead.
 
 The representation of literal values isn't important, so an implementation may
 copy the actual value or just a heap pointer.
+
+All registers begin zeroed out with the Nil value.
 
 ---------------------------- MODULE LAM_ISA_Move ----------------------------
 EXTENDS Naturals, Sequences, TLC
