@@ -20,7 +20,7 @@ build.web:
 
 .PHONY: manual
 manual:
-	mdbook build --dest-dir ../docs ./manual
+	mdbook build --dest-dir ../docs/manual ./manual
 
 .PHONY: test
 test:

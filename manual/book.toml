@@ -11,7 +11,7 @@ src = "src"
 
 [output.html]
 cname = "lam.run"
-google-analytics = "G-JXXV25JQD2"
+google-analytics = "G-56NXKQ4NJC"
 
 default-theme = "coal"
 preferred-dark-theme = "coal"
