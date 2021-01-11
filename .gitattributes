@@ -2,3 +2,4 @@ examples/**/*.js linguist-vendored
 examples/**/*.json linguist-vendored
 examples/**/*.html linguist-vendored
 spec/*.toolbox/**/* linguist-vendored
+docs/* linguist-vendored
