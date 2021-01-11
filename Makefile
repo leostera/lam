@@ -18,9 +18,9 @@ build.web:
 		-- --package lam-rts-web
 	cp ./lib/lam-rts-web/pkg/lam_rts_web.js ./lib/lam-compiler/src/index.js
 
-.PHONY: docs
-docs:
-	cargo doc --target-dir ./docs --workspace --no-deps
+.PHONY: manual
+manual:
+	mdbook build --dest-dir ../docs ./manual
 
 .PHONY: test
 test:

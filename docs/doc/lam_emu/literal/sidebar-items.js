@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["List","NOTE(@ostera): consider reusing an existing implementation of cons lists"],["Literal",""]],"struct":[["Lambda",""],["Pid",""],["Ref","An opaque reference to a runtime and platform specific value that can not be inspected."],["Tuple",""]],"type":[["Arity",""],["Atom",""],["Label",""]]});

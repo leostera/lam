@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["lam_beam"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"lam_beam/byteops/enum.OpCode.html\" title=\"enum lam_beam::byteops::OpCode\">OpCode</a>","synthetic":false,"types":["lam_beam::byteops::OpCode"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -3,7 +3,9 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - LAM Manual</title>
+        <title>LAM Manual</title>
+        
+        <meta name="robots" content="noindex" />
         
         
 
@@ -171,6 +173,65 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+<h1><a class="header" href="#getting-started" id="getting-started">Getting Started</a></h1>
+<h1><a class="header" href="#installation" id="installation">Installation</a></h1>
+<h1><a class="header" href="#first-steps" id="first-steps">First Steps</a></h1>
+<h1><a class="header" href="#how-lam-works" id="how-lam-works">How LAM Works</a></h1>
+<h1><a class="header" href="#guides" id="guides">Guides</a></h1>
+<h1><a class="header" href="#running-erlang-on-lam" id="running-erlang-on-lam">Running Erlang on LAM</a></h1>
+<h1><a class="header" href="#running-elixir-on-lam" id="running-elixir-on-lam">Running Elixir on LAM</a></h1>
+<h1><a class="header" href="#running-rescript-on-lam" id="running-rescript-on-lam">Running ReScript on LAM</a></h1>
+<h1><a class="header" href="#linking-external-code" id="linking-external-code">Linking external code</a></h1>
+<h1><a class="header" href="#using-lam-with-zap" id="using-lam-with-zap">Using LAM with Zap</a></h1>
+<h1><a class="header" href="#targetting-lam" id="targetting-lam">Targetting LAM</a></h1>
+<h1><a class="header" href="#embedding-lam" id="embedding-lam">Embedding LAM</a></h1>
+<h1><a class="header" href="#examples" id="examples">Examples</a></h1>
+<h1><a class="header" href="#hello-world" id="hello-world">Hello World</a></h1>
+<h1><a class="header" href="#reference" id="reference">Reference</a></h1>
+<h1><a class="header" href="#lam-cli" id="lam-cli">LAM CLI</a></h1>
+<h1><a class="header" href="#lam" id="lam">lam</a></h1>
+<h1><a class="header" href="#lam-build" id="lam-build">lam build</a></h1>
+<h1><a class="header" href="#lam-compile" id="lam-compile">lam compile</a></h1>
+<h1><a class="header" href="#lam-dump" id="lam-dump">lam dump</a></h1>
+<h1><a class="header" href="#lam-link" id="lam-link">lam link</a></h1>
+<h1><a class="header" href="#lam-bytecode-text-format" id="lam-bytecode-text-format">LAM Bytecode Text Format</a></h1>
+<h1><a class="header" href="#lam-instruction-set" id="lam-instruction-set">LAM Instruction Set</a></h1>
+<h1><a class="header" href="#halt" id="halt">Halt</a></h1>
+<h1><a class="header" href="#move" id="move">Move</a></h1>
+<h1><a class="header" href="#swap" id="swap">Swap</a></h1>
+<h1><a class="header" href="#clear" id="clear">Clear</a></h1>
+<h1><a class="header" href="#allocate" id="allocate">Allocate</a></h1>
+<h1><a class="header" href="#deallocate" id="deallocate">Deallocate</a></h1>
+<h1><a class="header" href="#shiftlocals" id="shiftlocals">ShiftLocals</a></h1>
+<h1><a class="header" href="#restorelocals" id="restorelocals">RestoreLocals</a></h1>
+<h1><a class="header" href="#label" id="label">Label</a></h1>
+<h1><a class="header" href="#jump" id="jump">Jump</a></h1>
+<h1><a class="header" href="#return" id="return">Return</a></h1>
+<h1><a class="header" href="#test" id="test">Test</a></h1>
+<h1><a class="header" href="#conditionaljump" id="conditionaljump">ConditionalJump</a></h1>
+<h1><a class="header" href="#badmatch" id="badmatch">Badmatch</a></h1>
+<h1><a class="header" href="#makelambda" id="makelambda">MakeLambda</a></h1>
+<h1><a class="header" href="#makelist" id="makelist">MakeList</a></h1>
+<h1><a class="header" href="#maketuple" id="maketuple">MakeTuple</a></h1>
+<h1><a class="header" href="#makemap" id="makemap">MakeMap</a></h1>
+<h1><a class="header" href="#splitlist-splitlisthead-splitlisttail" id="splitlist-splitlisthead-splitlisttail">SplitList, SplitListHead, SplitListTail</a></h1>
+<h1><a class="header" href="#gettupleelement" id="gettupleelement">GetTupleElement</a></h1>
+<h1><a class="header" href="#getmapelement" id="getmapelement">GetMapElement</a></h1>
+<h1><a class="header" href="#spawn" id="spawn">Spawn</a></h1>
+<h1><a class="header" href="#sleep" id="sleep">Sleep</a></h1>
+<h1><a class="header" href="#kill" id="kill">Kill</a></h1>
+<h1><a class="header" href="#monitor" id="monitor">Monitor</a></h1>
+<h1><a class="header" href="#send" id="send">Send</a></h1>
+<h1><a class="header" href="#peekmessage" id="peekmessage">PeekMessage</a></h1>
+<h1><a class="header" href="#removemessage" id="removemessage">RemoveMessage</a></h1>
+<h1><a class="header" href="#self" id="self">Self</a></h1>
+<h1><a class="header" href="#lam-runtime-native" id="lam-runtime-native">LAM Runtime: Native</a></h1>
+<h1><a class="header" href="#lam-runtime-webassembly-on-wasi" id="lam-runtime-webassembly-on-wasi">LAM Runtime: WebAssembly on WASI</a></h1>
+<h1><a class="header" href="#lam-runtime-webassembly-on-the-web" id="lam-runtime-webassembly-on-the-web">LAM Runtime: WebAssembly on the Web</a></h1>
+<h1><a class="header" href="#contributing" id="contributing">Contributing</a></h1>
+<h1><a class="header" href="#building-from-source" id="building-from-source">Building from Source</a></h1>
+<h1><a class="header" href="#style-guide" id="style-guide">Style guide</a></h1>
+<h1><a class="header" href="#architecutre" id="architecutre">Architecutre</a></h1>
 
                     </main>
 
@@ -178,10 +239,6 @@
                         <!-- Mobile navigation buttons -->
                         
 
-                        
-                            <a rel="next" href="getting-started/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -192,10 +249,6 @@
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
 
-                
-                    <a rel="next" href="getting-started/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
                 
             </nav>
 
@@ -245,6 +298,14 @@
         <!-- Custom JS scripts -->
         
 
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
         
 
     </body>

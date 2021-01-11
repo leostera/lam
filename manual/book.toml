@@ -1,0 +1,21 @@
+[book]
+title = "LAM Manual"
+description = "A Littler Actor Machine that runs on Native and WebAssembly"
+
+language = "en"
+multilingual = false
+
+authors = ["Leandro Ostera"]
+
+src = "src"
+
+[output.html]
+cname = "lam.run"
+google-analytics = "G-JXXV25JQD2"
+
+default-theme = "coal"
+preferred-dark-theme = "coal"
+
+git-repository-url = "https://github.com/AbstractMachinesLab/LAM"
+git-repository-icon = "fa-github"
+

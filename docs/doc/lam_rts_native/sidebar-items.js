@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["start","Safety *  This function will dereference the data pointer to read and then execute the bytecode."]]});

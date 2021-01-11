@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Goal",""]],"fn":[["main",""]],"struct":[["LAM",""]]});

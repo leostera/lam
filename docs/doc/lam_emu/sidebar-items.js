@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["bytecode",""],["coordinator",""],["emulator",""],["instr_ptr",""],["literal",""],["mailbox",""],["process",""],["process_queue",""],["process_registry",""],["program",""],["registers",""],["runtime",""],["scheduler",""]]});
