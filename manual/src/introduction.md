@@ -20,11 +20,11 @@ Come join us on [Discord](https://discord.gg/v5aAqKq6Rs)!
 
 ## Features
 
-* Runs Natively and on WebAssembly -- pick and choose your runtime!
-* Easy to Target -- a small and specified bytecode with a text and binary format
-* Erlang VM compatibility -- run your existing Erlang, Elixir, Caramel, and Gleam code
-* Seamless multi-core -- built to scale from one to thousands of cores for free
-* Extreme reliability -- use Erlang's OTP supervision patterns
+* Runs Natively and on WebAssembly &emdash; pick and choose your runtime!
+* Easy to Target &emdash; a small and specified bytecode with a text and binary format
+* Erlang VM compatibility &emdash; run your existing Erlang, Elixir, Caramel, and Gleam code
+* Seamless multi-core &emdash; built to scale from one to thousands of cores for free
+* Extreme reliability &emdash; use Erlang & Elixir's Supervision patterns
 
 ## Status
 

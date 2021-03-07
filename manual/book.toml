@@ -1,5 +1,5 @@
 [book]
-title = "LAM Manual"
+title = "Little Actor Machine"
 description = "A Littler Actor Machine that runs on Native and WebAssembly"
 
 language = "en"
