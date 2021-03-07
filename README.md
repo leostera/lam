@@ -18,6 +18,9 @@ VM](https://erlang.org).
 LAM lets you reuse the same programming paradigm, known for being
 **productive**, across your entire application stack.
 
+Come join us on [Discord](https://discord.gg/v5aAqKq6Rs)! (Ps: we share a
+server with [Caramel](https://caramel.run))
+
 ## Features
 
 * Runs Natively and on WebAssembly -- pick and choose your runtime!

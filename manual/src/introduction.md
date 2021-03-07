@@ -16,15 +16,16 @@ VM](https://erlang.org).
 LAM lets you reuse the same programming paradigm, known for being
 **productive**, across your entire application stack.
 
-Come join us on [Discord](https://discord.gg/v5aAqKq6Rs)!
+Come join us on [Discord](https://discord.gg/v5aAqKq6Rs)! (Ps: we share a
+server with [Caramel](https://caramel.run))
 
 ## Features
 
-* Runs Natively and on WebAssembly &emdash; pick and choose your runtime!
-* Easy to Target &emdash; a small and specified bytecode with a text and binary format
-* Erlang VM compatibility &emdash; run your existing Erlang, Elixir, Caramel, and Gleam code
-* Seamless multi-core &emdash; built to scale from one to thousands of cores for free
-* Extreme reliability &emdash; use Erlang & Elixir's Supervision patterns
+* Runs Natively and on WebAssembly -- pick and choose your runtime!
+* Easy to Target -- a small and specified bytecode with a text and binary format
+* Erlang VM compatibility -- run your existing Erlang, Elixir, Caramel, and Gleam code
+* Seamless multi-core -- built to scale from one to thousands of cores for free
+* Extreme reliability -- use Erlang's OTP supervision patterns
 
 ## Status
 
