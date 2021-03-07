@@ -1,41 +1,45 @@
-<h1>
-░█▒░▒▄▀▄░█▄▒▄█ ...:rocket:<br />
-▒█▄▄░█▀█░█▒▀▒█ 
-</h1>
+<div align="center">
+  <a href="https://lam.run/" target="_blank">
+    <img width="80" src="https://raw.githubusercontent.com/AbstractMachinesLab/lam/main/docs/lam.png" alt="LAM logo">
+  </a>
+  <p>&nbsp;</p>
+</div>
 
-> A Little Actor Machine that runs on Native and WebAssembly
+![Main workflow](https://github.com/AbstractMachinesLab/lam/workflows/Main%20workflow/badge.svg)
 
-## What is LAM?
+**LAM** is a lightweight, universal virtual machine for writing scalable and
+reliable applications that run natively and on
+[WebAssembly](https://webassembly.org).
 
-LAM is a research project exploring a **lightweight alternative to the BEAM**
-that runs as **Native and WebAssembly binaries**, both on WASI-enabled systems
-and browsers.
+It is inspired by [Erlang](https://erlang.org) and
+[Lua](https://www.lua.org/start.html), and it is compatible with the [Erlang
+VM](https://erlang.org).
 
-It will supports:
+LAM lets you reuse the same programming paradigm, known for being
+**productive**, across your entire application stack.
 
-* Immutable functional programming with proper tail calls
-* Concurrency via processes and message passing
-* Multi-core scheduling (except on the Web)
-* Erlang/OTP architectural patterns (such as supervision trees)
+## Features
 
-It will _not support_ hot-code reloading or distribution, and so not all BEAM
-programs will be supported.
+* Runs Natively and on WebAssembly -- pick and choose your runtime!
+* Easy to Target -- a small and specified bytecode with a text and binary format
+* Erlang VM compatibility -- run your existing Erlang, Elixir, Caramel, and Gleam code
+* Seamless multi-core -- built to scale from one to thousands of cores for free
+* Extreme reliability -- use Erlang's OTP supervision patterns
 
-It will be useful for building:
+## Status
 
-* short-lived, fast-startup services (e.g AWS Lambdas / Google Cloud Functions)
-* web apps
-* fast command line tools
-* native GUI applications
+Still under heavy development!
 
-## Great! Can I use it now?
+There's plenty of work to be done for it to be fully usable, but we keep a few
+tracking issues here:
 
-Not yet! There's plenty of work to be done for it to be fully usable, but we
-keep a few tracking issues here so its easier for you to see the progress:
-
-* [BEAM Compatibility Status](https://github.com/AbstractMachinesLab/lam/issues/4)
 * [LAM Specification Status](https://github.com/AbstractMachinesLab/lam/issues/5)
-* [Erlang BIF Support across Runtimes](https://github.com/AbstractMachinesLab/lam/issues/6)
+* [Targetability Status](https://github.com/AbstractMachinesLab/lam/issues/7)
+* [WebAssembly and Native Runtime Support](https://github.com/AbstractMachinesLab/lam/issues/8)
+
+The Erlang and Elixir ecosystem compatibility is tracked here:
+* [Erlang VM Compatibility Status](https://github.com/AbstractMachinesLab/lam/issues/4)
+* [Erlang/Elixir Support Across Runtimes](https://github.com/AbstractMachinesLab/lam/issues/6)
 
 ## Getting Started
 
@@ -48,7 +52,7 @@ Like this:
 
 ```sh
 # in this example I'm running linux with glibc
-$ wget https://github.com/AbstractMachinesLab/lam/releases/download/v0.0.5/lam-v0.0.5-x86_64-unknown-linux-gnu.tar.gz
+$ wget https://github.com/AbstractMachinesLab/lam/releases/download/v0.0.7/lam-v0.0.7-x86_64-unknown-linux-gnu.tar.gz
 $ tar xzf lam-*
 $ export PATH=$(pwd)/lam/bin:$PATH
 ```
